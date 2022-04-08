@@ -1,0 +1,25 @@
+.clickable {
+    cursor: pointer;
+}
+.red {
+    color: red
+}
+.green {
+    color: green;
+}
+
+.itemListBadge {
+    padding: 5px 10px;
+    margin: 2px 5px;
+}
+.itemListBadge a {
+    color: white;
+    text-decoration: underline;
+}
+.itemListBadge .badge {
+    margin-left: 5px;
+    cursor: pointer;
+}
+.treeview {
+    list-style-type: none;
+}
