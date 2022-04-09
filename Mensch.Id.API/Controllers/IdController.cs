@@ -17,5 +17,13 @@ namespace Mensch.Id.API.Controllers
             return Ok(id);
         }
 
+        [HttpGet("anonymous/random")]
+        public async Task<IActionResult> GetAnonymousRandomId()
+        {
+            var idGenerator = new MenschIdGenerator();
+            var id = idGenerator.GenerateAnonymous();
+            return Ok(id);
+        }
+
     }
 }
