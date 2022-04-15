@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Models;
 using Mensch.Id.API.Storage;
+using Mensch.Id.API.ViewModels;
 using Mensch.Id.API.Workflow;
 using Mensch.Id.API.Workflow.ViewModelBuilders;
 using Microsoft.AspNetCore.Authorization;
@@ -18,7 +19,9 @@ namespace Mensch.Id.API.Controllers
     {
         private readonly IAccountStore accountStore;
         private readonly IStore<Person> personStore;
+        private readonly IStore<Verification> verificationStore;
         private readonly IHttpContextAccessor httpContextAccessor;
+        private readonly ProfileViewModelBuilder profileViewModelBuilder;
         private readonly NewProfileViewModelBuilder newProfileViewModelBuilder;
         private readonly IIdStore idStore;
 
@@ -27,13 +30,17 @@ namespace Mensch.Id.API.Controllers
             IStore<Person> personStore,
             IHttpContextAccessor httpContextAccessor,
             NewProfileViewModelBuilder newProfileViewModelBuilder,
-            IIdStore idStore)
+            IIdStore idStore,
+            ProfileViewModelBuilder profileViewModelBuilder,
+            IStore<Verification> verificationStore)
         {
             this.accountStore = accountStore;
             this.personStore = personStore;
             this.httpContextAccessor = httpContextAccessor;
             this.newProfileViewModelBuilder = newProfileViewModelBuilder;
             this.idStore = idStore;
+            this.profileViewModelBuilder = profileViewModelBuilder;
+            this.verificationStore = verificationStore;
         }
 
         [Authorize]
@@ -45,7 +52,8 @@ namespace Mensch.Id.API.Controllers
             var profileData = await personStore.GetByIdAsync(account.PersonId);
             if (profileData == null)
                 return NotFound();
-            return Ok(profileData);
+            var vm = await profileViewModelBuilder.Build(profileData);
+            return Ok(vm);
         }
 
         [Authorize]
@@ -121,6 +129,34 @@ namespace Mensch.Id.API.Controllers
                 return StatusCode((int)HttpStatusCode.Forbidden, "You already have a profile");
             var vm = await newProfileViewModelBuilder.Build(birthDate, account.Id);
             return Ok(vm);
+        }
+
+
+        [Authorize]
+        [HttpPost("{id}/verify")]
+        public async Task<IActionResult> VerifyPerson([FromRoute] string id)
+        {
+            var targetProfile = await personStore.GetByIdAsync(id);
+            if (targetProfile == null)
+                return NotFound();
+            var claims = ControllerHelpers.GetClaims(httpContextAccessor);
+            var myAccount = await accountStore.GetFromClaimsAsync(claims);
+            if (myAccount.PersonId == null)
+                return StatusCode((int)HttpStatusCode.Forbidden, "You must have a profile and be verified yourself to verify other profiles");
+            if (myAccount.PersonId == id)
+                return StatusCode((int)HttpStatusCode.Forbidden, "You cannot verify yourself :D");
+            var myVerifications = await verificationStore.SearchAsync(x => x.PersonId == myAccount.PersonId);
+            if (myVerifications.Count == 0)
+                return StatusCode((int)HttpStatusCode.Forbidden, "You must be verified yourself to verify other profiles");
+            var verification = new Verification
+            {
+                Id = Guid.NewGuid().ToString(),
+                PersonId = id,
+                VerifierId = myAccount.PersonId,
+                Timestamp = DateTime.UtcNow
+            };
+            await verificationStore.StoreAsync(verification);
+            return Ok(verification);
         }
 
     }

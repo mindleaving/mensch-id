@@ -11,6 +11,7 @@ namespace Mensch.Id.API.Setups
             IConfiguration configuration)
         {
             services.AddScoped<NewProfileViewModelBuilder>();
+            services.AddScoped<ProfileViewModelBuilder>();
         }
     }
 }

@@ -1,9 +1,11 @@
+using Mensch.Id.API.AccessControl;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Mensch.Id.API.Setups;
+using Microsoft.AspNetCore.HttpOverrides;
 
 namespace Mensch.Id.API
 {
@@ -32,6 +34,11 @@ namespace Mensch.Id.API
             {
                 setup.Run(services, Configuration);
             }
+
+            services.Configure<ForwardedHeadersOptions>(options =>
+            {
+                options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -43,6 +50,9 @@ namespace Mensch.Id.API
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UseForwardedHeaders();
+            //app.UseHsts();
+
             app.UseSwagger();
             app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Mensch.Id.API v1"));
 
@@ -52,6 +62,7 @@ namespace Mensch.Id.API
                 app.UseCors();
             }
             app.UseAuthentication();
+            app.AddMultiIdentityAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>

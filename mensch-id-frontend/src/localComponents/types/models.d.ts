@@ -46,4 +46,10 @@ export namespace Models {
     interface Person extends Models.IId {
         anonymousId: string;
     }
+
+    interface Verification extends Models.IId {
+        personId: string;
+        verifierId: string;
+        timestamp: Date;
+    }
 }

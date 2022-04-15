@@ -1,18 +1,21 @@
 import { useEffect, useState } from 'react';
-import { Col, Row } from 'react-bootstrap';
+import { Badge, Button, Col, Row } from 'react-bootstrap';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
-import { Models } from '../types/models';
 import { NotificationManager } from 'react-notifications';
 import { apiClient } from '../../sharedCommonComponents/communication/ApiClient';
 import { ApiError } from '../../sharedCommonComponents/communication/ApiError';
 import { NewProfileForm } from '../components/NewProfileForm';
 import { CopyButton } from '../../sharedCommonComponents/components/CopyButton';
+import { ViewModels } from '../types/viewModels';
+import { LoginProvider } from '../types/enums.d';
+
+import '../styles/profile.css';
 
 interface ProfilePageProps {}
 
 export const ProfilePage = (props: ProfilePageProps) => {
 
-    const [ profileData, setProfileData ] = useState<Models.Person>();
+    const [ profileData, setProfileData ] = useState<ViewModels.ProfileViewModel>();
     const [ isNewProfile, setIsNewProfile ] = useState<boolean>(false);
     const [ isLoading, setIsLoading ] = useState<boolean>(true);
 
@@ -52,7 +55,11 @@ export const ProfilePage = (props: ProfilePageProps) => {
             <h1>{resolveText("NewProfile")}</h1>
             <NewProfileForm
                 onProfileCreated={(newProfile) => {
-                    setProfileData(newProfile);
+                    setProfileData({
+                        ...newProfile,
+                        loginProviders: [],
+                        verifications: []
+                    });
                     setIsNewProfile(false);
                 }}
             />
@@ -65,10 +72,50 @@ export const ProfilePage = (props: ProfilePageProps) => {
 
     return (
         <>
-            <h1>{resolveText("MyProfile")}</h1>
+            <div className='d-flex align-items-center'>
+                <div><h1>{resolveText("MyProfile")}</h1></div>
+                {profileData.verifications.length > 0 
+                ? <Badge 
+                    pill 
+                    bg="light"
+                    text="success"
+                    className='ms-3'
+                >
+                    <i className='fa fa-check green'/> {resolveText("Verified")} ({profileData.verifications.length})
+                </Badge> 
+                : null}
+            </div>
             <Row className="mt-3">
+                <Col>
+                    <div className='d-flex align-items-center'>
+                        <div className='me-3'>
+                            {resolveText("Accounts")}: 
+                        </div>
+                        {profileData.loginProviders.map(loginProvider => {
+                            const iconLookup: { [key: string]: string } = {
+                                [LoginProvider.Google]: 'google',
+                                [LoginProvider.Twitter]: 'twitter',
+                                [LoginProvider.Facebook]: 'facebook',
+                                [LoginProvider.Microsoft]: 'windows'
+                            };
+                            const iconId = iconLookup[loginProvider] ?? 'user';
+                            return (<Button
+                                    key={loginProvider}
+                                    variant="outline-success"
+                                    disabled
+                                    className='mx-2 login-provider-symbol'
+                                    title={loginProvider}
+                                >
+                                    <i className={`fa fa-${iconId}`} />
+                                </Button>
+                            );
+                        })}
+                    </div>
+                </Col>
+            </Row>
+            <Row className="mt-2">
                 <Col xs={3}>{resolveText("Person_ID")}</Col>
-                <Col xs={2}>
+                <Col xs={4} lg={2}>
                     <strong>{profileData.id}</strong>
                 </Col>
                 <Col>
@@ -79,7 +126,7 @@ export const ProfilePage = (props: ProfilePageProps) => {
             </Row>
             <Row className="mt-2">
                 <Col xs={3}>{resolveText("Person_AnonymousID")}</Col>
-                <Col xs={2}>
+                <Col xs={4} lg={2}>
                     <strong>{profileData.anonymousId}</strong>
                 </Col>
                 <Col>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -88,11 +89,14 @@ namespace Mensch.Id.API.Controllers
         {
             if (IsLoggedIn())
             {
-                if (!string.IsNullOrWhiteSpace(redirectUrl))
-                    return Redirect(redirectUrl);
                 var claims = ControllerHelpers.GetClaims(httpContextAccessor);
-                var authenticationResult = await ConstructAuthenticationResult(claims);
-                return Ok(authenticationResult);
+                var loginProviderInUse = ClaimsHelpers.GetLoginProvider(claims);
+                if (loginProvider == loginProviderInUse)
+                {
+                    if (!string.IsNullOrWhiteSpace(redirectUrl))
+                        return Redirect(redirectUrl);
+                    return Ok();
+                }
             }
             switch (loginProvider)
             {
@@ -109,28 +113,56 @@ namespace Mensch.Id.API.Controllers
             }
         }
 
-        [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
+        [Authorize]
         [HttpGet("accesstoken")]
         public async Task<IActionResult> GetAccessToken()
         {
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
-            var authenticationResult = await ConstructAuthenticationResult(claims);
-            return Ok(authenticationResult);
-        }
-
-
-        private async Task<AuthenticationResult> ConstructAuthenticationResult(List<Claim> claims)
-        {
             var loginProvider = ClaimsHelpers.GetLoginProvider(claims);
-            if(loginProvider == LoginProvider.Unknown)
-                return AuthenticationResult.Failed(AuthenticationErrorType.AuthenticationMethodNotAvailable);
-            if (loginProvider == LoginProvider.LocalJwt)
-                return AuthenticationResult.Success(null);
-            return await authenticationModule.AuthenticateExternalAsync(claims);
+            switch (loginProvider)
+            {
+                case LoginProvider.Google:
+                case LoginProvider.Twitter:
+                case LoginProvider.Facebook:
+                case LoginProvider.Microsoft:
+                    var authenticationResult = await authenticationModule.AuthenticateExternalAsync(claims);
+                    return Ok(authenticationResult);
+                case LoginProvider.LocalJwt:
+                    return StatusCode((int)HttpStatusCode.Forbidden, "This method cannot be used with JWT authentication");
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
-        
 
+        [Authorize]
+        [HttpPost("link")]
+        public async Task<IActionResult> LinkToAnotherAccount()
+        {
+            var claims = ControllerHelpers.GetClaims(httpContextAccessor);
+            var jwtClaims = claims.Where(x => x.Issuer == JwtSecurityTokenBuilder.Issuer).ToList();
+            var personId = jwtClaims.FirstOrDefault(x => x.Type == JwtSecurityTokenBuilder.PersonIdClaimName)?.Value;
+            if (personId == null)
+            {
+                var jwtAccountId = jwtClaims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
+                if (jwtAccountId == null)
+                    return BadRequest("Your JWT bearer token doesn' contain an account ID");
+                var originalAccount = await store.GetByIdAsync(jwtAccountId);
+                if(originalAccount?.PersonId == null)
+                    return BadRequest("Your JWT bearer token doesn't contain a person ID. If you just created your profile please log out and back in again");
+                personId = originalAccount.PersonId;
+            }
+
+            var loginProviderClaims = claims.Except(jwtClaims).ToList();
+            var account = await store.GetFromClaimsAsync(loginProviderClaims);
+            if (account.PersonId == personId)
+                return Ok();
+            if (account.PersonId != null)
+                return StatusCode((int)HttpStatusCode.Forbidden, "You current account is alread linked to another profile");
+            account.PersonId = personId;
+            await store.StoreAsync(account);
+            return Ok();
+        }
 
         [Authorize]
         [AllowAnonymous]

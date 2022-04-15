@@ -13,12 +13,19 @@ import { LoginPage } from './localComponents/pages/LoginPage';
 import { Models } from './localComponents/types/models';
 import { sendPostRequest } from './sharedCommonComponents/helpers/StoringHelpers';
 import { useEffect, useState } from 'react';
+import { LoginRedirectPage } from './localComponents/pages/LoginRedirectPage';
+import { LinkAccountPage } from './localComponents/pages/LinkAccountPage';
+import { LinkAccountRedirectPage } from './localComponents/pages/LinkAccountRedirectPage';
+import { ContactPage } from './localComponents/pages/ContactPage';
 
+const accessTokenSessionStorageKey = "accesstoken";
 defaultGlobalizer.instance = new Globalizer("de", "en", [germanTranslation, englishTranslation]);
 apiClient.instance = window.location.hostname.toLowerCase() === "localhost"
     ? new ApiClient(window.location.hostname, 44321)
     : new ApiClient(window.location.hostname, 443);
-
+if(!!sessionStorage.getItem(accessTokenSessionStorageKey)) {
+    apiClient.instance!.setAccessToken(sessionStorage.getItem(accessTokenSessionStorageKey)!);
+}
 function App() {
     const navigate = useNavigate();
     const [ isLoggedIn, setIsLoggedIn ] = useState<boolean>(false);
@@ -41,13 +48,17 @@ function App() {
         checkLoginState();
     }, []);
 
-    const onLoggedIn = (authenticationResult: Models.AuthenticationResult) => {
-        if(authenticationResult.isAuthenticated) {
+    const onLoggedIn = (authenticationResult?: Models.AuthenticationResult) => {
+        if(authenticationResult) {
+            if(!authenticationResult.isAuthenticated) {
+                navigate("/login");
+                return;
+            }
             apiClient.instance!.setAccessToken(authenticationResult.accessToken!);
-            sessionStorage.setItem("accesstoken", authenticationResult.accessToken!);
-            setIsLoggedIn(true);
-            navigate("/me");
+            sessionStorage.setItem(accessTokenSessionStorageKey, authenticationResult.accessToken!);
         }
+        setIsLoggedIn(true);
+        navigate("/me");
     }
     const logOut = async () => {
         await sendPostRequest(
@@ -66,10 +77,14 @@ function App() {
     return (
     <Layout isLoggedIn={isLoggedIn} onLogOut={logOut}>
         <Routes>
-            <Route path="/login" element={<LoginPage onLoggedIn={onLoggedIn} />} />
-            <Route path="/me" element={<ProfilePage />} />
+            {!isLoggedIn ? <Route path="/login" element={<LoginPage />} /> : null}
+            <Route path="/login/redirect" element={<LoginRedirectPage onLoggedIn={onLoggedIn} />} />
+            {isLoggedIn ? <Route path="/linkaccount" element={<LinkAccountPage />} /> : null}
+            {isLoggedIn ? <Route path="/linkaccount/finish" element={<LinkAccountRedirectPage />} /> : null}
+            {isLoggedIn ? <Route path="/me" element={<ProfilePage />} /> : null}
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+            <Route path="/contact" element={<ContactPage />} />
             <Route path="/" element={<HomePage />} />
             <Route path="*" element={<NotFoundPage />} />
         </Routes>        

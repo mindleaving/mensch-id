@@ -38,6 +38,7 @@ namespace Mensch.Id.API.Setups
             SetupTypeStores<MenschId>(services);
             services.AddScoped<IIdStore, IdStore>();
             SetupTypeStores<Person>(services);
+            SetupTypeStores<Verification>(services);
         }
 
         private static void SetupTypeStores<T>(IServiceCollection services) where T: IId

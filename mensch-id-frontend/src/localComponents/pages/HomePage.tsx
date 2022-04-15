@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import { Button } from 'react-bootstrap';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../../sharedCommonComponents/communication/ApiClient';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
@@ -29,14 +28,17 @@ export const HomePage = (props: HomePageProps) => {
         <>
             <h1 className='mt-3'>웃ID - Mensch.ID</h1>
             <p>
-                Create your global ID ... available in May 2022.
+                Create your global ID.
             </p>
             {randomId
             ? <p>
                 Sneak peak for humans born today: <b>{randomId}</b>
             </p>
             : null}
-            <Button onClick={() => navigate("/login")}>{resolveText("Login")}</Button>
+            <h2>{resolveText("HowToUseMenschID_Title")}</h2>
+            <p>
+                {resolveText("HowToUseMenschID_Text")}
+            </p>
         </>
     );
 
