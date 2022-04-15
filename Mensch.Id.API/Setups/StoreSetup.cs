@@ -33,6 +33,10 @@ namespace Mensch.Id.API.Setups
 
         private static void SetupStores(IServiceCollection services)
         {
+            SetupTypeStores<Account>(services);
+            services.AddScoped<IAccountStore, AccountStore>();
+            SetupTypeStores<MenschId>(services);
+            services.AddScoped<IIdStore, IdStore>();
             SetupTypeStores<Person>(services);
         }
 

@@ -71,7 +71,8 @@ export class ApiClient {
         const response = await fetch(requestUrl, {
             method: method,
             body: jsonBody,
-            headers: headers
+            headers: headers,
+            credentials: 'include'
         });
         if(effectiveOptions.handleError && !response.ok) {
             return await this._handleError(response);

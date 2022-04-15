@@ -1,3 +1,13 @@
+export enum AccountType {
+    Local = "Local",
+    External = "External"
+}
+export enum AuthenticationErrorType {
+    Ok = "Ok",
+    UserNotFound = "UserNotFound",
+    InvalidPassword = "InvalidPassword",
+    AuthenticationMethodNotAvailable = "AuthenticationMethodNotAvailable"
+}
 export enum Language {
     ab = "ab",
     aa = "aa",
@@ -182,6 +192,18 @@ export enum Language {
     yo = "yo",
     za = "za",
     zu = "zu"
+}
+export enum LoginProvider {
+    Unknown = "Unknown",
+    Google = "Google",
+    Twitter = "Twitter",
+    Facebook = "Facebook",
+    Microsoft = "Microsoft",
+    LocalJwt = "LocalJwt"
+}
+export enum IdType {
+    MenschID = "MenschID",
+    Anonymous = "Anonymous"
 }
 export enum OrderDirection {
     Ascending = "Ascending",
