@@ -39,18 +39,14 @@ namespace Mensch.Id.API.Helpers
                 case LoginProvider.Unknown:
                     throw new Exception($"Invalid login provider '{loginProvider}'");
                 case LoginProvider.Google:
-                    break;
                 case LoginProvider.LocalJwt:
                 case LoginProvider.Twitter:
                 case LoginProvider.Microsoft:
-                    return loginProviderClaims.Single(x => x.Type == ClaimTypes.NameIdentifier).Value;
                 case LoginProvider.Facebook:
-                    break;
+                    return loginProviderClaims.Single(x => x.Type == ClaimTypes.NameIdentifier).Value;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(loginProvider), loginProvider, null);
             }
-
-            throw new NotImplementedException();
         }
 
         private static string GetIssuer(LoginProvider loginProvider)
