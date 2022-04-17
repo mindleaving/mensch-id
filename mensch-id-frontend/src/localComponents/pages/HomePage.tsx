@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Row, Col, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../../sharedCommonComponents/communication/ApiClient';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
@@ -39,6 +40,17 @@ export const HomePage = (props: HomePageProps) => {
             <p>
                 {resolveText("HowToUseMenschID_Text")}
             </p>
+            <h2>{resolveText("SendChallenge")}</h2>
+            <p>
+                {resolveText("SendChallenge_Text")}
+            </p>
+            <Row>
+                <Col/>
+                <Col xs="auto">
+                    <Button onClick={() => navigate("/challenge")}>{resolveText("SendChallenge")}</Button>
+                </Col>
+                <Col/>
+            </Row>
         </>
     );
 

@@ -28,20 +28,17 @@ namespace Mensch.Id.API.Controllers
     public class AccountsController : ControllerBase
     {
         private readonly IAccountStore store;
-        private readonly IStore<Person> personStore;
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly IAuthenticationModule authenticationModule;
         private readonly IProfileCreator profileCreator;
 
         public AccountsController(
             IAccountStore store,
-            IStore<Person> personStore,
             IHttpContextAccessor httpContextAccessor,
             IAuthenticationModule authenticationModule,
             IProfileCreator profileCreator)
         {
             this.store = store;
-            this.personStore = personStore;
             this.httpContextAccessor = httpContextAccessor;
             this.authenticationModule = authenticationModule;
             this.profileCreator = profileCreator;
@@ -179,16 +176,7 @@ namespace Mensch.Id.API.Controllers
 
         private bool IsLoggedIn()
         {
-            var user = httpContextAccessor.HttpContext?.User;
-            if(user?.Identity == null)
-            {
-                return false;
-            }
-            if (!user.Identity.IsAuthenticated)
-            {
-                return false;
-            }
-            return true;
+            return httpContextAccessor.HttpContext?.User.Identities.Any(x => x.IsAuthenticated) ?? false;
         }
     }
 }

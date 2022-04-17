@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
-using Mensch.Id.API.Helpers;
+using Mensch.Id.API.Models;
+using Mensch.Id.API.Storage;
 using Mensch.Id.API.Workflow;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Mensch.Id.API.Controllers
@@ -14,12 +11,18 @@ namespace Mensch.Id.API.Controllers
     [Route("api/[controller]")]
     public class IdController : ControllerBase
     {
-        private readonly IHttpContextAccessor httpContextAccessor;
+        private readonly ChallengeCreator challengeCreator;
+        private readonly IStore<MenschIdChallenge> challengeStore;
+        private readonly IReadonlyStore<Person> personStore;
 
         public IdController(
-            IHttpContextAccessor httpContextAccessor)
+            ChallengeCreator challengeCreator,
+            IStore<MenschIdChallenge> challengeStore,
+            IReadonlyStore<Person> personStore)
         {
-            this.httpContextAccessor = httpContextAccessor;
+            this.challengeCreator = challengeCreator;
+            this.challengeStore = challengeStore;
+            this.personStore = personStore;
         }
 
         [HttpGet("random")]
@@ -38,13 +41,15 @@ namespace Mensch.Id.API.Controllers
             return Ok(id);
         }
 
-        [Authorize]
-        [HttpGet("my")]
-        public async Task<IActionResult> MyId()
+
+        [HttpPost("{menschId}/challenge")]
+        public async Task<IActionResult> CreateChallenge([FromRoute] string menschId)
         {
-            var username = ControllerHelpers.GetUsername(httpContextAccessor);
-            var name = httpContextAccessor.HttpContext.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Name);
-            return Ok(name?.Value ?? username);
+            var challenge = await challengeCreator.Create(menschId);
+            if (!await personStore.ExistsAsync(menschId))
+                return Ok(challenge); // Return challenge, even if it isn't stored, to not give away which IDs are in use.
+            await challengeStore.StoreAsync(challenge);
+            return Ok(challenge);
         }
 
     }

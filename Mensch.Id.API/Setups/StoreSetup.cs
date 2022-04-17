@@ -35,6 +35,7 @@ namespace Mensch.Id.API.Setups
         {
             SetupTypeStores<Account>(services);
             services.AddScoped<IAccountStore, AccountStore>();
+            SetupTypeStores<MenschIdChallenge>(services);
             SetupTypeStores<MenschId>(services);
             services.AddScoped<IIdStore, IdStore>();
             SetupTypeStores<Person>(services);
