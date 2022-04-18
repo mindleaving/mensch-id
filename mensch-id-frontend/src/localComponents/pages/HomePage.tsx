@@ -29,11 +29,11 @@ export const HomePage = (props: HomePageProps) => {
         <>
             <h1 className='mt-3'>웃ID - Mensch.ID</h1>
             <p>
-                Create your global ID.
+                {resolveText("Home_ClaimYouGlobalID")}
             </p>
             {randomId
             ? <p>
-                Sneak peak for humans born today: <b>{randomId}</b>
+                {resolveText("Home_SneakPeak")}: <b>{randomId}</b>
             </p>
             : null}
             <h2>{resolveText("HowToUseMenschID_Title")}</h2>

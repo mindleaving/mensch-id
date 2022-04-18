@@ -12,7 +12,7 @@ export const ContactPage = (props: ContactPageProps) => {
                 <div className='d-flex'>
                     <div className='mx-3'>Jan Scholtyssek</div> 
                     | <div className='mx-3'>웃ID: 19891117-XMWT3</div> 
-                    | <div className='mx-3'><a href="mailto:mindleaving@gmail.com">Email</a></div>
+                    | <div className='mx-3'><a href="mailto:mindleaving@gmail.com">{resolveText("Email")}</a></div>
                 </div>
             </Alert>
         </>
