@@ -17,6 +17,8 @@ import { LoginRedirectPage } from './localComponents/pages/LoginRedirectPage';
 import { LinkAccountPage } from './localComponents/pages/LinkAccountPage';
 import { LinkAccountRedirectPage } from './localComponents/pages/LinkAccountRedirectPage';
 import { ContactPage } from './localComponents/pages/ContactPage';
+import { SendChallengePage } from './localComponents/pages/SendChallengePage';
+import { MyChallengesPage } from './localComponents/pages/MyChallengesPage';
 
 const accessTokenSessionStorageKey = "accesstoken";
 defaultGlobalizer.instance = new Globalizer("de", "en", [germanTranslation, englishTranslation]);
@@ -82,6 +84,8 @@ function App() {
             {isLoggedIn ? <Route path="/linkaccount" element={<LinkAccountPage />} /> : null}
             {isLoggedIn ? <Route path="/linkaccount/finish" element={<LinkAccountRedirectPage />} /> : null}
             {isLoggedIn ? <Route path="/me" element={<ProfilePage />} /> : null}
+            {isLoggedIn ? <Route path="/challenges" element={<MyChallengesPage />} /> : null}
+            <Route path="/challenge" element={<SendChallengePage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/terms-of-service" element={<TermsOfServicePage />} />
             <Route path="/contact" element={<ContactPage />} />

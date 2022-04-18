@@ -28,7 +28,8 @@ namespace Mensch.Id.API
                 new AccessControlSetup(),
                 new CorsSetup(),
                 new OpenApiSetup(),
-                new ViewModelSetup()
+                new ViewModelSetup(),
+                new MiscSetup()
             };
             foreach (var setup in setups)
             {

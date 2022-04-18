@@ -13,9 +13,6 @@ export const Layout = (props: PropsWithChildren<LayoutProps>) => {
 
 
     const navigate = useNavigate();
-    const linkToAnotherAccount = () => {
-        navigate("/linkaccount");
-    }
 
     return (
         <>
@@ -30,8 +27,11 @@ export const Layout = (props: PropsWithChildren<LayoutProps>) => {
                             ? <>
                                 <Nav.Link onClick={() => navigate("/me")}>{resolveText("Menu_MyProfile")}</Nav.Link>
                                 <NavDropdown title={resolveText("Menu_Actions")}>
-                                    <NavDropdown.Item onClick={linkToAnotherAccount}>
+                                    <NavDropdown.Item onClick={() => navigate("/linkaccount")}>
                                         {resolveText("Menu_LinkToAnotherAccount")}
+                                    </NavDropdown.Item>
+                                    <NavDropdown.Item onClick={() => navigate("/challenges")}>
+                                        {resolveText("Menu_MyChallenges")}
                                     </NavDropdown.Item>
                                 </NavDropdown>
                             </>

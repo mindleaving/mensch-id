@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Models;
 using Mensch.Id.API.Storage;
-using Mensch.Id.API.ViewModels;
 using Mensch.Id.API.Workflow;
 using Mensch.Id.API.Workflow.ViewModelBuilders;
 using Microsoft.AspNetCore.Authorization;

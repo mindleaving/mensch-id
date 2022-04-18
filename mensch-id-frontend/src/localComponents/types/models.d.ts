@@ -43,6 +43,13 @@ export namespace Models {
         isClaimed: boolean;
     }
 
+    interface MenschIdChallenge extends Models.IId {
+        menschId: string;
+        challengeShortId: string;
+        challengeSecret: string;
+        createdTimestamp: Date;
+    }
+
     interface Person extends Models.IId {
         anonymousId: string;
     }
