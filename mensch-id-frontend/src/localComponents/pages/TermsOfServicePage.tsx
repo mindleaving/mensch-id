@@ -8,7 +8,7 @@ export const TermsOfServicePage = (props: TermsOfServicePageProps) => {
     <>
         <h1>{resolveText("TermsOfService")}</h1>
         <p>
-            Don't be evil...
+            {resolveText("TermsOfReference_Section1")}
         </p>
     </>
     );

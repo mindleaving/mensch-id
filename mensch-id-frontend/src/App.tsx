@@ -21,7 +21,10 @@ import { SendChallengePage } from './localComponents/pages/SendChallengePage';
 import { MyChallengesPage } from './localComponents/pages/MyChallengesPage';
 
 const accessTokenSessionStorageKey = "accesstoken";
-defaultGlobalizer.instance = new Globalizer("de", "en", [germanTranslation, englishTranslation]);
+defaultGlobalizer.instance = new Globalizer(
+    navigator.languages.map(x => x.substring(0, 2)), 
+    "en", 
+    [germanTranslation, englishTranslation]);
 apiClient.instance = window.location.hostname.toLowerCase() === "localhost"
     ? new ApiClient(window.location.hostname, 44321)
     : new ApiClient(window.location.hostname, 443);

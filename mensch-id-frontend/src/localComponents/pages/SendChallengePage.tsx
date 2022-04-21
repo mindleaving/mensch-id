@@ -49,7 +49,7 @@ export const SendChallengePage = (props: SendChallengePageProps) => {
                             value={menschId}
                             onChange={(e:any) => setMenschId(e.target.value.toUpperCase())}
                             pattern="[0-9]{8}-[A-Z0-9]{5}"
-                            placeholder='Format: yyyyMMdd-XXXX'
+                            placeholder={resolveText("MenschIDFormatPlaceholder")}
                         />
                     </FormGroup>
                     <AsyncButton

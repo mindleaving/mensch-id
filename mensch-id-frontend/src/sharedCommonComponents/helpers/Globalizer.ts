@@ -9,12 +9,21 @@ export class Globalizer {
     translations: Translation[];
 
     constructor(
-        preferedLanguage: string,
+        preferedLanguages: readonly string[],
         defaultLanguage: string,
         translations: Translation[]) {
-            this.preferedLanguage = preferedLanguage;
+            const availableLanguages = translations.map(x => x.language);
+            this.preferedLanguage = this.selectPreferedLanguage(
+                preferedLanguages, 
+                availableLanguages,
+                defaultLanguage);
             this.defaultLanguage = defaultLanguage;
             this.translations = translations;
+    }
+
+    selectPreferedLanguage = (preferedLanguages: readonly string[], availableLanguages: string[], defaultLanguage: string): string => {
+        const matchingPreferedLanguage = preferedLanguages.find(language => availableLanguages.includes(language));
+        return matchingPreferedLanguage ?? defaultLanguage;
     }
 
     canResolveText = (resourceId: string) => {
