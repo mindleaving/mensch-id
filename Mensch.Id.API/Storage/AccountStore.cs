@@ -18,10 +18,10 @@ namespace Mensch.Id.API.Storage
         {
         }
 
-        public Task<LocalAccount> GetLocalByIdAsync(string username)
+        public Task<LocalAccount> GetLocalByEmailAsync(string email)
         {
             return collection.OfType<LocalAccount>()
-                .Find(x => x.Username == username)
+                .Find(x => x.Email == email)
                 .FirstOrDefaultAsync();
         }
 
@@ -51,13 +51,13 @@ namespace Mensch.Id.API.Storage
         }
 
         public async Task<StorageResult> ChangePasswordAsync(
-            string username,
+            string email,
             string passwordBase64)
         {
             var updateBuilder = Builders<LocalAccount>.Update;
             var result = await collection.OfType<LocalAccount>()
                 .UpdateOneAsync(
-                    x => x.Username == username,
+                    x => x.Email == email,
                     updateBuilder.Set(x => x.PasswordHash, passwordBase64));
             if(result.IsAcknowledged && result.MatchedCount == 1)
                 return StorageResult.Success();

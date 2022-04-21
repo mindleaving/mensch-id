@@ -14,7 +14,7 @@ namespace Mensch.Id.API.Models
     public class LocalAccount : Account
     {
         public override AccountType AccountType => AccountType.Local;
-        public string Username { get; set; }
+        public string Email { get; set; }
         public string Salt { get; set; }
         public string PasswordHash { get; set; }
     }

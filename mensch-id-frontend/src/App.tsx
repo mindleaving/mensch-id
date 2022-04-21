@@ -19,8 +19,8 @@ import { LinkAccountRedirectPage } from './localComponents/pages/LinkAccountRedi
 import { ContactPage } from './localComponents/pages/ContactPage';
 import { SendChallengePage } from './localComponents/pages/SendChallengePage';
 import { MyChallengesPage } from './localComponents/pages/MyChallengesPage';
+import { SessionStoreKeys } from './localComponents/types/frontendTypes.d';
 
-const accessTokenSessionStorageKey = "accesstoken";
 defaultGlobalizer.instance = new Globalizer(
     navigator.languages.map(x => x.substring(0, 2)), 
     "en", 
@@ -28,8 +28,8 @@ defaultGlobalizer.instance = new Globalizer(
 apiClient.instance = window.location.hostname.toLowerCase() === "localhost"
     ? new ApiClient(window.location.hostname, 44321)
     : new ApiClient(window.location.hostname, 443);
-if(!!sessionStorage.getItem(accessTokenSessionStorageKey)) {
-    apiClient.instance!.setAccessToken(sessionStorage.getItem(accessTokenSessionStorageKey)!);
+if(!!sessionStorage.getItem(SessionStoreKeys.AccessToken)) {
+    apiClient.instance!.setAccessToken(sessionStorage.getItem(SessionStoreKeys.AccessToken)!);
 }
 function App() {
     const navigate = useNavigate();
@@ -60,7 +60,7 @@ function App() {
                 return;
             }
             apiClient.instance!.setAccessToken(authenticationResult.accessToken!);
-            sessionStorage.setItem(accessTokenSessionStorageKey, authenticationResult.accessToken!);
+            sessionStorage.setItem(SessionStoreKeys.AccessToken, authenticationResult.accessToken!);
         }
         setIsLoggedIn(true);
         navigate("/me");
@@ -82,19 +82,20 @@ function App() {
     return (
     <Layout isLoggedIn={isLoggedIn} onLogOut={logOut}>
         <Routes>
-            {!isLoggedIn ? <Route path="/login" element={<LoginPage />} /> : null}
+            {!isLoggedIn ? <Route path="/login" element={<LoginPage onLoggedIn={onLoggedIn} />} /> : null}
             <Route path="/login/redirect" element={<LoginRedirectPage onLoggedIn={onLoggedIn} />} />
-            {isLoggedIn ? <Route path="/linkaccount" element={<LinkAccountPage />} /> : null}
+            {isLoggedIn ? <Route path="/linkaccount" element={<LinkAccountPage onLoggedIn={onLoggedIn} />} /> : null}
             {isLoggedIn ? <Route path="/linkaccount/finish" element={<LinkAccountRedirectPage />} /> : null}
             {isLoggedIn ? <Route path="/me" element={<ProfilePage />} /> : null}
             {isLoggedIn ? <Route path="/challenges" element={<MyChallengesPage />} /> : null}
+            
             <Route path="/challenge" element={<SendChallengePage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/terms-of-service" element={<TermsOfServicePage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/" element={<HomePage />} />
             <Route path="*" element={<NotFoundPage />} />
-        </Routes>        
+        </Routes>
     </Layout>
     );
 }

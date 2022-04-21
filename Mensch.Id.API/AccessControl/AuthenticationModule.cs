@@ -26,7 +26,7 @@ namespace Mensch.Id.API.AccessControl
             string password,
             bool changePasswordOnNextLogin = false)
         {
-            var matchingAccount = await accountStore.GetLocalByIdAsync(username);
+            var matchingAccount = await accountStore.GetLocalByEmailAsync(username);
             if (matchingAccount == null)
                 return false;
             var saltBytes = Convert.FromBase64String(matchingAccount.Salt);
@@ -41,7 +41,7 @@ namespace Mensch.Id.API.AccessControl
         {
             if(string.IsNullOrEmpty(loginInformation.Password))
                 return AuthenticationResult.Failed(AuthenticationErrorType.InvalidPassword);
-            var account = await accountStore.GetLocalByIdAsync(loginInformation.Username);
+            var account = await accountStore.GetLocalByEmailAsync(loginInformation.Email);
             if(account == null)
                 return AuthenticationResult.Failed(AuthenticationErrorType.UserNotFound);
             var salt = Convert.FromBase64String(account.Salt);

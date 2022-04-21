@@ -27,7 +27,7 @@ namespace Mensch.Id.API.Workflow
             var account = new LocalAccount
             {
                 Id = Guid.NewGuid().ToString(),
-                Username = username,
+                Email = username,
                 Salt = Convert.ToBase64String(salt),
                 PasswordHash = Convert.ToBase64String(passwordHash),
                 PreferedLanguage = preferedLanguage,

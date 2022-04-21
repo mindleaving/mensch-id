@@ -15,7 +15,7 @@ export const LinkAccountRedirectPage = (props: LinkAccountRedirectPageProps) => 
                 if(!apiClient.instance!.accessToken) {
                     throw new Error("No access token set");
                 }
-                await apiClient.instance!.post('api/accounts/link', {}, null);
+                await apiClient.instance!.post('api/accounts/link/external', {}, null);
                 NotificationManager.success(resolveText("LinkAccount_SuccessfullyLinked"));
             } catch {
                 NotificationManager.error(resolveText("LinkAccount_CouldNotLink"));

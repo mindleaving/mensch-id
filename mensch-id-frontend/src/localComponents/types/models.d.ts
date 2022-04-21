@@ -8,7 +8,7 @@ export namespace Models {
     }
 
     interface LocalAccount extends Models.Account {
-        username: string;
+        email: string;
         salt: string;
         passwordHash: string;
     }
@@ -34,8 +34,9 @@ export namespace Models {
     }
 
     interface LoginInformation {
-        username: string;
+        email: string;
         password: string;
+        registerIfNotExists?: boolean;
     }
 
     interface MenschId extends Models.IId {

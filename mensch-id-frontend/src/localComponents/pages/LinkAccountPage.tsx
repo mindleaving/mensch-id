@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Button, Col, Row } from 'react-bootstrap';
 import { apiClient } from '../../sharedCommonComponents/communication/ApiClient';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { buildLoadObjectFunc } from '../../sharedCommonComponents/helpers/LoadingHelpers';
@@ -7,13 +6,19 @@ import { LoginProvider } from '../types/enums.d';
 import { ViewModels } from '../types/viewModels';
 import { NotificationManager } from 'react-notifications';
 import { Models } from '../types/models';
+import { LoginForm } from '../components/LoginForm';
+import { useNavigate } from 'react-router-dom';
+import { sendPostRequest } from '../../sharedCommonComponents/helpers/StoringHelpers';
 
-interface LinkAccountPageProps {}
+interface LinkAccountPageProps {
+    onLoggedIn: (authenticationResult: Models.AuthenticationResult) => void;
+}
 
 export const LinkAccountPage = (props: LinkAccountPageProps) => {
 
     const [ isLoadingLoginProviders, setIsLoadingLoginProviders ] = useState<boolean>(true);
     const [ existingLoginProviders, setExistingLoginProviders ] = useState<LoginProvider[]>([]);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const loadExistingLoginProviders = buildLoadObjectFunc<ViewModels.ProfileViewModel>(
@@ -25,7 +30,7 @@ export const LinkAccountPage = (props: LinkAccountPageProps) => {
         loadExistingLoginProviders();
     }, []);
 
-    const linkAccount = async (loginProvider: LoginProvider) => {
+    const linkExternalAccount = async (loginProvider: LoginProvider) => {
         if(!apiClient.instance!.accessToken) {
             try {
                 const response = await apiClient.instance!.get('api/accounts/accesstoken', {});
@@ -45,59 +50,32 @@ export const LinkAccountPage = (props: LinkAccountPageProps) => {
         window.location.href = actionUrl;
     }
 
+    const linkLocalAccount = async (loginInformation: Models.LoginInformation) => {
+        await sendPostRequest(
+            'api/accounts/link/local',
+            resolveText("LinkAccount_CouldNotLink"),
+            loginInformation,
+            () => {
+                NotificationManager.success(resolveText("LinkAccount_SuccessfullyLinked"));
+                navigate("/me");
+            }
+        );
+    }
+
     if(isLoadingLoginProviders) {
         return (<h3>{resolveText("Loading...")}</h3>);
     }
+
+    const availableExternalProviders = Object.values(LoginProvider).filter(x => !existingLoginProviders.includes(x));
     return (
         <>
             <h1>{resolveText("LinkAnotherAccount")}</h1>
-            <Row>
-                {!existingLoginProviders.includes(LoginProvider.Google)
-                ? <Col xs="auto">
-                    <Button
-                        size="lg"
-                        variant="outline-dark"
-                        onClick={() => linkAccount(LoginProvider.Google)}
-                    >
-                        <i className='fa fa-google' />
-                    </Button>
-                </Col>
-                : null}
-                {!existingLoginProviders.includes(LoginProvider.Twitter)
-                ? <Col xs="auto">
-                    <Button
-                        size="lg"
-                        variant="outline-dark"
-                        onClick={() => linkAccount(LoginProvider.Twitter)}
-                    >
-                        <i className='fa fa-twitter' />
-                    </Button>
-                </Col>
-                : null}
-                {!existingLoginProviders.includes(LoginProvider.Microsoft)
-                ? <Col xs="auto">
-                    <Button
-                        size="lg"
-                        variant="outline-dark"
-                        onClick={() => linkAccount(LoginProvider.Microsoft)}
-                    >
-                        <i className='fa fa-windows' />
-                    </Button>
-                </Col>
-                : null}
-                {!existingLoginProviders.includes(LoginProvider.Facebook)
-                ? <Col xs="auto">
-                    <Button
-                        size="lg"
-                        variant="outline-dark"
-                        onClick={() => linkAccount(LoginProvider.Facebook)}
-                    >
-                        <i className='fa fa-facebook' />
-                    </Button>
-                </Col>
-                : null}
-                <Col />
-            </Row>
+            <LoginForm
+                availableExternalProviders={availableExternalProviders}
+                onExternalProviderSelected={linkExternalAccount}
+                onLocalLogin={() => {}}
+                onLocalLoggingIn={linkLocalAccount}
+            />
         </>
     );
 

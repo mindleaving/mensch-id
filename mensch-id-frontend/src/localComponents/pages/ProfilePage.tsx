@@ -42,7 +42,7 @@ export const ProfilePage = (props: ProfilePageProps) => {
             }
         };
         loadProfileData();
-    }, []);
+    }, [ isNewProfile ]);
 
 
     if(isLoading) {
@@ -91,7 +91,7 @@ export const ProfilePage = (props: ProfilePageProps) => {
                         <div className='me-3'>
                             {resolveText("Accounts")}: 
                         </div>
-                        {profileData.loginProviders.map(loginProvider => {
+                        {profileData.loginProviders.map((loginProvider,loginIndex) => {
                             const iconLookup: { [key: string]: string } = {
                                 [LoginProvider.Google]: 'google',
                                 [LoginProvider.Twitter]: 'twitter',
@@ -100,7 +100,7 @@ export const ProfilePage = (props: ProfilePageProps) => {
                             };
                             const iconId = iconLookup[loginProvider] ?? 'user';
                             return (<Button
-                                    key={loginProvider}
+                                    key={loginIndex}
                                     variant="outline-success"
                                     disabled
                                     className='mx-2 login-provider-symbol'

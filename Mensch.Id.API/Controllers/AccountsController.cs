@@ -64,10 +64,10 @@ namespace Mensch.Id.API.Controllers
             var authenticationResult = await authenticationModule.AuthenticateLocalAsync(loginInformation);
             if (authenticationResult.IsAuthenticated)
                 return Ok(authenticationResult);
-            if (authenticationResult.Error == AuthenticationErrorType.UserNotFound)
+            if (authenticationResult.Error == AuthenticationErrorType.UserNotFound && loginInformation.RegisterIfNotExists)
             {
                 await profileCreator.CreateLocal(
-                    loginInformation.Username,
+                    loginInformation.Email,
                     loginInformation.Password);
                 authenticationResult = await authenticationModule.AuthenticateLocalAsync(loginInformation);
                 if (authenticationResult.IsAuthenticated)
@@ -133,8 +133,8 @@ namespace Mensch.Id.API.Controllers
 
 
         [Authorize]
-        [HttpPost("link")]
-        public async Task<IActionResult> LinkToAnotherAccount()
+        [HttpPost("link/external")]
+        public async Task<IActionResult> LinkToExternalAccount()
         {
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
             var jwtClaims = claims.Where(x => x.Issuer == JwtSecurityTokenBuilder.Issuer).ToList();
@@ -155,9 +155,54 @@ namespace Mensch.Id.API.Controllers
             if (account.PersonId == personId)
                 return Ok();
             if (account.PersonId != null)
-                return StatusCode((int)HttpStatusCode.Forbidden, "You current account is alread linked to another profile");
+            {
+                await httpContextAccessor.HttpContext.SignOutAsync();
+                return StatusCode((int)HttpStatusCode.Forbidden, 
+                    "You current account is already linked to another profile. "
+                    + "You have been logged out to avoid confusion about which account you are logged into.");
+            }
             account.PersonId = personId;
             await store.StoreAsync(account);
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpPost("link/local")]
+        public async Task<IActionResult> LinkToLocalAccount(LoginInformation loginInformation)
+        {
+            if (loginInformation == null)
+                return BadRequest("No login information provided");
+            var authenticationResult = await authenticationModule.AuthenticateLocalAsync(loginInformation);
+            if (!authenticationResult.IsAuthenticated)
+            {
+                if (authenticationResult.Error == AuthenticationErrorType.UserNotFound && loginInformation.RegisterIfNotExists)
+                {
+                    await profileCreator.CreateLocal(
+                        loginInformation.Email,
+                        loginInformation.Password);
+                    authenticationResult = await authenticationModule.AuthenticateLocalAsync(loginInformation);
+                    if (!authenticationResult.IsAuthenticated)
+                        return StatusCode((int)HttpStatusCode.Unauthorized, authenticationResult);
+                }
+                else
+                {
+                    return StatusCode((int)HttpStatusCode.Unauthorized, authenticationResult);
+                }
+            }
+
+            var accountToBeLinked = await store.GetLocalByEmailAsync(loginInformation.Email);
+            if(accountToBeLinked.PersonId != null)
+                return StatusCode((int)HttpStatusCode.Forbidden, "That account is already linked to another profile");
+
+            var claims = ControllerHelpers.GetClaims(httpContextAccessor);
+            var currentAccount = await store.GetFromClaimsAsync(claims);
+            if (currentAccount == null)
+                return StatusCode((int)HttpStatusCode.InternalServerError, "Couldn't find current account information");
+            if (currentAccount.PersonId == null)
+                return StatusCode((int)HttpStatusCode.ServiceUnavailable, "Your current account doesn't have a profile yet");
+
+            accountToBeLinked.PersonId = currentAccount.PersonId;
+            await store.StoreAsync(accountToBeLinked);
             return Ok();
         }
 
