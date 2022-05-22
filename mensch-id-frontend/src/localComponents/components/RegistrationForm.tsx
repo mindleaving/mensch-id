@@ -1,5 +1,5 @@
 import React, { FormEvent, useState } from 'react';
-import { Form, FormCheck, FormGroup } from 'react-bootstrap';
+import { Alert, Col, Form, FormCheck, FormGroup, FormLabel, Row } from 'react-bootstrap';
 import { AsyncButton } from '../../sharedCommonComponents/components/AsyncButton';
 import { RowFormGroup } from '../../sharedCommonComponents/components/RowFormGroup';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
@@ -7,59 +7,123 @@ import { sendPostRequest } from '../../sharedCommonComponents/helpers/StoringHel
 import { Models } from '../types/models';
 import { NotificationManager } from 'react-notifications';
 import { Center } from '../../sharedCommonComponents/components/Center';
+import { AccountType } from '../types/enums.d';
+import { confirmAlert } from 'react-confirm-alert';
+import { useNavigate } from 'react-router-dom';
 
 interface RegistrationFormProps {
-    onRegistering?: (loginInformation: Models.LoginInformation) => Promise<void>;
     onLoggedIn: (authenticationResult: Models.AuthenticationResult) => void;
 }
 
 export const RegistrationForm = (props: RegistrationFormProps) => {
 
+    const [ selectedAccountType, setSelectedAccountType ] = useState<AccountType>(AccountType.Local);
     const [ email, setEmail ] = useState<string>('');
     const [ password, setPassword ] = useState<string>('');
     const [ passwordRepeat, setPasswordRepeat ] = useState<string>('');
     const [ acceptPrivacy, setAcceptPrivacy ] = useState<boolean>(false);
     const [ acceptTermsOfService, setAcceptTermsOfService ] = useState<boolean>(false);
     const [ isSubmitting, setIsSubmitting ] = useState<boolean>(false);
+    const [ hasBeenRegistered, setHasBeenRegistered ] = useState<boolean>(false);
+    const navigate = useNavigate();
 
-    const register = async (e?: FormEvent) => {
+    const validate = async (e?: FormEvent) => {
         e?.preventDefault();
         if(password !== passwordRepeat) {
             NotificationManager.error(resolveText("Register_PasswordsDoNotMatch"));
             return;
         }
-        setIsSubmitting(true);
-        const loginInformation: Models.LoginInformation = {
-            email: email,
-            password: password,
-            registerIfNotExists: true
-        };
-        if(props.onRegistering) {
-            await props.onRegistering(loginInformation);
-            setIsSubmitting(false);
+        if(selectedAccountType === AccountType.LocalAnonymous) {
+            confirmAlert({
+                title: resolveText("Register_ConfirmAnonymous_Title"),
+                message: resolveText("Register_ConfirmAnonymous_Message"),
+                closeOnClickOutside: false,
+                closeOnEscape: true,
+                buttons: [
+                    {
+                        label: resolveText("Register_ConfirmAnonymous_No"),
+                        onClick: () => {}
+                    },
+                    {
+                        label: resolveText("Register_ConfirmAnonymous_Yes"),
+                        onClick: register
+                    }
+                ]
+            });
+        } else {
+            register();
         }
-        else {
-            await sendPostRequest(
-                'api/accounts/login',
-                resolveText("Register_CouldNotRegister"),
-                loginInformation,
-                async response => {
+    }
+    const register = async () => {
+        setIsSubmitting(true);
+        const registrationInformation: Models.RegistrationInformation = {
+            accountType: selectedAccountType,
+            email: selectedAccountType === AccountType.Local ? email : undefined,
+            password: password
+        };
+        await sendPostRequest(
+            'api/accounts/register-local',
+            resolveText("Register_CouldNotRegister"),
+            registrationInformation,
+            async response => {
+                setHasBeenRegistered(true);
+                if(registrationInformation.accountType === AccountType.LocalAnonymous) {
                     const authenticationResult = await response.json() as Models.AuthenticationResult;
                     props.onLoggedIn(authenticationResult);
-                },
-                () => setIsSubmitting(false)
-            );
-        }
+                } else {
+                    navigate("/");
+                }
+            },
+            () => setIsSubmitting(false)
+        );
+    }
+
+    if(hasBeenRegistered) {
+        const text = selectedAccountType === AccountType.Local ? resolveText("Register_HasBeenRegistered_Local")
+            : selectedAccountType === AccountType.LocalAnonymous ? resolveText("Register_HasBeenRegistered_LocalAnonymous")
+            : resolveText("Register_HasBeenRegistered_LocalAnonymous");
+        return (
+            <Alert variant='success'>
+                {text}
+            </Alert>
+        );
     }
 
     return (
-        <Form onSubmit={register}>
-            <RowFormGroup required
+        <Form onSubmit={validate}>
+            <FormGroup>
+                <FormLabel>{resolveText("LocalAccountType")}</FormLabel>
+                {[ AccountType.Local, AccountType.LocalAnonymous ].map(accountType => (
+                    <Alert key={accountType}>
+                        <Row>
+                            <Col xs="auto">
+                                <FormCheck
+                                    type="radio"
+                                    id={accountType}
+                                    checked={selectedAccountType === accountType}
+                                    onChange={(e:any) => {
+                                        if(e.target.checked) {
+                                            setSelectedAccountType(accountType);
+                                        }
+                                    }}
+                                />
+                            </Col>
+                            <Col>
+                                <strong>{resolveText(`AccountType_${accountType}`)}</strong>
+                                <div>{resolveText(`AccountType_${accountType}_Description`)}</div>
+                            </Col>
+                        </Row>
+                    </Alert>
+                ))}
+            </FormGroup>
+            {selectedAccountType === AccountType.Local
+            ? <RowFormGroup required
                 label={resolveText("Email")}
                 value={email}
                 onChange={setEmail}
                 isValid={email.includes('@')}
             />
+            : null}
             <RowFormGroup required
                 type='password'
                 label={resolveText("Password")}
@@ -72,12 +136,14 @@ export const RegistrationForm = (props: RegistrationFormProps) => {
                 value={passwordRepeat}
                 onChange={setPasswordRepeat}
             />
-            <FormGroup>
+            {selectedAccountType === AccountType.Local
+            ? <FormGroup>
                 <FormCheck required
                     label={resolveText("Register_AcceptPrivacy")}
                     onChange={(e:any) => setAcceptPrivacy(e.target.checked)}
                 />
             </FormGroup>
+            : null}
             <FormGroup>
                 <FormCheck required
                     label={resolveText("Register_AcceptTermsOfService")}
@@ -92,7 +158,7 @@ export const RegistrationForm = (props: RegistrationFormProps) => {
                     activeText={"Register"}
                     executingText={"Submitting..."}
                     isExecuting={isSubmitting}
-                    disabled={!acceptPrivacy || !acceptTermsOfService}
+                    disabled={(selectedAccountType === AccountType.Local && !acceptPrivacy) || !acceptTermsOfService}
                 />
             </Center>
         </Form>

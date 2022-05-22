@@ -18,7 +18,7 @@ export const RowFormGroup = (props: PropsWithChildren<RowFormGroupProps>) => {
 
     return (
         <FormGroup as={Row} className='my-1'>
-            <FormLabel column>{props.label}</FormLabel>
+            <FormLabel column xs={4}>{props.label}</FormLabel>
             <Col>
               <FormControl
                     required={props.required}

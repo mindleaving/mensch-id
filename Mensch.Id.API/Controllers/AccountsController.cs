@@ -10,10 +10,8 @@ using Mensch.Id.API.Models;
 using Mensch.Id.API.Storage;
 using Mensch.Id.API.Workflow;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Facebook;
 using Microsoft.AspNetCore.Authentication.Google;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
 using Microsoft.AspNetCore.Authentication.Twitter;
 using Microsoft.AspNetCore.Authorization;
@@ -27,21 +25,26 @@ namespace Mensch.Id.API.Controllers
     [Route("api/[controller]")]
     public class AccountsController : ControllerBase
     {
+        private const int MinimumPasswordLength = 8;
+
         private readonly IAccountStore store;
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly IAuthenticationModule authenticationModule;
         private readonly IProfileCreator profileCreator;
+        private readonly IEmailSender emailSender;
 
         public AccountsController(
             IAccountStore store,
             IHttpContextAccessor httpContextAccessor,
             IAuthenticationModule authenticationModule,
-            IProfileCreator profileCreator)
+            IProfileCreator profileCreator,
+            IEmailSender emailSender)
         {
             this.store = store;
             this.httpContextAccessor = httpContextAccessor;
             this.authenticationModule = authenticationModule;
             this.profileCreator = profileCreator;
+            this.emailSender = emailSender;
         }
 
         [Authorize]
@@ -54,6 +57,168 @@ namespace Mensch.Id.API.Controllers
             return StatusCode((int)HttpStatusCode.Unauthorized, "0");
         }
 
+        [AllowAnonymous]
+        [HttpPost("resend-verification-email")]
+        public async Task<IActionResult> ResendVerificationEmail(
+            [FromBody] ResendVerificationBody body)
+        {
+            var account = await store.GetLocalByEmailAsync(body.Email);
+            if (account == null)
+                return NotFound();
+            if (account.IsEmailVerified)
+                return BadRequest("Email is already verified");
+            account.EmailVerificationToken = EmailVerification.GenerateToken(account.Salt, out var unencryptedToken);
+            await store.StoreAsync(account);
+            var verificationEmail = new VerificationEmail
+            {
+                AccountId = account.Id,
+                Email = account.Email,
+                VerificationToken = unencryptedToken,
+                Subject = GetTranslatedVerificationEmailSubject(account.PreferedLanguage),
+                Message = GetTranslatedVerificationEmailMessage(account.PreferedLanguage)
+            };
+            await emailSender.SendVerificationEmail(verificationEmail);
+            return Ok();
+        }
+
+
+        [AllowAnonymous]
+        [HttpGet("{accountId}/verify-email")]
+        public async Task<IActionResult> VerifyEmail(
+            [FromRoute] string accountId,
+            [FromQuery] string token)
+        {
+            var account = await store.GetByIdAsync(accountId);
+            if (account == null)
+                return NotFound();
+            if (account is not LocalAccount localAccount)
+                return NotFound();
+            if (localAccount.IsEmailVerified)
+                return Ok();
+            if (!EmailVerification.Verify(token, localAccount))
+                return StatusCode((int)HttpStatusCode.Forbidden, "Invalid verification token");
+            localAccount.IsEmailVerified = true;
+            localAccount.EmailVerificationToken = null;
+            await store.StoreAsync(localAccount);
+            return Ok();
+        }
+
+        [AllowAnonymous]
+        [HttpPost("request-password-reset")]
+        public async Task<IActionResult> RequestPasswordResetEmail(
+            [FromBody] ResetPasswordRequest body)
+        {
+            var account = await store.GetLocalByEmailAsync(body.Email);
+            if (account == null)
+                return NotFound();
+            account.PasswordResetToken = PasswordReset.GenerateToken(account.Salt, out var unencryptedToken);
+            await store.StoreAsync(account);
+            var passwordResetEmail = new PasswordResetEmail
+            {
+                Email = account.Email,
+                AccountId = account.Id,
+                Subject = GetTranslatedPasswordResetSubject(account.PreferedLanguage),
+                Message = GetTranslatedPasswordResetMessage(account.PreferedLanguage),
+                ResetToken = unencryptedToken
+            };
+            await emailSender.SendPasswordResetEmail(passwordResetEmail);
+            return Ok();
+        }
+
+        [AllowAnonymous]
+        [HttpPost("{accountId}/reset-password")]
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword(
+            [FromRoute] string accountId,
+            [FromBody] ResetPasswordBody body)
+        {
+            var account = await store.GetByIdAsync(body.AccountId);
+            if (account == null)
+                return NotFound();
+            if (account is not LocalAccount localAccount)
+                return NotFound();
+            if (!PasswordReset.Verify(body.ResetToken, localAccount))
+                return StatusCode((int)HttpStatusCode.Forbidden, "Invalid reset token");
+            if(body.Password.Length < MinimumPasswordLength)
+                return BadRequest($"Password too short. Must be at least {MinimumPasswordLength} characters long.");
+            if (!await authenticationModule.ChangePasswordAsync(localAccount.Email, body.Password))
+                return StatusCode((int)HttpStatusCode.InternalServerError, "An unknown error occured");
+            var authenticationResult = await authenticationModule.AuthenticateLocalAsync(new LoginInformation(localAccount.Email, body.Password));
+            return Ok(authenticationResult);
+        }
+
+        private string GetTranslatedPasswordResetSubject(
+            Language language)
+        {
+            return Translate(PasswordResetEmailContent.Subject, language);
+        }
+
+        private string GetTranslatedPasswordResetMessage(
+            Language language)
+        {
+            return Translate(PasswordResetEmailContent.Message, language);
+        }
+
+        [Authorize]
+        [AllowAnonymous]
+        [HttpPost("register-local")]
+        public async Task<IActionResult> RegisterLocalAccount(
+            [FromBody] RegistrationInformation body)
+        {
+            if (body == null)
+                return BadRequest("Missing body");
+            if (body.Password.Length < MinimumPasswordLength)
+                return BadRequest($"Password too short. Must be at least {MinimumPasswordLength} characters long.");
+            var claims = ControllerHelpers.GetClaims(httpContextAccessor);
+            string personId = null;
+            if (claims.Any())
+            {
+                personId = ClaimsHelpers.GetPersonId(claims);
+                if (personId == null)
+                {
+                    var currentAccount = await store.GetFromClaimsAsync(claims);
+                    personId = currentAccount?.PersonId;
+                }
+            }
+            switch (body.AccountType)
+            {
+                case AccountType.Local:
+                {
+                    if (!EmailValidator.IsValidEmailFormat(body.Email))
+                        return BadRequest("Invalid email format");
+                    var account = await profileCreator.CreateLocal(
+                        body.Email,
+                        body.Password,
+                        body.PreferedLanguage ?? Language.en,
+                        personId);
+                    account.EmailVerificationToken = EmailVerification.GenerateToken(account.Salt, out var unencryptedToken);
+                    var verificationEmail = new VerificationEmail
+                    {
+                        AccountId = account.Id,
+                        Email = account.Email,
+                        Subject = GetTranslatedVerificationEmailSubject(account.PreferedLanguage),
+                        Message = GetTranslatedVerificationEmailMessage(account.PreferedLanguage),
+                        VerificationToken = unencryptedToken
+                    };
+                    await emailSender.SendVerificationEmail(verificationEmail);
+                    return Ok();
+                }
+                case AccountType.LocalAnonymous:
+                {
+                    var localAnonymousAccount = await profileCreator.CreateLocalAnonymous(
+                        body.Password,
+                        body.PreferedLanguage ?? Language.en,
+                        personId);
+                    var authenticationResult = authenticationModule.BuildSecurityTokenForUser(localAnonymousAccount);
+                    return Ok(authenticationResult);
+                }
+                case AccountType.External:
+                    return BadRequest($"Invalid account type '{body.AccountType}'");
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
 
         [AllowAnonymous]
         [HttpPost("login")]
@@ -64,16 +229,28 @@ namespace Mensch.Id.API.Controllers
             var authenticationResult = await authenticationModule.AuthenticateLocalAsync(loginInformation);
             if (authenticationResult.IsAuthenticated)
                 return Ok(authenticationResult);
-            if (authenticationResult.Error == AuthenticationErrorType.UserNotFound && loginInformation.RegisterIfNotExists)
-            {
-                await profileCreator.CreateLocal(
-                    loginInformation.Email,
-                    loginInformation.Password);
-                authenticationResult = await authenticationModule.AuthenticateLocalAsync(loginInformation);
-                if (authenticationResult.IsAuthenticated)
-                    return Ok(authenticationResult);
-            }
-            return Unauthorized();
+            return StatusCode((int)HttpStatusCode.Unauthorized, authenticationResult);
+        }
+
+        private string GetTranslatedVerificationEmailSubject(
+            Language language)
+        {
+            return Translate(VerificationEmailContent.Subject, language);
+        }
+
+        private string GetTranslatedVerificationEmailMessage(
+            Language language)
+        {
+            return Translate(VerificationEmailContent.Message, language);
+        }
+
+        private string Translate(
+            IReadOnlyDictionary<Language, string> resourceDictionary,
+            Language language)
+        {
+            if (resourceDictionary.ContainsKey(language))
+                return resourceDictionary[language];
+            return resourceDictionary[Language.en];
         }
 
         [Authorize]
@@ -138,7 +315,7 @@ namespace Mensch.Id.API.Controllers
         {
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
             var jwtClaims = claims.Where(x => x.Issuer == JwtSecurityTokenBuilder.Issuer).ToList();
-            var personId = jwtClaims.FirstOrDefault(x => x.Type == JwtSecurityTokenBuilder.PersonIdClaimName)?.Value;
+            var personId = ClaimsHelpers.GetPersonId(claims);
             if (personId == null)
             {
                 var jwtAccountId = jwtClaims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
@@ -166,6 +343,8 @@ namespace Mensch.Id.API.Controllers
             return Ok();
         }
 
+        
+
         [Authorize]
         [HttpPost("link/local")]
         public async Task<IActionResult> LinkToLocalAccount(LoginInformation loginInformation)
@@ -174,23 +353,9 @@ namespace Mensch.Id.API.Controllers
                 return BadRequest("No login information provided");
             var authenticationResult = await authenticationModule.AuthenticateLocalAsync(loginInformation);
             if (!authenticationResult.IsAuthenticated)
-            {
-                if (authenticationResult.Error == AuthenticationErrorType.UserNotFound && loginInformation.RegisterIfNotExists)
-                {
-                    await profileCreator.CreateLocal(
-                        loginInformation.Email,
-                        loginInformation.Password);
-                    authenticationResult = await authenticationModule.AuthenticateLocalAsync(loginInformation);
-                    if (!authenticationResult.IsAuthenticated)
-                        return StatusCode((int)HttpStatusCode.Unauthorized, authenticationResult);
-                }
-                else
-                {
-                    return StatusCode((int)HttpStatusCode.Unauthorized, authenticationResult);
-                }
-            }
+                return StatusCode((int)HttpStatusCode.Unauthorized, authenticationResult);
 
-            var accountToBeLinked = await store.GetLocalByEmailAsync(loginInformation.Email);
+            var accountToBeLinked = await store.GetLocalByEmailOrMenschIdAsync(loginInformation.EmailOrMenschId);
             if(accountToBeLinked.PersonId != null)
                 return StatusCode((int)HttpStatusCode.Forbidden, "That account is already linked to another profile");
 

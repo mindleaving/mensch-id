@@ -3,6 +3,7 @@
     public enum AccountType
     {
         Local,
+        LocalAnonymous,
         External
     }
 }

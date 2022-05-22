@@ -25,7 +25,7 @@ namespace Mensch.Id.API.AccessControl
         public const string Audience = "mensch.ID";
         public const string Issuer = "mensch.ID";
 
-        public string BuildForLocalUser(LocalAccount account)
+        public string BuildForLocalUser(LocalAnonymousAccount account)
         {
             var claims = new List<Claim>
             {

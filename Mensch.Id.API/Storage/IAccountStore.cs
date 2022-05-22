@@ -8,6 +8,8 @@ namespace Mensch.Id.API.Storage
     public interface IAccountStore : IStore<Account>
     {
         Task<LocalAccount> GetLocalByEmailAsync(string email);
+        Task<LocalAnonymousAccount> GetLocalByMenschId(string menschId);
+        Task<LocalAnonymousAccount> GetLocalByEmailOrMenschIdAsync(string emailOrMenschId);
         Task<ExternalAccount> GetExternalByIdAsync(LoginProvider loginProvider, string externalId);
         Task<Account> GetFromClaimsAsync(List<Claim> claims);
         Task<StorageResult> ChangePasswordAsync(string email, string passwordBase64);

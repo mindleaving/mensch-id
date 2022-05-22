@@ -9,6 +9,7 @@ namespace Mensch.Id.API.Models
         Ok = 0,
         UserNotFound = 1,
         InvalidPassword = 2,
-        AuthenticationMethodNotAvailable = 3
+        AuthenticationMethodNotAvailable = 3,
+        EmailNotVerified = 4
     }
 }

@@ -16,22 +16,44 @@ namespace Mensch.Id.API.Workflow
             this.accountStore = accountStore;
         }
 
+        public async Task<LocalAnonymousAccount> CreateLocalAnonymous(
+            string password,
+            Language preferedLanguage = Language.en,
+            string menschId = null)
+        {
+            var accountId = Guid.NewGuid().ToString();
+            var salt = PasswordHasher.CreateSalt();
+            var passwordHash = PasswordHasher.Hash(password, salt);
+            var account = new LocalAnonymousAccount
+            {
+                Id = accountId,
+                Salt = Convert.ToBase64String(salt),
+                PasswordHash = Convert.ToBase64String(passwordHash),
+                PreferedLanguage = preferedLanguage,
+                PersonId = menschId
+            };
+            await accountStore.StoreAsync(account);
+            return account;
+        }
+
         public async Task<LocalAccount> CreateLocal(
             string username,
             string password,
             Language preferedLanguage = Language.en,
-            string personId = null)
+            string menschId = null)
         {
+            var accountId = Guid.NewGuid().ToString();
             var salt = PasswordHasher.CreateSalt();
-            var passwordHash = PasswordHasher.Hash(password, salt, PasswordHasher.RecommendedHashLength);
+            var passwordHash = PasswordHasher.Hash(password, salt);
             var account = new LocalAccount
             {
-                Id = Guid.NewGuid().ToString(),
+                Id = accountId,
                 Email = username,
+                IsEmailVerified = false,
                 Salt = Convert.ToBase64String(salt),
                 PasswordHash = Convert.ToBase64String(passwordHash),
                 PreferedLanguage = preferedLanguage,
-                PersonId = personId
+                PersonId = menschId
             };
             await accountStore.StoreAsync(account);
             return account;
@@ -41,7 +63,7 @@ namespace Mensch.Id.API.Workflow
             LoginProvider loginProvider,
             string externalId,
             Language preferedLanguage = Language.en,
-            string personId = null)
+            string menschId = null)
         {
             var account = new ExternalAccount
             {
@@ -49,7 +71,7 @@ namespace Mensch.Id.API.Workflow
                 LoginProvider = loginProvider,
                 ExternalId = externalId,
                 PreferedLanguage = preferedLanguage,
-                PersonId = personId
+                PersonId = menschId
             };
             await accountStore.StoreAsync(account);
             return account;

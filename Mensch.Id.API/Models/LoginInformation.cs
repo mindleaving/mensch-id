@@ -1,25 +1,21 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
-using TypescriptGenerator.Attributes;
 
 namespace Mensch.Id.API.Models
 {
     public class LoginInformation
     {
         [JsonConstructor]
-        public LoginInformation(string email, string password)
+        public LoginInformation(string emailOrMenschId, string password)
         {
-            Email = email;
+            EmailOrMenschId = emailOrMenschId;
             Password = password;
         }
 
         [Required]
-        public string Email { get; set; }
+        public string EmailOrMenschId { get; set; }
 
         [Required]
         public string Password { get; set; }
-
-        [TypescriptIsOptional]
-        public bool RegisterIfNotExists { get; set; }
     }
 }

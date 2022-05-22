@@ -9,6 +9,12 @@ namespace Mensch.Id.API.Helpers
 {
     public static class ClaimsHelpers
     {
+        public static string GetPersonId(List<Claim> claims)
+        {
+            var jwtClaims = claims.Where(x => x.Issuer == JwtSecurityTokenBuilder.Issuer).ToList();
+            return jwtClaims.FirstOrDefault(x => x.Type == JwtSecurityTokenBuilder.PersonIdClaimName)?.Value;
+        }
+
         public static LoginProvider GetLoginProvider(List<Claim> claims)
         {
             var issuer = claims.Select(x => x.Issuer).Distinct().Single();

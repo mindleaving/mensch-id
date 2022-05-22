@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Mensch.Id.API.AccessControl;
 using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Models;
+using Mensch.Id.API.Workflow;
 using MongoDB.Driver;
 
 namespace Mensch.Id.API.Storage
@@ -23,6 +24,32 @@ namespace Mensch.Id.API.Storage
             return collection.OfType<LocalAccount>()
                 .Find(x => x.Email == email)
                 .FirstOrDefaultAsync();
+        }
+
+        public async Task<LocalAnonymousAccount> GetLocalByMenschId(
+            string menschId)
+        {
+            return await collection
+                .OfType<LocalAnonymousAccount>()
+                .Find(x => x.PersonId == menschId)
+                .FirstOrDefaultAsync()
+                ?? await collection
+                .OfType<LocalAccount>()
+                .Find(x => x.PersonId == menschId)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<LocalAnonymousAccount> GetLocalByEmailOrMenschIdAsync(string emailOrMenschId)
+        {
+            if (MenschIdGenerator.ValidateId(emailOrMenschId))
+            {
+                return await GetLocalByMenschId(emailOrMenschId);
+            }
+            if (EmailValidator.IsValidEmailFormat(emailOrMenschId))
+            {
+                return await GetLocalByEmailAsync(emailOrMenschId);
+            }
+            return null;
         }
 
         public Task<ExternalAccount> GetExternalByIdAsync(
@@ -58,7 +85,10 @@ namespace Mensch.Id.API.Storage
             var result = await collection.OfType<LocalAccount>()
                 .UpdateOneAsync(
                     x => x.Email == email,
-                    updateBuilder.Set(x => x.PasswordHash, passwordBase64));
+                    updateBuilder.Combine(
+                        updateBuilder.Set(x => x.PasswordHash, passwordBase64),
+                        updateBuilder.Set(x => x.PasswordResetToken, null)
+                    ));
             if(result.IsAcknowledged && result.MatchedCount == 1)
                 return StorageResult.Success();
             return StorageResult.Error(StoreErrorType.NoMatch);

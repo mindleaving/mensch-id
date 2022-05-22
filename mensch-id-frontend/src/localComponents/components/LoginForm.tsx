@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { Row, Col, ButtonGroup, Button } from 'react-bootstrap';
+import { useState } from 'react';
+import { ButtonGroup, Button, Card } from 'react-bootstrap';
+import { Center } from '../../sharedCommonComponents/components/Center';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { LoginProvider } from '../types/enums.d';
 import { Models } from '../types/models';
@@ -31,35 +32,36 @@ export const LoginForm = (props: LoginFormProps) => {
                 onProviderSelected={props.onExternalProviderSelected}
             />
             <hr className='my-3' />
-            <Row className='mb-3'>
-                <Col />
-                <Col xs="auto">
-                    <ButtonGroup>
-                        <Button 
-                            variant={localLoginMode === LocalLoginMode.Register ? 'primary' : 'outline-dark'}
-                            onClick={() => setLocalLoginMode(LocalLoginMode.Register)}
-                        >
-                            {resolveText("Register")}
-                        </Button>
-                        <Button 
-                            variant={localLoginMode === LocalLoginMode.Login ? 'primary' : 'outline-dark'}
-                            onClick={() => setLocalLoginMode(LocalLoginMode.Login)}
-                        >
-                            {resolveText("Login")}
-                        </Button>
-                    </ButtonGroup>
-                </Col>
-                <Col />
-            </Row>
-            {localLoginMode === LocalLoginMode.Login
-            ? <LocalLoginForm
-                onLoggingIn={props.onLocalLoggingIn}
-                onLoggedIn={props.onLocalLogin}
-            />
-            : <RegistrationForm
-                onRegistering={props.onLocalLoggingIn}
-                onLoggedIn={props.onLocalLogin}
-            />}
+            <Center className="mb-3">
+                <ButtonGroup>
+                    <Button 
+                        variant={localLoginMode === LocalLoginMode.Register ? 'primary' : 'outline-dark'}
+                        onClick={() => setLocalLoginMode(LocalLoginMode.Register)}
+                    >
+                        {resolveText("Register")}
+                    </Button>
+                    <Button 
+                        variant={localLoginMode === LocalLoginMode.Login ? 'primary' : 'outline-dark'}
+                        onClick={() => setLocalLoginMode(LocalLoginMode.Login)}
+                    >
+                        {resolveText("Login")}
+                    </Button>
+                </ButtonGroup>
+            </Center>
+            <Center>
+                <Card style={{ width: '600px'}}>
+                    <Card.Body>
+                        {localLoginMode === LocalLoginMode.Login
+                        ? <LocalLoginForm
+                            onSubmit={props.onLocalLoggingIn}
+                            onLoggedIn={props.onLocalLogin}
+                        />
+                        : <RegistrationForm
+                            onLoggedIn={props.onLocalLogin}
+                        />}
+                    </Card.Body>
+                </Card>
+            </Center>
         </>
     );
 

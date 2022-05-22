@@ -1,3 +1,4 @@
+import '../styles/profile.css';
 import { useEffect, useState } from 'react';
 import { Badge, Button, Col, Row } from 'react-bootstrap';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
@@ -6,16 +7,15 @@ import { apiClient } from '../../sharedCommonComponents/communication/ApiClient'
 import { ApiError } from '../../sharedCommonComponents/communication/ApiError';
 import { NewProfileForm } from '../components/NewProfileForm';
 import { CopyButton } from '../../sharedCommonComponents/components/CopyButton';
-import { ViewModels } from '../types/viewModels';
 import { LoginProvider } from '../types/enums.d';
-
-import '../styles/profile.css';
+import { useContext } from 'react';
+import UserContext from '../contexts/UserContext';
 
 interface ProfilePageProps {}
 
 export const ProfilePage = (props: ProfilePageProps) => {
 
-    const [ profileData, setProfileData ] = useState<ViewModels.ProfileViewModel>();
+    const { profileData, setProfileData } = useContext(UserContext);
     const [ isNewProfile, setIsNewProfile ] = useState<boolean>(false);
     const [ isLoading, setIsLoading ] = useState<boolean>(true);
 

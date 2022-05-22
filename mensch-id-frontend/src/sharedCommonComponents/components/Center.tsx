@@ -1,14 +1,16 @@
 import React, { PropsWithChildren } from 'react';
 import { Row, Col } from 'react-bootstrap';
 
-interface CenterProps {}
+interface CenterProps {
+    className?: string,
+}
 
 export const Center = (props: PropsWithChildren<CenterProps>) => {
 
     return (
-        <Row>
+        <Row className={props.className}>
             <Col />
-            <Col>{props.children}</Col>
+            <Col xs="auto">{props.children}</Col>
             <Col />
         </Row>
     );

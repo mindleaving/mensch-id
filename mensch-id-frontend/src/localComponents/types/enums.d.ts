@@ -1,12 +1,14 @@
 export enum AccountType {
     Local = "Local",
+    LocalAnonymous = "LocalAnonymous",
     External = "External"
 }
 export enum AuthenticationErrorType {
     Ok = "Ok",
     UserNotFound = "UserNotFound",
     InvalidPassword = "InvalidPassword",
-    AuthenticationMethodNotAvailable = "AuthenticationMethodNotAvailable"
+    AuthenticationMethodNotAvailable = "AuthenticationMethodNotAvailable",
+    EmailNotVerified = "EmailNotVerified"
 }
 export enum Language {
     ab = "ab",

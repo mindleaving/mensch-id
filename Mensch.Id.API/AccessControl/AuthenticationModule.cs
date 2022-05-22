@@ -22,18 +22,18 @@ namespace Mensch.Id.API.AccessControl
         }
 
         public async Task<bool> ChangePasswordAsync(
-            string username,
+            string email,
             string password,
             bool changePasswordOnNextLogin = false)
         {
-            var matchingAccount = await accountStore.GetLocalByEmailAsync(username);
+            var matchingAccount = await accountStore.GetLocalByEmailAsync(email);
             if (matchingAccount == null)
                 return false;
             var saltBytes = Convert.FromBase64String(matchingAccount.Salt);
-            var passwordHash = PasswordHasher.Hash(password, saltBytes, PasswordHasher.RecommendedHashLength);
+            var passwordHash = PasswordHasher.Hash(password, saltBytes);
             var passwordBase64 = Convert.ToBase64String(passwordHash);
 
-            var result = await accountStore.ChangePasswordAsync(username, passwordBase64);
+            var result = await accountStore.ChangePasswordAsync(email, passwordBase64);
             return result.IsSuccess;
         }
 
@@ -41,16 +41,17 @@ namespace Mensch.Id.API.AccessControl
         {
             if(string.IsNullOrEmpty(loginInformation.Password))
                 return AuthenticationResult.Failed(AuthenticationErrorType.InvalidPassword);
-            var account = await accountStore.GetLocalByEmailAsync(loginInformation.Email);
+            var account = await accountStore.GetLocalByEmailOrMenschIdAsync(loginInformation.EmailOrMenschId);
             if(account == null)
                 return AuthenticationResult.Failed(AuthenticationErrorType.UserNotFound);
-            var salt = Convert.FromBase64String(account.Salt);
-            var storedPasswordHash = Convert.FromBase64String(account.PasswordHash);
-            var providedPasswordHash = PasswordHasher.Hash(loginInformation.Password, salt, 8 * storedPasswordHash.Length);
-            var isMatch = HashComparer.Compare(providedPasswordHash, storedPasswordHash);
+            var isMatch = HashComparer.Compare(loginInformation.Password, account.PasswordHash, account.Salt);
             if (!isMatch)
                 return AuthenticationResult.Failed(AuthenticationErrorType.InvalidPassword);
-
+            if (account is LocalAccount localAccount)
+            {
+                if(!localAccount.IsEmailVerified)
+                    return AuthenticationResult.Failed(AuthenticationErrorType.EmailNotVerified);
+            }
             return BuildSecurityTokenForUser(account);
         }
 
@@ -68,7 +69,7 @@ namespace Mensch.Id.API.AccessControl
             return AuthenticationResult.Success(token);
         }
 
-        private AuthenticationResult BuildSecurityTokenForUser(LocalAccount account)
+        public AuthenticationResult BuildSecurityTokenForUser(LocalAnonymousAccount account)
         {
             var token = securityTokenBuilder.BuildForLocalUser(account);
             return AuthenticationResult.Success(token);
