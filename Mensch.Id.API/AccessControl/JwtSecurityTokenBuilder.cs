@@ -7,7 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Mensch.Id.API.AccessControl
 {
-    internal class JwtSecurityTokenBuilder : ISecurityTokenBuilder
+    public class JwtSecurityTokenBuilder : ISecurityTokenBuilder
     {
         private readonly SymmetricSecurityKey privateKey;
         private readonly TimeSpan expirationTime;
