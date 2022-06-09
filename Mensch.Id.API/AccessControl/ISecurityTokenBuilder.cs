@@ -4,7 +4,7 @@ namespace Mensch.Id.API.AccessControl
 {
     public interface ISecurityTokenBuilder
     {
-        string BuildForLocalUser(LocalAccount account);
+        string BuildForLocalUser(LocalAnonymousAccount account);
         string BuildForExternalLoginProvider(ExternalAccount account);
     }
 }

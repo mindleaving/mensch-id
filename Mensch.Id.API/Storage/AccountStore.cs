@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Mensch.Id.API.AccessControl;
 using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Models;
+using Mensch.Id.API.Workflow;
 using MongoDB.Driver;
 
 namespace Mensch.Id.API.Storage
@@ -18,11 +19,37 @@ namespace Mensch.Id.API.Storage
         {
         }
 
-        public Task<LocalAccount> GetLocalByIdAsync(string username)
+        public Task<LocalAccount> GetLocalByEmailAsync(string email)
         {
             return collection.OfType<LocalAccount>()
-                .Find(x => x.Username == username)
+                .Find(x => x.Email == email)
                 .FirstOrDefaultAsync();
+        }
+
+        public async Task<LocalAnonymousAccount> GetLocalByMenschId(
+            string menschId)
+        {
+            return await collection
+                .OfType<LocalAnonymousAccount>()
+                .Find(x => x.PersonId == menschId)
+                .FirstOrDefaultAsync()
+                ?? await collection
+                .OfType<LocalAccount>()
+                .Find(x => x.PersonId == menschId)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<LocalAnonymousAccount> GetLocalByEmailOrMenschIdAsync(string emailOrMenschId)
+        {
+            if (MenschIdGenerator.ValidateId(emailOrMenschId))
+            {
+                return await GetLocalByMenschId(emailOrMenschId);
+            }
+            if (EmailValidator.IsValidEmailFormat(emailOrMenschId))
+            {
+                return await GetLocalByEmailAsync(emailOrMenschId);
+            }
+            return null;
         }
 
         public Task<ExternalAccount> GetExternalByIdAsync(
@@ -51,14 +78,17 @@ namespace Mensch.Id.API.Storage
         }
 
         public async Task<StorageResult> ChangePasswordAsync(
-            string username,
+            string email,
             string passwordBase64)
         {
             var updateBuilder = Builders<LocalAccount>.Update;
             var result = await collection.OfType<LocalAccount>()
                 .UpdateOneAsync(
-                    x => x.Username == username,
-                    updateBuilder.Set(x => x.PasswordHash, passwordBase64));
+                    x => x.Email == email,
+                    updateBuilder.Combine(
+                        updateBuilder.Set(x => x.PasswordHash, passwordBase64),
+                        updateBuilder.Set(x => x.PasswordResetToken, null)
+                    ));
             if(result.IsAcknowledged && result.MatchedCount == 1)
                 return StorageResult.Success();
             return StorageResult.Error(StoreErrorType.NoMatch);

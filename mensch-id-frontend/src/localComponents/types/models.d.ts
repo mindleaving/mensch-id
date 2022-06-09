@@ -7,10 +7,16 @@ export namespace Models {
         preferedLanguage: Enums.Language;
     }
 
-    interface LocalAccount extends Models.Account {
-        username: string;
+    interface LocalAnonymousAccount extends Models.Account {
         salt: string;
         passwordHash: string;
+        passwordResetToken: string;
+    }
+
+    interface LocalAccount extends Models.LocalAnonymousAccount {
+        email: string;
+        emailVerificationToken: string;
+        isEmailVerified: boolean;
     }
 
     interface ExternalAccount extends Models.Account {
@@ -34,7 +40,7 @@ export namespace Models {
     }
 
     interface LoginInformation {
-        username: string;
+        emailOrMenschId: string;
         password: string;
     }
 
@@ -52,6 +58,27 @@ export namespace Models {
 
     interface Person extends Models.IId {
         anonymousId: string;
+    }
+
+    interface RegistrationInformation {
+        accountType: Enums.AccountType;
+        email?: string;
+        password: string;
+        preferedLanguage?: Enums.Language | null;
+    }
+
+    interface ResendVerificationBody {
+        email: string;
+    }
+
+    interface ResetPasswordBody {
+        accountId: string;
+        resetToken: string;
+        password: string;
+    }
+
+    interface ResetPasswordRequest {
+        email: string;
     }
 
     interface Verification extends Models.IId {

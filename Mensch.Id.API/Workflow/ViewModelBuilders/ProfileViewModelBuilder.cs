@@ -26,8 +26,7 @@ namespace Mensch.Id.API.Workflow.ViewModelBuilders
             var loginProviders = accounts.OfType<ExternalAccount>()
                 .Select(x => x.LoginProvider)
                 .ToList();
-            if(accounts.OfType<LocalAccount>().Any())
-                loginProviders.Add(LoginProvider.LocalJwt);
+            loginProviders.AddRange(accounts.OfType<LocalAccount>().Select(_ => LoginProvider.LocalJwt));
             var verifications = await verificationStore.SearchAsync(x => x.PersonId == model.Id);
             return new ProfileViewModel
             {
