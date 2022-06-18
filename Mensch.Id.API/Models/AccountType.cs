@@ -2,8 +2,9 @@
 {
     public enum AccountType
     {
-        Local,
-        LocalAnonymous,
-        External
+        Local = 1,
+        LocalAnonymous = 2,
+        External = 3,
+        Assigner = 4
     }
 }
