@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Security.Cryptography;
 
 namespace Mensch.Id.API.Workflow
 {
@@ -14,9 +15,7 @@ namespace Mensch.Id.API.Workflow
 
         private char GetRandomCharacter()
         {
-            // Ideally a crypto-grade random number generate should be used,
-            // but this is a temporary password that is printed on paper anyway
-            return AllowedCharacters[StaticRandom.Rng.Next(AllowedCharacters.Length)];
+            return AllowedCharacters[RandomNumberGenerator.GetInt32(AllowedCharacters.Length)];
         }
     }
 }

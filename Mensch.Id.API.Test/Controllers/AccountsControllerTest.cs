@@ -22,6 +22,7 @@ namespace Mensch.Id.API.Test.Controllers
         private Mock<IAuthenticationModule> authenticationModule;
         private ProfileCreator profileCreator;
         private Mock<IEmailSender> emailSender;
+        private Mock<IExternalLoginObscurer> externalLoginObscurer;
 
         [SetUp]
         public void Setup()
@@ -29,7 +30,8 @@ namespace Mensch.Id.API.Test.Controllers
             accountStore = new Mock<IAccountStore>();
             httpContextAccessor = new Mock<IHttpContextAccessor>();
             authenticationModule = new Mock<IAuthenticationModule>();
-            profileCreator = new ProfileCreator(accountStore.Object);
+            externalLoginObscurer = new Mock<IExternalLoginObscurer>();
+            profileCreator = new ProfileCreator(accountStore.Object, externalLoginObscurer.Object);
             emailSender = new Mock<IEmailSender>();
             controller = new AccountsController(
                 accountStore.Object,

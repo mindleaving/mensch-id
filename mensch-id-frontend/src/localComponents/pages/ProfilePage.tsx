@@ -10,6 +10,7 @@ import { CopyButton } from '../../sharedCommonComponents/components/CopyButton';
 import { LoginProvider } from '../types/enums.d';
 import { useContext } from 'react';
 import UserContext from '../contexts/UserContext';
+import { useNavigate } from 'react-router-dom';
 
 interface ProfilePageProps {}
 
@@ -18,6 +19,7 @@ export const ProfilePage = (props: ProfilePageProps) => {
     const { profileData, setProfileData } = useContext(UserContext);
     const [ isNewProfile, setIsNewProfile ] = useState<boolean>(false);
     const [ isLoading, setIsLoading ] = useState<boolean>(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
         setIsLoading(true);
@@ -135,6 +137,10 @@ export const ProfilePage = (props: ProfilePageProps) => {
                     />
                 </Col>
             </Row>
+            <hr />
+            <div className='text-center'>
+                <Button size="lg" onClick={() => navigate("/challenges")}>{resolveText("MyChallenges")}</Button>
+            </div>
         </>
     );
 }

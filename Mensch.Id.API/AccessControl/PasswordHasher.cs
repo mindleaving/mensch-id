@@ -27,9 +27,7 @@ namespace Mensch.Id.API.AccessControl
         {
             if (hashBitLength % 8 != 0)
                 throw new ArgumentOutOfRangeException($"{nameof(hashBitLength)} must be a multiple of 8");
-            var salt = new byte[hashBitLength / 8];
-            using var rng = new RNGCryptoServiceProvider();
-            rng.GetBytes(salt);
+            var salt = RandomNumberGenerator.GetBytes(hashBitLength / 8);
             return salt;
         }
     }

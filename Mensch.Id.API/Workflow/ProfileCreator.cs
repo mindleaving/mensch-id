@@ -9,11 +9,14 @@ namespace Mensch.Id.API.Workflow
     public class ProfileCreator : IProfileCreator
     {
         private readonly IStore<Account> accountStore;
+        private readonly IExternalLoginObscurer externalLoginObscurer;
 
         public ProfileCreator(
-            IStore<Account> accountStore)
+            IStore<Account> accountStore,
+            IExternalLoginObscurer externalLoginObscurer)
         {
             this.accountStore = accountStore;
+            this.externalLoginObscurer = externalLoginObscurer;
         }
 
         public async Task<LocalAnonymousAccount> CreateLocalAnonymous(
@@ -69,7 +72,7 @@ namespace Mensch.Id.API.Workflow
             {
                 Id = Guid.NewGuid().ToString(),
                 LoginProvider = loginProvider,
-                ExternalId = externalId,
+                ExternalId = externalLoginObscurer.Obscure(externalId),
                 PreferedLanguage = preferedLanguage,
                 PersonId = menschId
             };
