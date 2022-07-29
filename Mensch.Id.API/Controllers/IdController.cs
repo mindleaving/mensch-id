@@ -26,18 +26,10 @@ namespace Mensch.Id.API.Controllers
         }
 
         [HttpGet("random")]
-        public async Task<IActionResult> GetRandomId([FromQuery] DateTime birthdate)
+        public IActionResult GetRandomId([FromQuery] DateTime birthdate)
         {
             var idGenerator = new MenschIdGenerator();
             var id = idGenerator.Generate(birthdate);
-            return Ok(id);
-        }
-
-        [HttpGet("anonymous/random")]
-        public async Task<IActionResult> GetAnonymousRandomId()
-        {
-            var idGenerator = new MenschIdGenerator();
-            var id = idGenerator.GenerateAnonymous();
             return Ok(id);
         }
 

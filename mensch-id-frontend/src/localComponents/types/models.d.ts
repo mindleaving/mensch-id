@@ -57,7 +57,7 @@ export namespace Models {
     }
 
     interface Person extends Models.IId {
-        anonymousId: string;
+        
     }
 
     interface RegistrationInformation {

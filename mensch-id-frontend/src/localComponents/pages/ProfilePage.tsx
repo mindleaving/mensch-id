@@ -126,17 +126,6 @@ export const ProfilePage = (props: ProfilePageProps) => {
                     />
                 </Col>
             </Row>
-            <Row className="mt-2">
-                <Col xs={3}>{resolveText("Person_AnonymousID")}</Col>
-                <Col xs={4} lg={2}>
-                    <strong>{profileData.anonymousId}</strong>
-                </Col>
-                <Col>
-                    <CopyButton
-                        value={profileData.anonymousId}
-                    />
-                </Col>
-            </Row>
             <hr />
             <div className='text-center'>
                 <Button size="lg" onClick={() => navigate("/challenges")}>{resolveText("MyChallenges")}</Button>

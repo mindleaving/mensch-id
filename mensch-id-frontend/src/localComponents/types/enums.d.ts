@@ -204,8 +204,7 @@ export enum LoginProvider {
     LocalJwt = "LocalJwt"
 }
 export enum IdType {
-    MenschID = "MenschID",
-    Anonymous = "Anonymous"
+    MenschID = "MenschID"
 }
 export enum OrderDirection {
     Ascending = "Ascending",
