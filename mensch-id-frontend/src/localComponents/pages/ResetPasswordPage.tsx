@@ -26,7 +26,7 @@ export const ResetPasswordPage = (props: ResetPasswordPageProps) => {
             return;
         }
         if(password !== passwordRepeat) {
-            NotificationManager.danger(resolveText("ResetPassword_PasswordsDoNotMatch"));
+            NotificationManager.error(resolveText("ResetPassword_PasswordsDoNotMatch"));
             return;
         }
         setIsSubmitting(true);
@@ -43,6 +43,7 @@ export const ResetPasswordPage = (props: ResetPasswordPageProps) => {
                 const authenticationResult = await response.json() as Models.AuthenticationResult;
                 if(authenticationResult.isAuthenticated) {
                     NotificationManager.success(resolveText("ResetPassword_SuccessfullyChanged"));
+                    NotificationManager.info(resolveText("Redirecting..."));
                     props.onLoggedIn(authenticationResult);
                 }
             },

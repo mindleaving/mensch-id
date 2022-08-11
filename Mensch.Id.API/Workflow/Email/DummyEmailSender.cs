@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace Mensch.Id.API.Workflow
+namespace Mensch.Id.API.Workflow.Email
 {
     public class DummyEmailSender : IEmailSender
     {

@@ -6,6 +6,7 @@ using Mensch.Id.API.Controllers;
 using Mensch.Id.API.Models;
 using Mensch.Id.API.Storage;
 using Mensch.Id.API.Workflow;
+using Mensch.Id.API.Workflow.Email;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;

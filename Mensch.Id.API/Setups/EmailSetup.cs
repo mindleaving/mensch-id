@@ -1,4 +1,4 @@
-﻿using Mensch.Id.API.Workflow;
+﻿using Mensch.Id.API.Workflow.Email;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,7 +10,9 @@ namespace Mensch.Id.API.Setups
             IServiceCollection services,
             IConfiguration configuration)
         {
-            services.AddSingleton<IEmailSender, DummyEmailSender>();
+            services.Configure<EmailSettings>(configuration.GetSection(EmailSettings.SettingsName));
+            services.AddSingleton<EmailComposer>();
+            services.AddSingleton<IEmailSender, EmailSender>();
         }
     }
 }
