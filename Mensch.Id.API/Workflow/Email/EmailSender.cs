@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using MailKit.Net.Smtp;
+using MailKit.Security;
 using Microsoft.Extensions.Options;
 using MimeKit;
 
@@ -40,7 +41,7 @@ namespace Mensch.Id.API.Workflow.Email
             {
                 Console.WriteLine("Sending email...");
                 using var mailClient = new SmtpClient();
-                await mailClient.ConnectAsync(settings.SmtpServerName, settings.SmtpServerPort, false);
+                await mailClient.ConnectAsync(settings.SmtpServerName, settings.SmtpServerPort, SecureSocketOptions.None);
                 await mailClient.SendAsync(message);
                 await mailClient.DisconnectAsync(true);
                 Console.WriteLine("Email sent!");
