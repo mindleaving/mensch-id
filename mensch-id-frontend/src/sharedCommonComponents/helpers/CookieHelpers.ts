@@ -1,7 +1,7 @@
 export const getCookieValue = (name: string) => {
     const matchingEntry = document.cookie
         .split(';')
-        .find(entry => entry.trimStart().startsWith(`${name}=`));
+        .find(entry => entry.trimLeft().startsWith(`${name}=`));
     if(!matchingEntry) {
         return undefined;
     }

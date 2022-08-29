@@ -24,6 +24,10 @@ export namespace Models {
         externalId: string;
     }
 
+    interface AssignerAccount extends Models.Account {
+        
+    }
+
     interface AuthenticationResult {
         isAuthenticated: boolean;
         accessToken?: string;

@@ -8,6 +8,7 @@ interface StoreButtonProps {
     onClick?: () => void;
     isStoring: boolean;
     disabled?: boolean;
+    className?: string;
 }
 
 export const StoreButton = (props: StoreButtonProps) => {
@@ -17,7 +18,7 @@ export const StoreButton = (props: StoreButtonProps) => {
             type={props.type}
             form={props.form}
             onClick={props.onClick}
-            className="m-2"
+            className={props.className ?? 'm-2'}
             activeText={resolveText('Store')}
             executingText={resolveText('Storing...')}
             isExecuting={props.isStoring}

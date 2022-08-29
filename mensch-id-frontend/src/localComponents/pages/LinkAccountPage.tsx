@@ -25,6 +25,7 @@ export const LinkAccountPage = (props: LinkAccountPageProps) => {
             'api/profiles/me', {},
             resolveText("LinkAccount_CouldNotLoadExistingLoginProviders"),
             vm => setExistingLoginProviders(vm.loginProviders),
+            undefined,
             () => setIsLoadingLoginProviders(false)
         );
         loadExistingLoginProviders();
@@ -70,6 +71,7 @@ export const LinkAccountPage = (props: LinkAccountPageProps) => {
     return (
         <>
             <h1>{resolveText("LinkAnotherAccount")}</h1>
+            <div className='mt-3' />
             <LoginForm
                 availableExternalProviders={availableExternalProviders}
                 onExternalProviderSelected={linkExternalAccount}

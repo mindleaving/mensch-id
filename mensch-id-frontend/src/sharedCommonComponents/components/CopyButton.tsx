@@ -4,24 +4,26 @@ import { resolveText } from '../helpers/Globalizer';
 
 interface CopyButtonProps {
     value: string;
-    size?: 'sm' | 'lg',
+    size?: "sm" | "lg";
     className?: string;
 }
 
 export const CopyButton = (props: CopyButtonProps) => {
 
     const [ isCopied, setIsCopied ] = useState<boolean>(false);
-    const copy = () => {
+
+    const copyToClipboard = () => {
         navigator.clipboard.writeText(props.value);
         setIsCopied(true);
         setTimeout(() => setIsCopied(false), 5000);
     }
+
     return (
         <Button
+            size={props.size}
             className={props.className}
             variant={isCopied ? 'success' : 'primary'}
-            size={props.size ?? 'sm'}
-            onClick={copy}
+            onClick={copyToClipboard}
         >
             {isCopied ? resolveText("Copied!") : resolveText("Copy")}
         </Button>

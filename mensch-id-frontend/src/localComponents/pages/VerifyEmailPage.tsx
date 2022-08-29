@@ -4,8 +4,8 @@ import { apiClient } from '../../sharedCommonComponents/communication/ApiClient'
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { Alert, Button } from 'react-bootstrap';
 import { ResendVerificationEmailForm } from './ResendVerificationEmailForm';
-import { HorizontalLineWithText } from '../components/HorizontalLineWithText';
 import { NotificationManager } from 'react-notifications';
+import { HorizontalLineWithText } from '../../sharedCommonComponents/components/HorizontalLineWithText';
 
 interface VerifyEmailPageProps {}
 

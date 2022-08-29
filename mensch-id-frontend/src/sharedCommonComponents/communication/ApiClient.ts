@@ -1,9 +1,11 @@
+import { resolveText } from '../helpers/Globalizer';
 import { buildUrl } from '../helpers/UrlBuilder';
 import { ApiError } from './ApiError';
 
 export interface ApiClientOptions {
     handleError?: boolean;
     contentType?: string;
+    includeCredentials?: boolean;
     stringifyBody?: boolean;
 }
 export class ApiClient {
@@ -19,8 +21,21 @@ export class ApiClient {
         this.defaultOptions = { 
             handleError: true, 
             contentType: 'application/json', 
+            includeCredentials: false,
             stringifyBody: true
         };
+    }
+
+    isLoggedIn = async () => {
+        const response = await this.get('api/logins/is-logged-in', {}, { handleError: false });
+        if(response.ok) {
+            return true;
+        }
+        if(response.status === 401) {
+            return false;
+        }
+        this._handleError(response);
+        return false;
     }
 
     get = async (path: string, params: { [key: string]: string }, options?: ApiClientOptions) => {
@@ -72,7 +87,7 @@ export class ApiClient {
             method: method,
             body: jsonBody,
             headers: headers,
-            credentials: 'include'
+            credentials: effectiveOptions.includeCredentials ? 'include' : 'omit'
         });
         if(effectiveOptions.handleError && !response.ok) {
             return await this._handleError(response);
@@ -91,7 +106,21 @@ export class ApiClient {
     }
 
     _handleError = async (response: Response) => {
-        throw new ApiError(response.status, await response.text());
+        const errorText = await response.text();
+        if(errorText.startsWith('{') && errorText.endsWith('}')) {
+            const errorObject = JSON.parse(errorText);
+            const errorsToken = errorObject['errors'];
+            if(errorsToken) {
+                const errors = Array.isArray(errorsToken)
+                    ? (errorsToken as any[]).flatMap(x => x) as string[]
+                    : [ errorText ];
+                throw new ApiError(response.status, errors.join(', '));
+            }
+        }
+        const translatedErrorText = errorText.startsWith("resolveText:")
+            ? resolveText(errorText.replace("resolveText:", ""))
+            : errorText;
+        throw new ApiError(response.status, translatedErrorText);
     }
 }
 

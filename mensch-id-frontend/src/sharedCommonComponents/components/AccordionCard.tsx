@@ -6,7 +6,9 @@ interface AccordionCardProps extends PropsWithChildren<{}> {
     eventKey: string;
     title: ReactNode;
     collapsedTitle?: ReactNode;
+    id?: string;
     className?: string;
+    headerClassName?: string;
     bg?: string;
     standalone?: boolean;
     isOpenAtCreate?: boolean;
@@ -18,10 +20,11 @@ export const AccordionCard = (props: AccordionCardProps) => {
 
     const accordionItem = (
         <Accordion.Item
+            id={props.id}
             className={props.className}
             eventKey={props.eventKey}
         >
-            <Accordion.Button bsPrefix={`accordion-button` + (props.bg ? ` bg-${props.bg}` : '')}>
+            <Accordion.Button className={props.headerClassName} bsPrefix={`accordion-button` + (props.bg ? ` bg-${props.bg}` : '')}>
                 {isCollapsed && props.collapsedTitle ? props.collapsedTitle : props.title}
             </Accordion.Button>
             <Accordion.Body>

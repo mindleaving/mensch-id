@@ -6,7 +6,7 @@ export const buildAndStoreObject = async <T extends unknown>(
     successText: string,
     errorText: string,
     itemBuilder: () => T,
-    onSuccess?: () => void,
+    onSuccess?: (item: T) => void,
     onFinally?: () => void
 ) => {
     try {
@@ -14,7 +14,7 @@ export const buildAndStoreObject = async <T extends unknown>(
         await apiClient.instance!.put(apiPath, {}, item);
         NotificationManager.success(successText);
         if(onSuccess) {
-            onSuccess();
+            onSuccess(item);
         }
     } catch(error: any) {
         NotificationManager.error(error.message, errorText);
@@ -30,6 +30,7 @@ export const sendPutRequest = async <T extends unknown>(
     errorText: string,
     item: T,
     handleResponse?: (response: Response) => void,
+    onFailure?: () => void,
     onFinally?: () => void
 ) => {
     try {
@@ -38,6 +39,9 @@ export const sendPutRequest = async <T extends unknown>(
             handleResponse(response);
         }
     } catch(error: any) {
+        if(onFailure) {
+            onFailure();
+        }
         NotificationManager.error(error.message, errorText);
     } finally {
         if(onFinally) {
@@ -50,15 +54,19 @@ export const sendPostRequest = async (
     apiPath: string,
     errorText: string,
     body: any,
-    handleResponse?: (response: Response) => void,
+    onSuccess?: (response: Response) => void,
+    onFailure?: () => void,
     onFinally?: () => void
 ) => {
     try {
         const response = await apiClient.instance!.post(apiPath, {}, body);
-        if(handleResponse) {
-            handleResponse(response);
+        if(onSuccess) {
+            onSuccess(response);
         }
     } catch(error: any) {
+        if(onFailure) {
+            onFailure();
+        }
         NotificationManager.error(error.message, errorText);
     } finally {
         if(onFinally) {

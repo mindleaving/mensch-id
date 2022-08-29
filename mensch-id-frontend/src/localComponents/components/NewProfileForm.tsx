@@ -72,6 +72,7 @@ export const NewProfileForm = (props: NewProfileFormProps) => {
             resolveText('Profile_CouldNotStore'),
             profileData,
             () => props.onProfileCreated(profileData),
+            undefined,
             () => setIsSubmitting(false)
         );
     }

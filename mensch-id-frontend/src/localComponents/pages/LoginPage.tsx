@@ -18,10 +18,14 @@ export const LoginPage = (props: LoginPageProps) => {
     }
 
     return (
+    <>
+        <h1>{resolveText("Login")}</h1>
+        <div className='mt-3' />
         <LoginForm
             availableExternalProviders={Object.values(LoginProvider).filter(x => ![LoginProvider.Unknown, LoginProvider.LocalJwt].includes(x))}
             onExternalProviderSelected={externalLogin}
             onLocalLogin={props.onLoggedIn}
         />
+    </>
     )
 }

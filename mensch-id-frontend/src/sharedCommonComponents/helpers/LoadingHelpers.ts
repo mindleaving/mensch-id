@@ -6,14 +6,16 @@ export const buildLoadObjectFunc = <T extends unknown>(
     params: { [key:string]: string } = {},
     errorText: string,
     onItemLoaded: (item: T) => void,
+    onFailure?: () => void,
     onFinally?: () => void) => {
-    return async () => await loadObject(apiPath, params, errorText, onItemLoaded, onFinally);
+    return async () => await loadObject(apiPath, params, errorText, onItemLoaded, onFailure, onFinally);
 }
 export const loadObject = async <T extends unknown>(
     apiPath: string,
     params: { [key:string]: string } = {},
     errorText: string,
     onItemLoaded: (item: T) => void,
+    onFailure?: () => void,
     onFinally?: () => void
 ) => {
     try {
@@ -21,6 +23,9 @@ export const loadObject = async <T extends unknown>(
         const item = await response.json() as T;
         onItemLoaded(item);
     } catch (error: any) {
+        if(onFailure) {
+            onFailure();
+        }
         NotificationManager.error(error.message, errorText);
     } finally {
         if(onFinally) {

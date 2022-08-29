@@ -74,6 +74,7 @@ export const RegistrationForm = (props: RegistrationFormProps) => {
                     navigate("/");
                 }
             },
+            undefined,
             () => setIsSubmitting(false)
         );
     }

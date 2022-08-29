@@ -33,9 +33,11 @@ defaultGlobalizer.instance = new Globalizer(
 apiClient.instance = window.location.hostname.toLowerCase() === "localhost"
     ? new ApiClient(window.location.hostname, 44321)
     : new ApiClient(window.location.hostname, 443);
+apiClient.instance!.defaultOptions.includeCredentials = true;
 if(!!sessionStorage.getItem(SessionStoreKeys.AccessToken)) {
     apiClient.instance!.setAccessToken(sessionStorage.getItem(SessionStoreKeys.AccessToken)!);
 }
+
 function App() {
     const navigate = useNavigate();
     const [ isLoggedIn, setIsLoggedIn ] = useState<boolean>(false);

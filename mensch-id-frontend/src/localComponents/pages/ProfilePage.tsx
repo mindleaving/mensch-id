@@ -1,6 +1,6 @@
 import '../styles/profile.css';
 import { useEffect, useState } from 'react';
-import { Badge, Button, Col, Row } from 'react-bootstrap';
+import { Alert, Badge, Button, Col, Row } from 'react-bootstrap';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { NotificationManager } from 'react-notifications';
 import { apiClient } from '../../sharedCommonComponents/communication/ApiClient';
@@ -115,15 +115,24 @@ export const ProfilePage = (props: ProfilePageProps) => {
                     </div>
                 </Col>
             </Row>
-            <Row className="mt-2">
-                <Col xs={3}>{resolveText("Person_ID")}</Col>
-                <Col xs={4} lg={2}>
-                    <strong>{profileData.id}</strong>
-                </Col>
+            <Row className='mt-3'>
                 <Col>
-                    <CopyButton
-                        value={profileData.id}
-                    />
+                    <Alert
+                        variant="success"
+                    >
+                        <Row className='align-items-center'>
+                            <Col xs={3}>{resolveText("Person_ID")}</Col>
+                            <Col xs={4} lg={2}>
+                                <strong className='text-nowrap'>{profileData.id}</strong>
+                            </Col>
+                            <Col>
+                                <CopyButton
+                                    value={profileData.id}
+                                    size='sm'
+                                />
+                            </Col>
+                        </Row>
+                    </Alert>
                 </Col>
             </Row>
             <hr />
