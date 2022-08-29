@@ -69,22 +69,11 @@ namespace Mensch.Id.API.Controllers
             {
                 if (account.PersonId != id)
                     return StatusCode((int)HttpStatusCode.Forbidden, "ID in body doesn't match your ID");
-                var existingProfile = await personStore.GetByIdAsync(account.PersonId);
-                if (existingProfile != null)
-                {
-                    if (model.AnonymousId != existingProfile.AnonymousId)
-                        return StatusCode((int)HttpStatusCode.Forbidden, "Anonymous ID in body doesn't match anonymous ID in your existing profile. You cannot change your IDs");
-                }
             }
             else
             {
                 if (!await idStore.TryClaimId(id, account.Id))
                     return StatusCode((int)HttpStatusCode.InternalServerError, $"ID '{id}' could not be claimed");
-                if (!await idStore.TryClaimId(model.AnonymousId, account.Id))
-                {
-                    await idStore.UnclaimId(id);
-                    return StatusCode((int)HttpStatusCode.InternalServerError, $"Anonymous ID '{model.AnonymousId}' could not be claimed");
-                }
             }
 
             try
@@ -107,7 +96,6 @@ namespace Mensch.Id.API.Controllers
             catch
             {
                 await idStore.UnclaimId(id);
-                await idStore.UnclaimId(model.AnonymousId);
                 return StatusCode((int)HttpStatusCode.InternalServerError);
             }
             await idStore.ReleaseReservations(account.Id);

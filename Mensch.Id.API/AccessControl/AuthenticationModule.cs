@@ -29,8 +29,7 @@ namespace Mensch.Id.API.AccessControl
             var matchingAccount = await accountStore.GetLocalByEmailAsync(email);
             if (matchingAccount == null)
                 return false;
-            var saltBytes = Convert.FromBase64String(matchingAccount.Salt);
-            var passwordHash = PasswordHasher.Hash(password, saltBytes);
+            var passwordHash = PasswordHasher.Hash(password, matchingAccount.Salt);
             var passwordBase64 = Convert.ToBase64String(passwordHash);
 
             var result = await accountStore.ChangePasswordAsync(email, passwordBase64);

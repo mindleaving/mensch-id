@@ -3,6 +3,5 @@
     public class Person : IId
     {
         public string Id { get; set; }
-        public string AnonymousId { get; set; }
     }
 }

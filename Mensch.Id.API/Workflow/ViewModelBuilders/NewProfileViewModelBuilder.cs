@@ -10,7 +10,6 @@ namespace Mensch.Id.API.Workflow.ViewModelBuilders
     public class NewProfileViewModelBuilder
     {
         private const int IdCandidateCount = 10;
-        private const int AnonymousIdCandidateCount = 10;
 
         private readonly IIdStore idStore;
 
@@ -38,16 +37,7 @@ namespace Mensch.Id.API.Workflow.ViewModelBuilders
                 idCandidates.Add(idCandidate);
             }
 
-            var anonymousIdCandidates = reservedIds.Where(x => x.Type == IdType.Anonymous).Select(x => x.Id).ToList();
-            while (anonymousIdCandidates.Count < AnonymousIdCandidateCount)
-            {
-                var idCandidate = idGenerator.GenerateAnonymous();
-                if(!await idStore.TryReserveCandidate(idCandidate, IdType.Anonymous, accountId))
-                    continue;
-                anonymousIdCandidates.Add(idCandidate);
-            }
-
-            return new NewProfileViewModel(idCandidates, anonymousIdCandidates);
+            return new NewProfileViewModel(idCandidates);
         }
     }
 }

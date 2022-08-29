@@ -1,14 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using System.Web;
 using Mensch.Id.API.AccessControl;
 using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Models;
 using Mensch.Id.API.Storage;
 using Mensch.Id.API.Workflow;
+using Mensch.Id.API.Workflow.Email;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Facebook;
 using Microsoft.AspNetCore.Authentication.Google;
@@ -72,10 +73,8 @@ namespace Mensch.Id.API.Controllers
             var verificationEmail = new VerificationEmail
             {
                 AccountId = account.Id,
-                Email = account.Email,
-                VerificationToken = unencryptedToken,
-                Subject = GetTranslatedVerificationEmailSubject(account.PreferedLanguage),
-                Message = GetTranslatedVerificationEmailMessage(account.PreferedLanguage)
+                RecipientAddress = account.Email,
+                VerificationToken = unencryptedToken
             };
             await emailSender.SendVerificationEmail(verificationEmail);
             return Ok();
@@ -95,7 +94,8 @@ namespace Mensch.Id.API.Controllers
                 return NotFound();
             if (localAccount.IsEmailVerified)
                 return Ok();
-            if (!EmailVerification.Verify(token, localAccount))
+            var decodedToken = HttpUtility.UrlDecode(token);
+            if (!EmailVerification.Verify(decodedToken, localAccount))
                 return StatusCode((int)HttpStatusCode.Forbidden, "Invalid verification token");
             localAccount.IsEmailVerified = true;
             localAccount.EmailVerificationToken = null;
@@ -115,10 +115,8 @@ namespace Mensch.Id.API.Controllers
             await store.StoreAsync(account);
             var passwordResetEmail = new PasswordResetEmail
             {
-                Email = account.Email,
+                RecipientAddress = account.Email,
                 AccountId = account.Id,
-                Subject = GetTranslatedPasswordResetSubject(account.PreferedLanguage),
-                Message = GetTranslatedPasswordResetMessage(account.PreferedLanguage),
                 ResetToken = unencryptedToken
             };
             await emailSender.SendPasswordResetEmail(passwordResetEmail);
@@ -147,17 +145,7 @@ namespace Mensch.Id.API.Controllers
             return Ok(authenticationResult);
         }
 
-        private string GetTranslatedPasswordResetSubject(
-            Language language)
-        {
-            return Translate(PasswordResetEmailContent.Subject, language);
-        }
-
-        private string GetTranslatedPasswordResetMessage(
-            Language language)
-        {
-            return Translate(PasswordResetEmailContent.Message, language);
-        }
+        
 
         [Authorize]
         [AllowAnonymous]
@@ -186,18 +174,20 @@ namespace Mensch.Id.API.Controllers
                 {
                     if (!EmailValidator.IsValidEmailFormat(body.Email))
                         return BadRequest("Invalid email format");
+                    var existingAccount = await store.GetLocalByEmailAsync(body.Email);
+                    if (existingAccount != null)
+                        return Conflict("You already have an account with this email. Use password reset to gain access if you have forgotten your password.");
                     var account = await profileCreator.CreateLocal(
                         body.Email,
                         body.Password,
                         body.PreferedLanguage ?? Language.en,
                         personId);
                     account.EmailVerificationToken = EmailVerification.GenerateToken(account.Salt, out var unencryptedToken);
+                    await store.StoreAsync(account);
                     var verificationEmail = new VerificationEmail
                     {
                         AccountId = account.Id,
-                        Email = account.Email,
-                        Subject = GetTranslatedVerificationEmailSubject(account.PreferedLanguage),
-                        Message = GetTranslatedVerificationEmailMessage(account.PreferedLanguage),
+                        RecipientAddress = account.Email,
                         VerificationToken = unencryptedToken
                     };
                     await emailSender.SendVerificationEmail(verificationEmail);
@@ -230,27 +220,6 @@ namespace Mensch.Id.API.Controllers
             if (authenticationResult.IsAuthenticated)
                 return Ok(authenticationResult);
             return StatusCode((int)HttpStatusCode.Unauthorized, authenticationResult);
-        }
-
-        private string GetTranslatedVerificationEmailSubject(
-            Language language)
-        {
-            return Translate(VerificationEmailContent.Subject, language);
-        }
-
-        private string GetTranslatedVerificationEmailMessage(
-            Language language)
-        {
-            return Translate(VerificationEmailContent.Message, language);
-        }
-
-        private string Translate(
-            IReadOnlyDictionary<Language, string> resourceDictionary,
-            Language language)
-        {
-            if (resourceDictionary.ContainsKey(language))
-                return resourceDictionary[language];
-            return resourceDictionary[Language.en];
         }
 
         [Authorize]

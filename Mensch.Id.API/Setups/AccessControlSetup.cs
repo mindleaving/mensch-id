@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security;
 using System.Security.Cryptography;
 using Mensch.Id.API.AccessControl;
 using Mensch.Id.API.AccessControl.EventHandlers;
@@ -18,6 +19,7 @@ namespace Mensch.Id.API.Setups
             IServiceCollection services,
             IConfiguration configuration)
         {
+            SetupExternalLoginObscurer(services, configuration);
             var jwtPrivateKey = GetOrGenerateJwtPrivateKey(configuration);
             services.AddScoped<ISecurityTokenBuilder>(_ => new JwtSecurityTokenBuilder(jwtPrivateKey, TimeSpan.FromMinutes(60)));
             services.AddScoped<IAuthenticationModule, AuthenticationModule>();
@@ -79,6 +81,19 @@ namespace Mensch.Id.API.Setups
                     });
         }
 
+        private static void SetupExternalLoginObscurer(
+            IServiceCollection services,
+            IConfiguration configuration)
+        {
+            var obscureSalt = configuration["ExternalLogins:ObscureSalt"];
+            if (string.IsNullOrWhiteSpace(obscureSalt))
+                throw new SecurityException("No salt provided for obscuring external logins");
+            var obscureSecret = configuration["ExternalLogins:SecretPrefix"];
+            if (string.IsNullOrWhiteSpace(obscureSecret))
+                throw new SecurityException("No secret provided for obscuring external logins");
+            services.AddSingleton<IExternalLoginObscurer>(new ExternalLoginObscurer(obscureSalt, obscureSecret));
+        }
+
         private SymmetricSecurityKey GetOrGenerateJwtPrivateKey(IConfiguration configuration)
         {
             SymmetricSecurityKey privateKey;
@@ -88,9 +103,7 @@ namespace Mensch.Id.API.Setups
             }
             catch (KeyNotFoundException)
             {
-                using var rng = new RNGCryptoServiceProvider();
-                var bytes = new byte[32];
-                rng.GetBytes(bytes);
+                var bytes = RandomNumberGenerator.GetBytes(32);
                 privateKey = new SymmetricSecurityKey(bytes);
                 Console.WriteLine($"JWT private key candidate: {Convert.ToBase64String(bytes)}. Store this as environment variable 'Authentication__Jwt__PrivateKey'.");
             }

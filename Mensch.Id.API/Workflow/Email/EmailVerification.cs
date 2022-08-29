@@ -2,7 +2,7 @@
 using Mensch.Id.API.AccessControl;
 using Mensch.Id.API.Models;
 
-namespace Mensch.Id.API.Workflow
+namespace Mensch.Id.API.Workflow.Email
 {
     public static class EmailVerification
     {
@@ -15,7 +15,7 @@ namespace Mensch.Id.API.Workflow
 
         public static bool Verify(string token, LocalAccount account)
         {
-            if (token == null || account.PasswordResetToken == null)
+            if (token == null || account.EmailVerificationToken == null)
                 return false;
             return HashComparer.Compare(token, account.EmailVerificationToken, account.Salt);
         }

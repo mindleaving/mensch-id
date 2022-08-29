@@ -19,7 +19,6 @@ export const NewProfileForm = (props: NewProfileFormProps) => {
     const [ newProfileData, setNewProfileData ] = useState<ViewModels.NewProfileViewModel>();
 
     const [ selectedId, setSelectedId ] = useState<string>();
-    const [ selectedAnonymousId, setSelectedAnonymousId ] = useState<string>();
     const [ isSubmitting, setIsSubmitting ] = useState<boolean>(false);
 
     const loadIdReservations = async (e?: FormEvent) => {
@@ -31,7 +30,6 @@ export const NewProfileForm = (props: NewProfileFormProps) => {
             vm => {
                 setNewProfileData(vm);
                 setSelectedId(vm.idCandidates[0]);
-                setSelectedAnonymousId(vm.anonymousIdCandidates[0]);
             },
             () => setIsLoading(false)
         );
@@ -62,12 +60,11 @@ export const NewProfileForm = (props: NewProfileFormProps) => {
     
     const createProfile = async (e?: FormEvent) => {
         e?.preventDefault();
-        if(!selectedId || !selectedAnonymousId) {
+        if(!selectedId) {
             return;
         }
         const profileData: Models.Person = {
-            id: selectedId,
-            anonymousId: selectedAnonymousId
+            id: selectedId
         };
         setIsSubmitting(true);
         await sendPutRequest(
@@ -113,32 +110,12 @@ export const NewProfileForm = (props: NewProfileFormProps) => {
                     ))}
                 </ListGroup>
             </FormGroup>
-            <FormGroup className='mt-3'>
-                <FormLabel><h3>{resolveText("NewProfile_SelectAnonymousID")}</h3></FormLabel>
-                <ListGroup>
-                    {newProfileData.anonymousIdCandidates.map(id => (
-                        <ListGroup.Item
-                            key={id}
-                            onClick={() => setSelectedAnonymousId(id)}
-                            variant={selectedAnonymousId === id ? 'success' : undefined}
-                        >
-                            <Form.Check>
-                                <Form.Check.Input
-                                    type="radio"
-                                    checked={selectedAnonymousId === id}
-                                />
-                                <Form.Check.Label>{id}</Form.Check.Label>
-                            </Form.Check>
-                        </ListGroup.Item>
-                    ))}
-                </ListGroup>
-            </FormGroup>
             <Row>
                 <Col>
                     <StoreButton
                         type="submit"
                         isStoring={isSubmitting}
-                        disabled={!selectedId || !selectedAnonymousId}
+                        disabled={!selectedId}
                     />
                 </Col>
             </Row>

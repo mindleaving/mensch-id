@@ -26,14 +26,13 @@ namespace Mensch.Id.API.Workflow.ViewModelBuilders
             var loginProviders = accounts.OfType<ExternalAccount>()
                 .Select(x => x.LoginProvider)
                 .ToList();
-            loginProviders.AddRange(accounts.OfType<LocalAccount>().Select(_ => LoginProvider.LocalJwt));
+            loginProviders.AddRange(accounts.OfType<LocalAnonymousAccount>().Select(_ => LoginProvider.LocalJwt)); // Includes local accounts because they derive from anonymous accounts
             var verifications = await verificationStore.SearchAsync(x => x.PersonId == model.Id);
             return new ProfileViewModel
             {
                 LoginProviders = loginProviders,
                 Verifications = verifications,
-                Id = model.Id,
-                AnonymousId = model.AnonymousId
+                Id = model.Id
             };
         }
     }

@@ -12,11 +12,15 @@ namespace Mensch.Id.API.Storage
 {
     public class AccountStore : GenericStore<Account>, IAccountStore
     {
+        private readonly IExternalLoginObscurer externalLoginObscurer;
+
         public AccountStore(
             IMongoDatabase mongoDatabase,
+            IExternalLoginObscurer externalLoginObscurer,
             string collectionName = null)
             : base(mongoDatabase, collectionName)
         {
+            this.externalLoginObscurer = externalLoginObscurer;
         }
 
         public Task<LocalAccount> GetLocalByEmailAsync(string email)
@@ -56,8 +60,9 @@ namespace Mensch.Id.API.Storage
             LoginProvider loginProvider,
             string externalId)
         {
+            var obscuredExternalId = externalLoginObscurer.Obscure(externalId);
             return collection.OfType<ExternalAccount>()
-                .Find(x => x.LoginProvider == loginProvider && x.ExternalId == externalId)
+                .Find(x => x.LoginProvider == loginProvider && x.ExternalId == obscuredExternalId)
                 .FirstOrDefaultAsync();
         }
 
