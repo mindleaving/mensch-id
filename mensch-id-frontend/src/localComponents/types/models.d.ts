@@ -38,7 +38,7 @@ export namespace Models {
         isAuthenticated: boolean;
         accessToken?: string;
         accountType?: Enums.AccountType | null;
-        error: Enums.AuthenticationErrorType;
+        error?: Enums.AuthenticationErrorType | null;
     }
 
     interface IExternalLogin {

@@ -67,13 +67,15 @@ function App() {
         checkLoginState();
     }, []);
 
-    const onLoggedIn = (authenticationResult?: Models.AuthenticationResult) => {
-        if(!authenticationResult?.isAuthenticated) {
+    const onLoggedIn = (authenticationResult: Models.AuthenticationResult) => {
+        if(!authenticationResult.isAuthenticated) {
             navigate("/login");
             return;
         }
-        apiClient.instance!.setAccessToken(authenticationResult.accessToken!);
-        sessionStorage.setItem(SessionStoreKeys.AccessToken, authenticationResult.accessToken!);
+        if(authenticationResult.accessToken) {
+            apiClient.instance!.setAccessToken(authenticationResult.accessToken);
+            sessionStorage.setItem(SessionStoreKeys.AccessToken, authenticationResult.accessToken);
+        }
         setIsLoggedIn(true);
         setAccountType(authenticationResult.accountType!);
         if(authenticationResult.accountType === AccountType.Assigner) {

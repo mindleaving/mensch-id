@@ -15,7 +15,7 @@ namespace Mensch.Id.API.Helpers
             return jwtClaims.FirstOrDefault(x => x.Type == JwtSecurityTokenBuilder.PersonIdClaimName)?.Value;
         }
 
-        public static LoginProvider GetLoginProvider(List<Claim> claims)
+        public static LoginProvider GetLoginProvider(IEnumerable<Claim> claims)
         {
             var issuer = claims.Select(x => x.Issuer).Distinct().Single();
             return issuer switch
@@ -36,7 +36,7 @@ namespace Mensch.Id.API.Helpers
         }
 
         public static string GetExternalId(
-            List<Claim> claims,
+            IEnumerable<Claim> claims,
             LoginProvider loginProvider)
         {
             var loginProviderClaims = claims.Where(x => x.Issuer == GetIssuer(loginProvider)).ToList();
@@ -50,6 +50,29 @@ namespace Mensch.Id.API.Helpers
                 case LoginProvider.Microsoft:
                 case LoginProvider.Facebook:
                     return loginProviderClaims.Single(x => x.Type == ClaimTypes.NameIdentifier).Value;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(loginProvider), loginProvider, null);
+            }
+        }
+
+        public static AccountType? GetAccountType(
+            List<Claim> claims)
+        {
+            var loginProvider = GetLoginProvider(claims);
+            switch (loginProvider)
+            {
+                case LoginProvider.Unknown:
+                    throw new Exception($"Invalid login provider '{loginProvider}'");
+                case LoginProvider.Google:
+                case LoginProvider.Twitter:
+                case LoginProvider.Facebook:
+                case LoginProvider.Microsoft:
+                    return AccountType.External;
+                case LoginProvider.LocalJwt:
+                    {
+                        var accountTypeString = claims.Single(x => x.Type == JwtSecurityTokenBuilder.AccountTypeClaimName).Value;
+                        return Enum.Parse<AccountType>(accountTypeString);
+                    }
                 default:
                     throw new ArgumentOutOfRangeException(nameof(loginProvider), loginProvider, null);
             }

@@ -8,7 +8,7 @@ namespace Mensch.Id.API.Models
         [JsonConstructor]
         private AuthenticationResult(
             bool isAuthenticated,
-            AuthenticationErrorType error,
+            AuthenticationErrorType? error,
             string accessToken,
             AccountType? accountType)
         {
@@ -20,7 +20,7 @@ namespace Mensch.Id.API.Models
 
         public static AuthenticationResult Success(string accessToken, AccountType accountType)
         {
-            return new AuthenticationResult(true, AuthenticationErrorType.Ok, accessToken, accountType);
+            return new AuthenticationResult(true, null, accessToken, accountType);
         }
 
         public static AuthenticationResult Failed(AuthenticationErrorType errorType)
@@ -32,6 +32,6 @@ namespace Mensch.Id.API.Models
         [TypescriptIsOptional]
         public string AccessToken { get; }
         public AccountType? AccountType { get; set; }
-        public AuthenticationErrorType Error { get; }
+        public AuthenticationErrorType? Error { get; }
     }
 }

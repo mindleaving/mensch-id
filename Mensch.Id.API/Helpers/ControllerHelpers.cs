@@ -26,12 +26,10 @@ namespace Mensch.Id.API.Helpers
         public static AccountType? GetAccountType(
             IHttpContextAccessor httpContextAccessor)
         {
-            var accountTypeString = httpContextAccessor.HttpContext?.User.Claims
-                .FirstOrDefault(x => x.Type == JwtSecurityTokenBuilder.AccountTypeClaimName)?.Value;
-            if (accountTypeString == null)
-                return null;
-            return Enum.Parse<AccountType>(accountTypeString);
+            var claims = httpContextAccessor.HttpContext?.User.Claims.ToList();
+            return ClaimsHelpers.GetAccountType(claims);
         }
+
         public static string GetAccountId(
             IHttpContextAccessor httpContextAccessor)
         {

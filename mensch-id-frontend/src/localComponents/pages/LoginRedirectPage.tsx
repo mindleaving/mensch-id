@@ -4,9 +4,10 @@ import { apiClient } from '../../sharedCommonComponents/communication/ApiClient'
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { Models } from '../types/models';
 import { NotificationManager } from 'react-notifications';
+import { AuthenticationErrorType } from '../types/enums';
 
 interface LoginRedirectPageProps {
-    onLoggedIn: (authenticationResult?: Models.AuthenticationResult) => void;
+    onLoggedIn: (authenticationResult: Models.AuthenticationResult) => void;
 }
 
 export const LoginRedirectPage = (props: LoginRedirectPageProps) => {
@@ -22,6 +23,7 @@ export const LoginRedirectPage = (props: LoginRedirectPageProps) => {
                     navigate("/login");
                     return;
                 }
+                const isLoggedInResponse = await response.json() as Models.IsLoggedInResponse;
                 if(loginProvider?.toLowerCase() === "jwt") {
                     const jwtResponse = await apiClient.instance!.get("api/accounts/accesstoken", {});
                     const authenticationResult = await jwtResponse.json() as Models.AuthenticationResult;
@@ -29,7 +31,10 @@ export const LoginRedirectPage = (props: LoginRedirectPageProps) => {
                         props.onLoggedIn(authenticationResult);
                     }
                 } else {
-                    props.onLoggedIn();
+                    props.onLoggedIn({
+                        isAuthenticated: true,
+                        accountType: isLoggedInResponse.accountType
+                    });
                 }
             } catch {
                 NotificationManager.error(resolveText("CouldNotLogIn"));

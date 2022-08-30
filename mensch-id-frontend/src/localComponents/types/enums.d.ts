@@ -5,7 +5,7 @@ export enum AccountType {
     Assigner = "Assigner"
 }
 export enum AuthenticationErrorType {
-    Ok = "Ok",
+    Unknown = "Unknown",
     UserNotFound = "UserNotFound",
     InvalidPassword = "InvalidPassword",
     AuthenticationMethodNotAvailable = "AuthenticationMethodNotAvailable",
