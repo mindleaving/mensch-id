@@ -53,6 +53,13 @@ namespace Mensch.Id.API.Storage
                 Builders<MenschId>.Update.Set(x => x.IsClaimed, false));
         }
 
+        public Task ReleaseSpecificReservation(
+            string accountId,
+            string idCandidate)
+        {
+            return collection.DeleteOneAsync(x => !x.IsClaimed && x.ReservingAccountId == accountId && x.Id == idCandidate);
+        }
+
         public Task ReleaseReservations(string accountId)
         {
             return collection.DeleteManyAsync(x => !x.IsClaimed && x.ReservingAccountId == accountId);

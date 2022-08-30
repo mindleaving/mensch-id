@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ButtonGroup, Button, Card } from 'react-bootstrap';
 import { Center } from '../../sharedCommonComponents/components/Center';
+import { HorizontalLineWithText } from '../../sharedCommonComponents/components/HorizontalLineWithText';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { LoginProvider } from '../types/enums.d';
 import { Models } from '../types/models';
@@ -25,13 +26,11 @@ export const LoginForm = (props: LoginFormProps) => {
 
     return (
         <>
-            <h1>{resolveText("Login")}</h1>
-            <div className='mt-3' />
             <ExternalLogins
                 availableExternalProviders={props.availableExternalProviders}
                 onProviderSelected={props.onExternalProviderSelected}
             />
-            <hr className='my-3' />
+            <HorizontalLineWithText text={resolveText("or")} />
             <Center className="mb-3">
                 <ButtonGroup>
                     <Button 

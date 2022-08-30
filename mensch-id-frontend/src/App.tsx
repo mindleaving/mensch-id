@@ -25,6 +25,9 @@ import { RequestPasswordResetPage } from './localComponents/pages/RequestPasswor
 import { VerifyEmailPage } from './localComponents/pages/VerifyEmailPage';
 import UserContext from './localComponents/contexts/UserContext';
 import { ViewModels } from './localComponents/types/viewModels';
+import { AssignerPage } from './localComponents/pages/AssignerPage';
+import { NewProfilePage } from './localComponents/pages/NewProfilePage';
+import { AccountType } from './localComponents/types/enums.d';
 
 defaultGlobalizer.instance = new Globalizer(
     navigator.languages.map(x => x.substring(0, 2)), 
@@ -33,20 +36,25 @@ defaultGlobalizer.instance = new Globalizer(
 apiClient.instance = window.location.hostname.toLowerCase() === "localhost"
     ? new ApiClient(window.location.hostname, 44321)
     : new ApiClient(window.location.hostname, 443);
+apiClient.instance!.defaultOptions.includeCredentials = true;
 if(!!sessionStorage.getItem(SessionStoreKeys.AccessToken)) {
     apiClient.instance!.setAccessToken(sessionStorage.getItem(SessionStoreKeys.AccessToken)!);
 }
+
 function App() {
     const navigate = useNavigate();
     const [ isLoggedIn, setIsLoggedIn ] = useState<boolean>(false);
     const [ profileData, setProfileData ] = useState<ViewModels.ProfileViewModel | undefined>();
+    const [ accountType, setAccountType ] = useState<AccountType>();
 
     useEffect(() => {
         const checkLoginState = async () => {
             try {
                 const response = await apiClient.instance!.get('api/accounts/is-logged-in', {});
                 if(response.status === 200) {
+                    const loggedInInfo = await response.json() as Models.IsLoggedInResponse;
                     setIsLoggedIn(true);
+                    setAccountType(loggedInInfo.accountType);
                 } else if(response.status === 401) {
                     setIsLoggedIn(false);
                 } else {
@@ -67,7 +75,12 @@ function App() {
         apiClient.instance!.setAccessToken(authenticationResult.accessToken!);
         sessionStorage.setItem(SessionStoreKeys.AccessToken, authenticationResult.accessToken!);
         setIsLoggedIn(true);
-        navigate("/me");
+        setAccountType(authenticationResult.accountType!);
+        if(authenticationResult.accountType === AccountType.Assigner) {
+            navigate("/assigner");
+        } else {
+            navigate("/me");
+        }
     }
     
     const logOut = async () => {
@@ -87,14 +100,16 @@ function App() {
 
     return (
     <UserContext.Provider value={{ profileData, setProfileData }}>
-        <Layout isLoggedIn={isLoggedIn} onLogOut={logOut}>
+        <Layout isLoggedIn={isLoggedIn} accountType={accountType} onLogOut={logOut}>
             <Routes>
                 {!isLoggedIn ? <Route path="/login" element={<LoginPage onLoggedIn={onLoggedIn} />} /> : null}
                 <Route path="/login/redirect" element={<LoginRedirectPage onLoggedIn={onLoggedIn} />} />
                 {isLoggedIn ? <Route path="/linkaccount" element={<LinkAccountPage onLoggedIn={onLoggedIn} />} /> : null}
                 {isLoggedIn ? <Route path="/linkaccount/finish" element={<LinkAccountRedirectPage />} /> : null}
-                {isLoggedIn ? <Route path="/me" element={<ProfilePage />} /> : null}
-                {isLoggedIn ? <Route path="/challenges" element={<MyChallengesPage />} /> : null}
+                {isLoggedIn && accountType !== AccountType.Assigner ? <Route path="/me" element={<ProfilePage />} /> : null}
+                {isLoggedIn && accountType !== AccountType.Assigner ? <Route path="/new-profile" element={<NewProfilePage />} /> : null}
+                {isLoggedIn && accountType !== AccountType.Assigner ? <Route path="/challenges" element={<MyChallengesPage />} /> : null}
+                {isLoggedIn && accountType === AccountType.Assigner ? <Route path="/assigner" element={<AssignerPage />} /> : null}
                 
                 <Route path="/challenge" element={<SendChallengePage />} />
                 <Route path='/verify-email' element={<VerifyEmailPage />} />

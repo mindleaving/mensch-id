@@ -1,7 +1,8 @@
 export enum AccountType {
     Local = "Local",
     LocalAnonymous = "LocalAnonymous",
-    External = "External"
+    External = "External",
+    Assigner = "Assigner"
 }
 export enum AuthenticationErrorType {
     Ok = "Ok",

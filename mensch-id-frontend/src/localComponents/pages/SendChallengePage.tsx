@@ -26,6 +26,7 @@ export const SendChallengePage = (props: SendChallengePageProps) => {
                 const result = await response.json() as Models.MenschIdChallenge;
                 setChallengeData(result);
             },
+            undefined,
             () => setIsSending(false)
         )
     }

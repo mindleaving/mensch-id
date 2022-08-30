@@ -47,6 +47,7 @@ export const ResetPasswordPage = (props: ResetPasswordPageProps) => {
                     props.onLoggedIn(authenticationResult);
                 }
             },
+            undefined,
             () => setIsSubmitting(false)
         );
     }

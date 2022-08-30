@@ -4,9 +4,11 @@ using System.Security;
 using System.Security.Cryptography;
 using Mensch.Id.API.AccessControl;
 using Mensch.Id.API.AccessControl.EventHandlers;
+using Mensch.Id.API.AccessControl.Policies;
 using Mensch.Id.API.Workflow;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -23,7 +25,7 @@ namespace Mensch.Id.API.Setups
             var jwtPrivateKey = GetOrGenerateJwtPrivateKey(configuration);
             services.AddScoped<ISecurityTokenBuilder>(_ => new JwtSecurityTokenBuilder(jwtPrivateKey, TimeSpan.FromMinutes(60)));
             services.AddScoped<IAuthenticationModule, AuthenticationModule>();
-            services.AddScoped<IProfileCreator, ProfileCreator>();
+            services.AddScoped<IAccountCreator, AccountCreator>();
             services.AddScoped<GoogleAuthenticationEvents>();
             services.AddScoped<TwitterAuthenticationEvents>();
             services.AddScoped<FacebookAuthenticationEvents>();
@@ -79,6 +81,15 @@ namespace Mensch.Id.API.Setups
                         options.CallbackPath = "/api/accounts/external-login/microsoft";
                         options.EventsType = typeof(MicrosoftAuthenticationEvents);
                     });
+
+            services.AddSingleton<IAuthorizationHandler, AssignerPolicy>();
+            services.AddSingleton<IAuthorizationHandler, RegularUserPolicy>();
+            services.AddAuthorization(
+                options =>
+                {
+                    options.AddPolicy(AssignerPolicy.PolicyName, policy => policy.AddRequirements(new AssignerRequirement()));
+                    options.AddPolicy(RegularUserPolicy.PolicyName, policy => policy.AddRequirements(new RegularUserRequirement()));
+                });
         }
 
         private static void SetupExternalLoginObscurer(

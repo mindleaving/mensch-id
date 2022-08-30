@@ -28,12 +28,7 @@ namespace Mensch.Id.API.Workflow.ViewModelBuilders
                 .ToList();
             loginProviders.AddRange(accounts.OfType<LocalAnonymousAccount>().Select(_ => LoginProvider.LocalJwt)); // Includes local accounts because they derive from anonymous accounts
             var verifications = await verificationStore.SearchAsync(x => x.PersonId == model.Id);
-            return new ProfileViewModel
-            {
-                LoginProviders = loginProviders,
-                Verifications = verifications,
-                Id = model.Id
-            };
+            return new ProfileViewModel(model.Id, loginProviders, verifications);
         }
     }
 }

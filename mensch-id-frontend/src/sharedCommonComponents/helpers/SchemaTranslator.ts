@@ -2,6 +2,7 @@ import { canResolveText, resolveText } from "./Globalizer";
 
 export const translateSchema = (schema: any) => {
     const typeName = firstLetterToUpper(schema.title);
+    translateConcatenatedSchemas(typeName, schema.allOf);
     translateProperties(typeName, schema.properties);
     translateDefinitions(schema.definitions);
     return schema;
@@ -11,6 +12,14 @@ const firstLetterToUpper = (str: string) => {
         return str;
     }
     return str[0].toUpperCase() + str.substring(1);
+}
+const translateConcatenatedSchemas = (typeName: string, allOf: any) => {
+    if(!allOf) {
+        return;
+    }
+    for(let typeSchema of allOf) {
+        translateProperties(typeName, typeSchema.properties);
+    }
 }
 const translateProperties = (typeName: string, properties: any) => {
     if(!properties) {
@@ -37,6 +46,7 @@ const translateDefinitions = (definitions: any) => {
             if(canResolveText(translationKey)) {
                 definition.title = resolveText(translationKey);
             }
+            translateConcatenatedSchemas(typeName, definition.allOf);
             translateProperties(typeName, definition.properties);
         }
     }

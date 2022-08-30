@@ -6,12 +6,12 @@ using Mensch.Id.API.Storage;
 
 namespace Mensch.Id.API.Workflow
 {
-    public class ProfileCreator : IProfileCreator
+    public class AccountCreator : IAccountCreator
     {
         private readonly IStore<Account> accountStore;
         private readonly IExternalLoginObscurer externalLoginObscurer;
 
-        public ProfileCreator(
+        public AccountCreator(
             IStore<Account> accountStore,
             IExternalLoginObscurer externalLoginObscurer)
         {
@@ -75,6 +75,26 @@ namespace Mensch.Id.API.Workflow
                 ExternalId = externalLoginObscurer.Obscure(externalId),
                 PreferedLanguage = preferedLanguage,
                 PersonId = menschId
+            };
+            await accountStore.StoreAsync(account);
+            return account;
+        }
+
+        public async Task<LocalAnonymousAccount> CreateAssigner(
+            string name,
+            string password,
+            Language preferedLanguage = Language.en)
+        {
+            var accountId = Guid.NewGuid().ToString();
+            var salt = PasswordHasher.CreateSalt();
+            var passwordHash = PasswordHasher.Hash(password, salt);
+            var account = new AssignerAccount
+            {
+                Id = accountId,
+                Name = name,
+                Salt = Convert.ToBase64String(salt),
+                PasswordHash = Convert.ToBase64String(passwordHash),
+                PreferedLanguage = preferedLanguage,
             };
             await accountStore.StoreAsync(account);
             return account;

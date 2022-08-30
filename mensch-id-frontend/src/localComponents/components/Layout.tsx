@@ -1,18 +1,33 @@
 import React, { PropsWithChildren } from 'react';
-import { Button, Col, Container, Nav, Navbar, NavDropdown, Row } from 'react-bootstrap';
+import { Button, Col, Container, Nav, Navbar, Row } from 'react-bootstrap';
 import { NotificationContainer } from 'react-notifications';
 import { useNavigate } from 'react-router-dom';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
+import { AccountType } from '../types/enums.d';
+import { AssignerMenu } from './Menus/AssignerMenu';
+import { RegularUserMenu } from './Menus/RegularUserMenu';
 
 interface LayoutProps {
     isLoggedIn: boolean;
+    accountType?: AccountType;
     onLogOut: () => void;
 }
 
 export const Layout = (props: PropsWithChildren<LayoutProps>) => {
 
-
     const navigate = useNavigate();
+
+    let userMenu = null;
+    if(props.isLoggedIn) {
+        switch(props.accountType!) {
+            case AccountType.Assigner:
+                userMenu = (<AssignerMenu />);
+                break;
+            default:
+                userMenu = (<RegularUserMenu />);
+                break;
+        }
+    }
 
     return (
         <>
@@ -22,20 +37,8 @@ export const Layout = (props: PropsWithChildren<LayoutProps>) => {
                     <Navbar.Brand className='clickable' onClick={() => navigate("/")}>웃ID</Navbar.Brand>
                     <Navbar.Toggle />
                     <Navbar.Collapse>
+                        {userMenu}
                         <Nav>
-                            {props.isLoggedIn
-                            ? <>
-                                <Nav.Link onClick={() => navigate("/me")}>{resolveText("Menu_MyProfile")}</Nav.Link>
-                                <NavDropdown title={resolveText("Menu_Actions")}>
-                                    <NavDropdown.Item onClick={() => navigate("/linkaccount")}>
-                                        {resolveText("Menu_LinkToAnotherAccount")}
-                                    </NavDropdown.Item>
-                                    <NavDropdown.Item onClick={() => navigate("/challenges")}>
-                                        {resolveText("Menu_MyChallenges")}
-                                    </NavDropdown.Item>
-                                </NavDropdown>
-                            </>
-                            : null}
                             <Nav.Link onClick={() => navigate("/privacy")}>{resolveText("Menu_Privacy")}</Nav.Link>
                             <Nav.Link onClick={() => navigate("/terms-of-service")}>{resolveText("Menu_TermsOfService")}</Nav.Link>
                         </Nav>

@@ -3,7 +3,7 @@ using Mensch.Id.API.Models;
 
 namespace Mensch.Id.API.Workflow
 {
-    public interface IProfileCreator
+    public interface IAccountCreator
     {
         Task<LocalAnonymousAccount> CreateLocalAnonymous(
             string password,

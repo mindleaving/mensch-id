@@ -5,7 +5,7 @@ interface HorizontalLineWithTextProps {
 export const HorizontalLineWithText = (props: HorizontalLineWithTextProps) => {
 
     return (
-        <div className="separator-with-text">
+        <div className="timelineSeparator">
             <span className="text-secondary">{props.text}</span>
         </div>
     );

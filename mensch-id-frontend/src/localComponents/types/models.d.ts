@@ -24,9 +24,20 @@ export namespace Models {
         externalId: string;
     }
 
+    interface AssignerAccount extends Models.LocalAccount {
+        name: string;
+    }
+
+    interface AssignerControlledProfile extends Models.IId {
+        assignerAccountId: string;
+        creationDate: Date;
+        ownershipSecret: string;
+    }
+
     interface AuthenticationResult {
         isAuthenticated: boolean;
         accessToken?: string;
+        accountType?: Enums.AccountType | null;
         error: Enums.AuthenticationErrorType;
     }
 
@@ -37,6 +48,10 @@ export namespace Models {
 
     interface IId {
         id: string;
+    }
+
+    interface IsLoggedInResponse {
+        accountType: Enums.AccountType;
     }
 
     interface LoginInformation {
@@ -57,7 +72,7 @@ export namespace Models {
     }
 
     interface Person extends Models.IId {
-        
+        creationDate: Date;
     }
 
     interface RegistrationInformation {
@@ -79,6 +94,11 @@ export namespace Models {
 
     interface ResetPasswordRequest {
         email: string;
+    }
+
+    interface TakeControlBody {
+        id: string;
+        ownershipSecret: string;
     }
 
     interface Verification extends Models.IId {

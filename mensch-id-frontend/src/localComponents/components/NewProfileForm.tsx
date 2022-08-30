@@ -1,12 +1,11 @@
-import { FormEvent, useState } from 'react';
-import { Button, Col, Form, FormControl, FormGroup, FormLabel, ListGroup, Row } from 'react-bootstrap';
-import { AsyncButton } from '../../sharedCommonComponents/components/AsyncButton';
+import { FormEvent, useEffect, useState } from 'react';
+import { Button, Col, Form, FormGroup, FormLabel, ListGroup, Row } from 'react-bootstrap';
 import { StoreButton } from '../../sharedCommonComponents/components/StoreButton';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
-import { loadObject } from '../../sharedCommonComponents/helpers/LoadingHelpers';
-import { sendPutRequest } from '../../sharedCommonComponents/helpers/StoringHelpers';
+import { sendPostRequest } from '../../sharedCommonComponents/helpers/StoringHelpers';
 import { Models } from '../types/models';
 import { ViewModels } from '../types/viewModels';
+import { BirthdayForm } from './BirthdayForm';
 
 interface NewProfileFormProps {
     onProfileCreated: (profileData: Models.Person) => void;
@@ -15,47 +14,24 @@ interface NewProfileFormProps {
 export const NewProfileForm = (props: NewProfileFormProps) => {
 
     const [ birthDate, setBirthDate ] = useState<string>('');
-    const [ isLoading, setIsLoading ] = useState<boolean>(false);
     const [ newProfileData, setNewProfileData ] = useState<ViewModels.NewProfileViewModel>();
-
     const [ selectedId, setSelectedId ] = useState<string>();
     const [ isSubmitting, setIsSubmitting ] = useState<boolean>(false);
 
-    const loadIdReservations = async (e?: FormEvent) => {
-        e?.preventDefault();
-        setIsLoading(true);
-        await loadObject<ViewModels.NewProfileViewModel>(
-            `api/profiles/new`, { birthDate: birthDate },
-            resolveText('NewProfile_CouldNotLoad'),
-            vm => {
-                setNewProfileData(vm);
-                setSelectedId(vm.idCandidates[0]);
-            },
-            () => setIsLoading(false)
-        );
-    }
+    useEffect(() => {
+        if(!newProfileData) {
+            return;
+        }
+        setSelectedId(newProfileData.idCandidates[0]);
+    }, [ newProfileData ]);
 
     if(!newProfileData) {
-        return (
-            <Form onSubmit={loadIdReservations}>
-                <FormGroup>
-                    <FormLabel>{resolveText("NewProfile_BirthDate")}</FormLabel>
-                    <FormControl
-                        value={birthDate}
-                        onChange={(e: any) => setBirthDate(e.target.value)}
-                        pattern='[0-9]{4}-[0-9]{2}-[0-9]{2}'
-                        placeholder='Format: yyyy-MM-dd'
-                    />
-                </FormGroup>
-                <AsyncButton
-                    className='m-2'
-                    type='submit'
-                    activeText={resolveText("Submit")}
-                    executingText={resolveText("Submitting...")}
-                    isExecuting={isLoading}
-                />
-            </Form>
-        )
+        return (<BirthdayForm
+            onNewProfileCreated={(birthDate,newProfileData) => {
+                setBirthDate(birthDate);
+                setNewProfileData(newProfileData);
+            }}
+        />);
     }
     
     const createProfile = async (e?: FormEvent) => {
@@ -63,15 +39,16 @@ export const NewProfileForm = (props: NewProfileFormProps) => {
         if(!selectedId) {
             return;
         }
-        const profileData: Models.Person = {
-            id: selectedId
-        };
         setIsSubmitting(true);
-        await sendPutRequest(
-            `api/profiles/${profileData.id}`,
+        await sendPostRequest(
+            `api/profiles/claim/${selectedId}`,
             resolveText('Profile_CouldNotStore'),
-            profileData,
-            () => props.onProfileCreated(profileData),
+            null,
+            async response => {
+                const profileData = await response.json() as Models.Person;
+                props.onProfileCreated(profileData);
+            },
+            undefined,
             () => setIsSubmitting(false)
         );
     }
@@ -103,6 +80,7 @@ export const NewProfileForm = (props: NewProfileFormProps) => {
                                 <Form.Check.Input
                                     type="radio"
                                     checked={selectedId === id}
+                                    readOnly
                                 />
                                 <Form.Check.Label>{id}</Form.Check.Label>
                             </Form.Check>

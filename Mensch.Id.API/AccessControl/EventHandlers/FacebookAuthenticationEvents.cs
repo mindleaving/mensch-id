@@ -11,14 +11,14 @@ namespace Mensch.Id.API.AccessControl.EventHandlers
     public class FacebookAuthenticationEvents : OAuthEvents
     {
         private readonly IAccountStore accountStore;
-        private readonly IProfileCreator profileCreator;
+        private readonly IAccountCreator accountCreator;
 
         public FacebookAuthenticationEvents(
             IAccountStore accountStore,
-            IProfileCreator profileCreator)
+            IAccountCreator accountCreator)
         {
             this.accountStore = accountStore;
-            this.profileCreator = profileCreator;
+            this.accountCreator = accountCreator;
         }
 
         public override async Task CreatingTicket(
@@ -29,7 +29,7 @@ namespace Mensch.Id.API.AccessControl.EventHandlers
             var existingAccount = await accountStore.GetExternalByIdAsync(loginProvider, externalId);
             if (existingAccount == null)
             {
-                await profileCreator.CreateExternal(loginProvider, externalId);
+                await accountCreator.CreateExternal(loginProvider, externalId);
             }
             await base.CreatingTicket(context);
         }

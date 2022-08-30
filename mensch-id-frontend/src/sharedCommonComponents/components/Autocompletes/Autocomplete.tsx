@@ -1,4 +1,4 @@
-import { KeyboardEvent, useState } from 'react';
+import { KeyboardEvent, useEffect, useState } from 'react';
 import Autosuggest from 'react-autosuggest';
 import { defaultGlobalizer, resolveText } from '../../helpers/Globalizer';
 import '../../styles/react-autosuggest.css';
@@ -25,6 +25,12 @@ export const Autocomplete = <T extends unknown>(props: AutocompleteProps<T>) => 
     const [ searchTimer, setSearchTimer ] = useState<NodeJS.Timeout>();
     const [ searchText, setSearchText ] = useState<string>(props.defaultValue ?? '');
     const [ suggestions, setSuggestions ] = useState<T[]>([]);
+
+    useEffect(() => {
+        if(props.defaultValue) {
+            setSearchText(props.defaultValue);
+        }
+    }, [ props.defaultValue]);
 
     const onItemSelected = (item: any) => {
         if(props.onItemSelected) {
