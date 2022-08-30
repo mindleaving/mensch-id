@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Threading.Tasks;
+using Mensch.Id.API.AccessControl.Policies;
 using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Models;
 using Mensch.Id.API.Storage;
@@ -12,6 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Mensch.Id.API.Controllers
 {
+    [Authorize(Policy = RegularUserPolicy.PolicyName)]
     [ApiController]
     [Route("api/[controller]")]
     public class ProfilesController : ControllerBase
@@ -23,6 +25,7 @@ namespace Mensch.Id.API.Controllers
         private readonly ProfileViewModelBuilder profileViewModelBuilder;
         private readonly NewProfileViewModelBuilder newProfileViewModelBuilder;
         private readonly IIdStore idStore;
+        private readonly IStore<AssignerControlledProfile> assignerControlledProfileStore;
 
         public ProfilesController(
             IAccountStore accountStore,
@@ -31,7 +34,8 @@ namespace Mensch.Id.API.Controllers
             NewProfileViewModelBuilder newProfileViewModelBuilder,
             IIdStore idStore,
             ProfileViewModelBuilder profileViewModelBuilder,
-            IStore<Verification> verificationStore)
+            IStore<Verification> verificationStore,
+            IStore<AssignerControlledProfile> assignerControlledProfileStore)
         {
             this.accountStore = accountStore;
             this.personStore = personStore;
@@ -40,9 +44,9 @@ namespace Mensch.Id.API.Controllers
             this.idStore = idStore;
             this.profileViewModelBuilder = profileViewModelBuilder;
             this.verificationStore = verificationStore;
+            this.assignerControlledProfileStore = assignerControlledProfileStore;
         }
 
-        [Authorize]
         [HttpGet("me")]
         public async Task<IActionResult> MyProfile()
         {
@@ -55,14 +59,12 @@ namespace Mensch.Id.API.Controllers
             return Ok(vm);
         }
 
-        [Authorize]
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Store([FromRoute] string id, [FromBody] Person model)
+        
+        [HttpPost("claim/{id}")]
+        public async Task<IActionResult> ClaimId([FromRoute] string id)
         {
             if (!MenschIdGenerator.ValidateId(id))
                 return BadRequest($"Invalid mensch.ID {id}");
-            if (model.Id != id)
-                return BadRequest("ID of route doesn't match ID in body");
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
             var account = await accountStore.GetFromClaimsAsync(claims);
             if (account.PersonId != null)
@@ -76,14 +78,18 @@ namespace Mensch.Id.API.Controllers
                     return StatusCode((int)HttpStatusCode.InternalServerError, $"ID '{id}' could not be claimed");
             }
 
+            if (await personStore.ExistsAsync(id))
+                return Ok();
+
+            var profile = new Person(id, DateTime.UtcNow);
             try
             {
-                await personStore.StoreAsync(model);
+                await personStore.StoreAsync(profile);
                 if (account.PersonId == null)
                 {
                     try
                     {
-                        account.PersonId = model.Id;
+                        account.PersonId = id;
                         await accountStore.StoreAsync(account);
                     }
                     catch
@@ -99,11 +105,45 @@ namespace Mensch.Id.API.Controllers
                 return StatusCode((int)HttpStatusCode.InternalServerError);
             }
             await idStore.ReleaseReservations(account.Id);
-            return Ok();
+            return Ok(profile);
+        }
+
+        [HttpPost("take-control")]
+        public async Task<IActionResult> TakeControlOfId([FromBody] TakeControlBody body)
+        {
+            var owningAccount = await accountStore.FirstOrDefaultAsync(x => x.PersonId == body.Id);
+            if (owningAccount != null)
+                return StatusCode((int)HttpStatusCode.Forbidden, "ID is controlled by another account already");
+            var assignerControlledProfile = await assignerControlledProfileStore.GetByIdAsync(body.Id);
+            if (assignerControlledProfile == null)
+                return NotFound();
+            if (body.OwnershipSecret != assignerControlledProfile.OwnershipSecret)
+                return StatusCode((int)HttpStatusCode.Unauthorized, "Invalid ownership secret");
+            var claims = ControllerHelpers.GetClaims(httpContextAccessor);
+            var account = await accountStore.GetFromClaimsAsync(claims);
+            if(account.AccountType == AccountType.Assigner)
+                return StatusCode((int)HttpStatusCode.Unauthorized, "Assigners cannot take permanent control of profiles");
+            if (account.PersonId != null)
+            {
+                if (account.PersonId == body.Id)
+                    return Ok();
+                return StatusCode((int)HttpStatusCode.Forbidden, "Your account is already associated with a profile");
+            }
+
+            var profile = await personStore.GetByIdAsync(body.Id);
+            if (profile == null)
+            {
+                profile = new Person(body.Id, DateTime.UtcNow);
+                await personStore.StoreAsync(profile);
+            }
+            account.PersonId = body.Id;
+            await accountStore.StoreAsync(account);
+            await assignerControlledProfileStore.DeleteAsync(body.Id);
+            return Ok(profile);
         }
 
 
-        [Authorize]
+
         [HttpGet("new")]
         public async Task<IActionResult> NewProfile([FromQuery] DateTime birthDate)
         {
@@ -114,12 +154,11 @@ namespace Mensch.Id.API.Controllers
             var profileData = await personStore.GetByIdAsync(account.PersonId);
             if (profileData != null)
                 return StatusCode((int)HttpStatusCode.Forbidden, "You already have a profile");
-            var vm = await newProfileViewModelBuilder.Build(birthDate, account.Id);
+            var vm = await newProfileViewModelBuilder.BuildForNormalUser(birthDate, account.Id);
             return Ok(vm);
         }
 
 
-        [Authorize]
         [HttpPost("{id}/verify")]
         public async Task<IActionResult> VerifyPerson([FromRoute] string id)
         {

@@ -1,0 +1,1 @@
+export const isMenschId = (str: string) => /^[0-9]{8}-[A-Z0-9]{5}$/i.test(str);

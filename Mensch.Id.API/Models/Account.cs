@@ -2,7 +2,12 @@
 
 namespace Mensch.Id.API.Models
 {
-    [BsonKnownTypes(typeof(ExternalAccount), typeof(LocalAccount))]
+    [BsonKnownTypes(
+        typeof(ExternalAccount), 
+        typeof(LocalAnonymousAccount), 
+        typeof(LocalAccount),
+        typeof(AssignerAccount)
+    )]
     public abstract class Account : IId
     {
         public string Id { get; set; }

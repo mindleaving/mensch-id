@@ -65,13 +65,13 @@ namespace Mensch.Id.API.AccessControl
             var externalId = ClaimsHelpers.GetExternalId(claims);
             var account = await accountStore.GetExternalByIdAsync(loginProvider, externalId);
             var token = securityTokenBuilder.BuildForExternalLoginProvider(account);
-            return AuthenticationResult.Success(token);
+            return AuthenticationResult.Success(token, account.AccountType);
         }
 
         public AuthenticationResult BuildSecurityTokenForUser(LocalAnonymousAccount account)
         {
             var token = securityTokenBuilder.BuildForLocalUser(account);
-            return AuthenticationResult.Success(token);
+            return AuthenticationResult.Success(token, account.AccountType);
         }
     }
 }

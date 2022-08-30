@@ -31,20 +31,20 @@ namespace Mensch.Id.API.Controllers
         private readonly IAccountStore store;
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly IAuthenticationModule authenticationModule;
-        private readonly IProfileCreator profileCreator;
+        private readonly IAccountCreator accountCreator;
         private readonly IEmailSender emailSender;
 
         public AccountsController(
             IAccountStore store,
             IHttpContextAccessor httpContextAccessor,
             IAuthenticationModule authenticationModule,
-            IProfileCreator profileCreator,
+            IAccountCreator accountCreator,
             IEmailSender emailSender)
         {
             this.store = store;
             this.httpContextAccessor = httpContextAccessor;
             this.authenticationModule = authenticationModule;
-            this.profileCreator = profileCreator;
+            this.accountCreator = accountCreator;
             this.emailSender = emailSender;
         }
 
@@ -54,8 +54,11 @@ namespace Mensch.Id.API.Controllers
         public IActionResult GetIsLoggedIn()
         {
             if (IsLoggedIn())
-                return Ok("1");
-            return StatusCode((int)HttpStatusCode.Unauthorized, "0");
+            {
+                var accountType = ControllerHelpers.GetAccountType(httpContextAccessor);
+                return Ok(new IsLoggedInResponse(accountType.Value));
+            }
+            return StatusCode((int)HttpStatusCode.Unauthorized);
         }
 
         [AllowAnonymous]
@@ -177,7 +180,7 @@ namespace Mensch.Id.API.Controllers
                     var existingAccount = await store.GetLocalByEmailAsync(body.Email);
                     if (existingAccount != null)
                         return Conflict("You already have an account with this email. Use password reset to gain access if you have forgotten your password.");
-                    var account = await profileCreator.CreateLocal(
+                    var account = await accountCreator.CreateLocal(
                         body.Email,
                         body.Password,
                         body.PreferedLanguage ?? Language.en,
@@ -195,7 +198,7 @@ namespace Mensch.Id.API.Controllers
                 }
                 case AccountType.LocalAnonymous:
                 {
-                    var localAnonymousAccount = await profileCreator.CreateLocalAnonymous(
+                    var localAnonymousAccount = await accountCreator.CreateLocalAnonymous(
                         body.Password,
                         body.PreferedLanguage ?? Language.en,
                         personId);

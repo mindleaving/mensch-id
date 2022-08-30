@@ -6,7 +6,8 @@ export namespace ViewModels {
         idCandidates: string[];
     }
 
-    interface ProfileViewModel extends Models.Person {
+    interface ProfileViewModel {
+        id: string;
         loginProviders: Enums.LoginProvider[];
         verifications: Models.Verification[];
     }

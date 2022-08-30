@@ -5,7 +5,6 @@ import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { NotificationManager } from 'react-notifications';
 import { apiClient } from '../../sharedCommonComponents/communication/ApiClient';
 import { ApiError } from '../../sharedCommonComponents/communication/ApiError';
-import { NewProfileForm } from '../components/NewProfileForm';
 import { CopyButton } from '../../sharedCommonComponents/components/CopyButton';
 import { LoginProvider } from '../types/enums.d';
 import { useContext } from 'react';
@@ -17,7 +16,6 @@ interface ProfilePageProps {}
 export const ProfilePage = (props: ProfilePageProps) => {
 
     const { profileData, setProfileData } = useContext(UserContext);
-    const [ isNewProfile, setIsNewProfile ] = useState<boolean>(false);
     const [ isLoading, setIsLoading ] = useState<boolean>(true);
     const navigate = useNavigate();
 
@@ -28,7 +26,8 @@ export const ProfilePage = (props: ProfilePageProps) => {
                 const response = await apiClient.instance!.get(`api/profiles/me`, {}, { handleError: false });
                 if(!response.ok) {
                     if(response.status === 404) {
-                        setIsNewProfile(true);
+                        navigate("/new-profile");
+                        return;
                     } else {
                         const errorText = await response.text();
                         throw new ApiError(response.status, errorText);
@@ -44,28 +43,11 @@ export const ProfilePage = (props: ProfilePageProps) => {
             }
         };
         loadProfileData();
-    }, [ isNewProfile ]);
+    }, []);
 
 
     if(isLoading) {
         return (<h3>{resolveText("Loading...")}</h3>);
-    }
-
-
-    if(isNewProfile) {
-        return (<>
-            <h1>{resolveText("NewProfile")}</h1>
-            <NewProfileForm
-                onProfileCreated={(newProfile) => {
-                    setProfileData({
-                        ...newProfile,
-                        loginProviders: [],
-                        verifications: []
-                    });
-                    setIsNewProfile(false);
-                }}
-            />
-        </>);
     }
 
     if(!profileData) {

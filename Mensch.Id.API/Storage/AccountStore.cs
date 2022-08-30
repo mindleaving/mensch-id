@@ -23,24 +23,19 @@ namespace Mensch.Id.API.Storage
             this.externalLoginObscurer = externalLoginObscurer;
         }
 
-        public Task<LocalAccount> GetLocalByEmailAsync(string email)
+        public async Task<LocalAccount> GetLocalByEmailAsync(string email)
         {
-            return collection.OfType<LocalAccount>()
-                .Find(x => x.Email == email)
-                .FirstOrDefaultAsync();
+            var filterBuilder = Builders<Account>.Filter;
+            var filter = filterBuilder.Eq(nameof(LocalAccount.Email), email);
+            return await collection.Find(filter).FirstOrDefaultAsync() as LocalAccount;
         }
 
         public async Task<LocalAnonymousAccount> GetLocalByMenschId(
             string menschId)
         {
-            return await collection
-                .OfType<LocalAnonymousAccount>()
-                .Find(x => x.PersonId == menschId)
-                .FirstOrDefaultAsync()
-                ?? await collection
-                .OfType<LocalAccount>()
-                .Find(x => x.PersonId == menschId)
-                .FirstOrDefaultAsync();
+            var filterBuilder = Builders<Account>.Filter;
+            var filter = filterBuilder.Eq(nameof(Account.PersonId), menschId);
+            return await collection.Find(filter).FirstOrDefaultAsync() as LocalAnonymousAccount;
         }
 
         public async Task<LocalAnonymousAccount> GetLocalByEmailOrMenschIdAsync(string emailOrMenschId)
