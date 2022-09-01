@@ -56,3 +56,9 @@ export const last = <T extends unknown>(collection: T[]): T | undefined => {
     }
     return collection[collection.length-1];
 }
+export const range = (start: number, end: number) => {
+    if(end < start) {
+        return [];
+    }
+    return Array.from({ length: end - start + 1}, (_,i) => start + i);
+}

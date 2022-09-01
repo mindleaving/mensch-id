@@ -41,6 +41,7 @@ export const Layout = (props: PropsWithChildren<LayoutProps>) => {
                         <Nav>
                             <Nav.Link onClick={() => navigate("/privacy")}>{resolveText("Menu_Privacy")}</Nav.Link>
                             <Nav.Link onClick={() => navigate("/terms-of-service")}>{resolveText("Menu_TermsOfService")}</Nav.Link>
+                            <Nav.Link onClick={() => navigate("/about")}>{resolveText("Menu_About")}</Nav.Link>
                         </Nav>
                         <Nav className='me-auto' />
                         {props.isLoggedIn

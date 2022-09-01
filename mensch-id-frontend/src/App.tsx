@@ -28,6 +28,7 @@ import { ViewModels } from './localComponents/types/viewModels';
 import { AssignerPage } from './localComponents/pages/AssignerPage';
 import { NewProfilePage } from './localComponents/pages/NewProfilePage';
 import { AccountType } from './localComponents/types/enums.d';
+import { AboutPage } from './localComponents/pages/AboutPage';
 
 defaultGlobalizer.instance = new Globalizer(
     navigator.languages.map(x => x.substring(0, 2)), 
@@ -119,6 +120,7 @@ function App() {
                 <Route path='/request-password-reset' element={<RequestPasswordResetPage />} />
                 <Route path="/privacy" element={<PrivacyPage />} />
                 <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+                <Route path="/about" element={<AboutPage />} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/" element={<HomePage />} />
                 <Route path="*" element={<NotFoundPage />} />
