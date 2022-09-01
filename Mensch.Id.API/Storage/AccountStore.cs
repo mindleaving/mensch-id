@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Mensch.Id.API.AccessControl;
@@ -30,23 +31,25 @@ namespace Mensch.Id.API.Storage
             return await collection.Find(filter).FirstOrDefaultAsync() as LocalAccount;
         }
 
-        public async Task<LocalAnonymousAccount> GetLocalByMenschId(
+        public async Task<List<LocalAnonymousAccount>> GetLocalsByMenschId(
             string menschId)
         {
             var filterBuilder = Builders<Account>.Filter;
             var filter = filterBuilder.Eq(nameof(Account.PersonId), menschId);
-            return await collection.Find(filter).FirstOrDefaultAsync() as LocalAnonymousAccount;
+            var localAccounts = await collection.Find(filter).ToListAsync();
+            return localAccounts.Cast<LocalAnonymousAccount>().ToList();
         }
 
-        public async Task<LocalAnonymousAccount> GetLocalByEmailOrMenschIdAsync(string emailOrMenschId)
+        public async Task<List<LocalAnonymousAccount>> GetLocalsByEmailOrMenschIdAsync(string emailOrMenschId)
         {
             if (MenschIdGenerator.ValidateId(emailOrMenschId))
             {
-                return await GetLocalByMenschId(emailOrMenschId);
+                return await GetLocalsByMenschId(emailOrMenschId);
             }
             if (EmailValidator.IsValidEmailFormat(emailOrMenschId))
             {
-                return await GetLocalByEmailAsync(emailOrMenschId);
+                var localAccount = await GetLocalByEmailAsync(emailOrMenschId);
+                return new List<LocalAnonymousAccount> { localAccount };
             }
             return null;
         }
@@ -78,15 +81,15 @@ namespace Mensch.Id.API.Storage
         }
 
         public async Task<StorageResult> ChangePasswordAsync(
-            string email,
-            string passwordBase64)
+            string accountId,
+            string passwordHash)
         {
             var updateBuilder = Builders<LocalAccount>.Update;
             var result = await collection.OfType<LocalAccount>()
                 .UpdateOneAsync(
-                    x => x.Email == email,
+                    x => x.Id == accountId,
                     updateBuilder.Combine(
-                        updateBuilder.Set(x => x.PasswordHash, passwordBase64),
+                        updateBuilder.Set(x => x.PasswordHash, passwordHash),
                         updateBuilder.Set(x => x.PasswordResetToken, null)
                     ));
             if(result.IsAcknowledged && result.MatchedCount == 1)

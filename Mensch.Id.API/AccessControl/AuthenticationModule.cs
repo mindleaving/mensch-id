@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Models;
 using Mensch.Id.API.Storage;
+using Microsoft.AspNetCore.Identity;
 
 namespace Mensch.Id.API.AccessControl
 {
@@ -12,27 +13,28 @@ namespace Mensch.Id.API.AccessControl
     {
         private readonly IAccountStore accountStore;
         private readonly ISecurityTokenBuilder securityTokenBuilder;
+        private readonly IPasswordHasher<LocalAnonymousAccount> passwordHasher;
 
         public AuthenticationModule(
             IAccountStore accountStore,
-            ISecurityTokenBuilder securityTokenBuilder)
+            ISecurityTokenBuilder securityTokenBuilder,
+            IPasswordHasher<LocalAnonymousAccount> passwordHasher)
         {
             this.accountStore = accountStore;
             this.securityTokenBuilder = securityTokenBuilder;
+            this.passwordHasher = passwordHasher;
         }
 
         public async Task<bool> ChangePasswordAsync(
-            string email,
+            string accountId,
             string password,
             bool changePasswordOnNextLogin = false)
         {
-            var matchingAccount = await accountStore.GetLocalByEmailAsync(email);
+            var matchingAccount = await accountStore.GetByIdAsync(accountId) as LocalAnonymousAccount;
             if (matchingAccount == null)
                 return false;
-            var passwordHash = PasswordHasher.Hash(password, matchingAccount.Salt);
-            var passwordBase64 = Convert.ToBase64String(passwordHash);
-
-            var result = await accountStore.ChangePasswordAsync(email, passwordBase64);
+            var passwordHash = passwordHasher.HashPassword(matchingAccount, password);
+            var result = await accountStore.ChangePasswordAsync(matchingAccount.Id, passwordHash);
             return result.IsSuccess;
         }
 
@@ -40,18 +42,29 @@ namespace Mensch.Id.API.AccessControl
         {
             if(string.IsNullOrEmpty(loginInformation.Password))
                 return AuthenticationResult.Failed(AuthenticationErrorType.InvalidPassword);
-            var account = await accountStore.GetLocalByEmailOrMenschIdAsync(loginInformation.EmailOrMenschId);
-            if(account == null)
+            var accounts = await accountStore.GetLocalsByEmailOrMenschIdAsync(loginInformation.EmailOrMenschId);
+            if(accounts.Count == 0)
                 return AuthenticationResult.Failed(AuthenticationErrorType.UserNotFound);
-            var isMatch = HashComparer.Compare(loginInformation.Password, account.PasswordHash, account.Salt);
-            if (!isMatch)
-                return AuthenticationResult.Failed(AuthenticationErrorType.InvalidPassword);
-            if (account is LocalAccount localAccount)
+            foreach (var account in accounts)
             {
-                if(!localAccount.IsEmailVerified)
-                    return AuthenticationResult.Failed(AuthenticationErrorType.EmailNotVerified);
+                var verificationResult = passwordHasher.VerifyHashedPassword(account, account.PasswordHash, loginInformation.Password);
+                if (verificationResult == PasswordVerificationResult.Failed)
+                    continue;
+                if (verificationResult != PasswordVerificationResult.Success && verificationResult != PasswordVerificationResult.SuccessRehashNeeded)
+                    throw new ArgumentOutOfRangeException(nameof(verificationResult), $"Invalid verification result '{verificationResult}'");
+                if (verificationResult == PasswordVerificationResult.SuccessRehashNeeded)
+                {
+                    account.PasswordHash = passwordHasher.HashPassword(account, loginInformation.Password);
+                    await accountStore.StoreAsync(account);
+                }
+                if (account is LocalAccount localAccount)
+                {
+                    if(!localAccount.IsEmailVerified)
+                        return AuthenticationResult.Failed(AuthenticationErrorType.EmailNotVerified);
+                }
+                return BuildSecurityTokenForUser(account);
             }
-            return BuildSecurityTokenForUser(account);
+            return AuthenticationResult.Failed(AuthenticationErrorType.InvalidPassword);
         }
 
         public async Task<AuthenticationResult> AuthenticateExternalAsync(List<Claim> claims)

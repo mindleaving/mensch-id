@@ -17,7 +17,7 @@ namespace Mensch.Id.API.Workflow.Email
         {
             if (token == null || account.EmailVerificationToken == null)
                 return false;
-            return HashComparer.Compare(token, account.EmailVerificationToken, account.Salt);
+            return HashComparer.Compare(token, account.EmailVerificationToken, account.EmailVerificationAndPasswordResetSalt);
         }
     }
 }

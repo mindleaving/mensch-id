@@ -9,7 +9,7 @@ import { NotificationManager } from 'react-notifications';
 import { Center } from '../../sharedCommonComponents/components/Center';
 import { AccountType } from '../types/enums.d';
 import { confirmAlert } from 'react-confirm-alert';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface RegistrationFormProps {
     onLoggedIn: (authenticationResult: Models.AuthenticationResult) => void;
@@ -90,6 +90,14 @@ export const RegistrationForm = (props: RegistrationFormProps) => {
         );
     }
 
+    const insertLink = (str: string, linkTarget: string) => {
+        const placeholderGroup = str.match(/^(.*)\{(.+)\}(.*)$/);
+        if(!placeholderGroup) {
+            return str;
+        }
+        return (<>{placeholderGroup[1]}<Link to={linkTarget} target="_blank">{placeholderGroup[2]}</Link>{placeholderGroup[3]}</>);
+    }
+
     return (
         <Form onSubmit={validate}>
             <FormGroup>
@@ -140,14 +148,15 @@ export const RegistrationForm = (props: RegistrationFormProps) => {
             {selectedAccountType === AccountType.Local
             ? <FormGroup>
                 <FormCheck required
-                    label={resolveText("Register_AcceptPrivacy")}
+                    label={insertLink(resolveText("Register_AcceptPrivacy"), "/privacy")}
+                    checked={acceptPrivacy}
                     onChange={(e:any) => setAcceptPrivacy(e.target.checked)}
                 />
             </FormGroup>
             : null}
             <FormGroup>
                 <FormCheck required
-                    label={resolveText("Register_AcceptTermsOfService")}
+                    label={insertLink(resolveText("Register_AcceptTermsOfService"), "/terms-of-service")}
                     checked={acceptTermsOfService}
                     onChange={(e:any) => setAcceptTermsOfService(e.target.checked)}
                 />

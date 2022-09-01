@@ -71,7 +71,7 @@ namespace Mensch.Id.API.Controllers
                 return NotFound();
             if (account.IsEmailVerified)
                 return BadRequest("Email is already verified");
-            account.EmailVerificationToken = EmailVerification.GenerateToken(account.Salt, out var unencryptedToken);
+            account.EmailVerificationToken = EmailVerification.GenerateToken(account.EmailVerificationAndPasswordResetSalt, out var unencryptedToken);
             await store.StoreAsync(account);
             var verificationEmail = new VerificationEmail
             {
@@ -114,7 +114,7 @@ namespace Mensch.Id.API.Controllers
             var account = await store.GetLocalByEmailAsync(body.Email);
             if (account == null)
                 return NotFound();
-            account.PasswordResetToken = PasswordReset.GenerateToken(account.Salt, out var unencryptedToken);
+            account.PasswordResetToken = PasswordReset.GenerateToken(account.EmailVerificationAndPasswordResetSalt, out var unencryptedToken);
             await store.StoreAsync(account);
             var passwordResetEmail = new PasswordResetEmail
             {
@@ -133,6 +133,8 @@ namespace Mensch.Id.API.Controllers
             [FromRoute] string accountId,
             [FromBody] ResetPasswordBody body)
         {
+            if (accountId != null && accountId != body.AccountId)
+                return BadRequest("Account ID of body doesn't match route");
             var account = await store.GetByIdAsync(body.AccountId);
             if (account == null)
                 return NotFound();
@@ -142,7 +144,7 @@ namespace Mensch.Id.API.Controllers
                 return StatusCode((int)HttpStatusCode.Forbidden, "Invalid reset token");
             if(body.Password.Length < MinimumPasswordLength)
                 return BadRequest($"Password too short. Must be at least {MinimumPasswordLength} characters long.");
-            if (!await authenticationModule.ChangePasswordAsync(localAccount.Email, body.Password))
+            if (!await authenticationModule.ChangePasswordAsync(localAccount.Id, body.Password))
                 return StatusCode((int)HttpStatusCode.InternalServerError, "An unknown error occured");
             var authenticationResult = await authenticationModule.AuthenticateLocalAsync(new LoginInformation(localAccount.Email, body.Password));
             return Ok(authenticationResult);
@@ -185,7 +187,7 @@ namespace Mensch.Id.API.Controllers
                         body.Password,
                         body.PreferedLanguage ?? Language.en,
                         personId);
-                    account.EmailVerificationToken = EmailVerification.GenerateToken(account.Salt, out var unencryptedToken);
+                    account.EmailVerificationToken = EmailVerification.GenerateToken(account.EmailVerificationAndPasswordResetSalt, out var unencryptedToken);
                     await store.StoreAsync(account);
                     var verificationEmail = new VerificationEmail
                     {
@@ -327,9 +329,9 @@ namespace Mensch.Id.API.Controllers
             if (!authenticationResult.IsAuthenticated)
                 return StatusCode((int)HttpStatusCode.Unauthorized, authenticationResult);
 
-            var accountToBeLinked = await store.GetLocalByEmailOrMenschIdAsync(loginInformation.EmailOrMenschId);
-            if(accountToBeLinked.PersonId != null)
-                return StatusCode((int)HttpStatusCode.Forbidden, "That account is already linked to another profile");
+            var accountsToBeLinked = await store.GetLocalsByEmailOrMenschIdAsync(loginInformation.EmailOrMenschId);
+            if(accountsToBeLinked.Any(account => account.PersonId != null))
+                return StatusCode((int)HttpStatusCode.Forbidden, "One or more matching accounts are already linked to another profile");
 
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
             var currentAccount = await store.GetFromClaimsAsync(claims);
@@ -338,8 +340,11 @@ namespace Mensch.Id.API.Controllers
             if (currentAccount.PersonId == null)
                 return StatusCode((int)HttpStatusCode.ServiceUnavailable, "Your current account doesn't have a profile yet");
 
-            accountToBeLinked.PersonId = currentAccount.PersonId;
-            await store.StoreAsync(accountToBeLinked);
+            foreach (var accountToBeLinked in accountsToBeLinked)
+            {
+                accountToBeLinked.PersonId = currentAccount.PersonId;
+                await store.StoreAsync(accountToBeLinked);
+            }
             return Ok();
         }
 
