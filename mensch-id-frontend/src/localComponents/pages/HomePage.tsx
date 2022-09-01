@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Row, Col, Button } from 'react-bootstrap';
+import { Button, Image } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../../sharedCommonComponents/communication/ApiClient';
+import { Center } from '../../sharedCommonComponents/components/Center';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 
 interface HomePageProps {}
@@ -44,13 +45,16 @@ export const HomePage = (props: HomePageProps) => {
             <p>
                 {resolveText("SendChallenge_Text")}
             </p>
-            <Row>
-                <Col/>
-                <Col xs="auto">
-                    <Button onClick={() => navigate("/challenge")}>{resolveText("SendChallenge")}</Button>
-                </Col>
-                <Col/>
-            </Row>
+            <Center>
+                <Button onClick={() => navigate("/challenge")}>{resolveText("SendChallenge")}</Button>
+            </Center>
+            <Center className='mt-5'>
+                <Image
+                    src='/img/blood-sample-tube-mensch-id.jpg'
+                    width={450}
+                    alt="Blood sample tube with 웃ID on it"
+                />
+            </Center>
         </>
     );
 

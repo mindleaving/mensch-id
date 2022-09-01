@@ -29,6 +29,7 @@ import { AssignerPage } from './localComponents/pages/AssignerPage';
 import { NewProfilePage } from './localComponents/pages/NewProfilePage';
 import { AccountType } from './localComponents/types/enums.d';
 import { AboutPage } from './localComponents/pages/AboutPage';
+import { PilotProjectHeidelbergPage } from './localComponents/pages/PilotProjectHeidelbergPage';
 
 defaultGlobalizer.instance = new Globalizer(
     navigator.languages.map(x => x.substring(0, 2)), 
@@ -121,9 +122,10 @@ function App() {
                 <Route path="/privacy" element={<PrivacyPage />} />
                 <Route path="/terms-of-service" element={<TermsOfServicePage />} />
                 <Route path="/about" element={<AboutPage />} />
+                <Route path="/pilot-project-hd" element={<PilotProjectHeidelbergPage />} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/" element={<HomePage />} />
-                <Route path="*" element={<NotFoundPage />} />
+                <Route path="*" element={isLoggedIn ? <NotFoundPage /> : <LoginPage onLoggedIn={onLoggedIn} />} />
             </Routes>
         </Layout>
     </UserContext.Provider>

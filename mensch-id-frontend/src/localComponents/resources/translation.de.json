@@ -345,5 +345,12 @@
   "TakeControl_OwnershipSecret": "Besitzübernahme-Code",
   "TakeControl_TakeControl": "Übernehme die Kontrolle",
   "TakeControl_TakingControl": "Übernehme die Kontrolle...",
-  "TakeOverControl": "Übernehme die Kontrolle"
+  "TakeOverControl": "Übernehme die Kontrolle",
+  "About": "Über mensch.ID (웃ID)",
+  "About_ElevatorPitch": "mensch.ID möchte gerne jeder Person eine eindeutige ID zur Verfügung stellen um dadurch Prozesse des täglichen Lebens zu vereinfachen, z.B. im Gesundheitswesen, bei Behördengängen und im Finanzbereich.\nDas Projekt ist inspiriert von den nationalen IDs in Skandinavien, die dort den zuverlässigen Austausch von Informationen über Behördengrenzen hinweg ermöglichen und dadurch zu einem einfacheren, bequemeren und glücklicheren Leben beitragen.",
+  "AuthenticationErrorType_Unknown": "Unbekannter Status",
+  "FAQ": "Häufig gestellte Fragen",
+  "Menu_About": "Über uns",
+  "Menu_FAQ": "FAQ",
+  "PilotProject_Heidelberg": "Pilotprojekt Heidelberg"
 }
