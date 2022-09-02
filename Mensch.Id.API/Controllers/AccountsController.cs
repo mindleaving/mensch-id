@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Security.Claims;
@@ -60,6 +61,24 @@ namespace Mensch.Id.API.Controllers
             }
             return StatusCode((int)HttpStatusCode.Unauthorized);
         }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> GetMyAccounts()
+        {
+            var claims = ControllerHelpers.GetClaims(httpContextAccessor);
+            var personId = ClaimsHelpers.GetPersonId(claims);
+            if (personId == null)
+            {
+                var currentAccount = await store.GetFromClaimsAsync(claims);
+                if (currentAccount?.PersonId == null)
+                    return Ok(new List<Account>());
+                personId = currentAccount.PersonId;
+            }
+            var myAccounts = await store.GeAllForMenschIdAsync(personId);
+            return Ok(myAccounts);
+        }
+
 
         [AllowAnonymous]
         [HttpPost("resend-verification-email")]
@@ -146,7 +165,7 @@ namespace Mensch.Id.API.Controllers
                 return BadRequest($"Password too short. Must be at least {MinimumPasswordLength} characters long.");
             if (!await authenticationModule.ChangePasswordAsync(localAccount.Id, body.Password))
                 return StatusCode((int)HttpStatusCode.InternalServerError, "An unknown error occured");
-            var authenticationResult = await authenticationModule.AuthenticateLocalAsync(new LoginInformation(localAccount.Email, body.Password));
+            var authenticationResult = await authenticationModule.AuthenticateLocalByEmailOrMenschIdAsync(new LoginInformation(localAccount.Email, body.Password));
             return Ok(authenticationResult);
         }
 
@@ -221,7 +240,7 @@ namespace Mensch.Id.API.Controllers
         {
             if (loginInformation == null)
                 return BadRequest("No login information provided");
-            var authenticationResult = await authenticationModule.AuthenticateLocalAsync(loginInformation);
+            var authenticationResult = await authenticationModule.AuthenticateLocalByEmailOrMenschIdAsync(loginInformation);
             if (authenticationResult.IsAuthenticated)
                 return Ok(authenticationResult);
             return StatusCode((int)HttpStatusCode.Unauthorized, authenticationResult);
@@ -325,7 +344,7 @@ namespace Mensch.Id.API.Controllers
         {
             if (loginInformation == null)
                 return BadRequest("No login information provided");
-            var authenticationResult = await authenticationModule.AuthenticateLocalAsync(loginInformation);
+            var authenticationResult = await authenticationModule.AuthenticateLocalByEmailOrMenschIdAsync(loginInformation);
             if (!authenticationResult.IsAuthenticated)
                 return StatusCode((int)HttpStatusCode.Unauthorized, authenticationResult);
 
@@ -358,6 +377,61 @@ namespace Mensch.Id.API.Controllers
             await httpContextAccessor.HttpContext.SignOutAsync();
             return Ok();
         }
+
+        [Authorize]
+        [HttpPost("{accountId}/change-password")]
+        public async Task<IActionResult> ChangePassword(
+            [FromRoute] string accountId,
+            [FromBody] ChangePasswordRequest body)
+        {
+            if (body.AccountId != accountId)
+                return BadRequest("Account ID in body doesn't match route");
+            if(body.NewPassword.Length < MinimumPasswordLength)
+                return BadRequest($"Password too short. Must be at least {MinimumPasswordLength} characters long.");
+            var authenticationResult = await authenticationModule.AuthenticateLocalByAccountIdAsync(body.AccountId, body.CurrentPassword);
+            if (!authenticationResult.IsAuthenticated)
+            {
+                switch (authenticationResult.Error)
+                {
+                    case AuthenticationErrorType.UserNotFound:
+                        return NotFound();
+                    case AuthenticationErrorType.AuthenticationMethodNotAvailable:
+                        return StatusCode((int)HttpStatusCode.ServiceUnavailable);
+                    case AuthenticationErrorType.InvalidPassword:
+                    case AuthenticationErrorType.Unknown:
+                    case AuthenticationErrorType.EmailNotVerified:
+                    case null:
+                        return Unauthorized();
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+
+            if (authenticationResult.AccountType == AccountType.External)
+                return BadRequest("Cannot change password for external account");
+            if(await authenticationModule.ChangePasswordAsync(body.AccountId, body.NewPassword))
+                return Ok();
+            return StatusCode((int)HttpStatusCode.InternalServerError);
+        }
+
+        [Authorize]
+        [HttpDelete("{accountId}")]
+        public async Task<IActionResult> DeleteAccount(
+            [FromRoute] string accountId)
+        {
+            var claims = ControllerHelpers.GetClaims(httpContextAccessor);
+            var personId = ClaimsHelpers.GetPersonId(claims);
+            var matchingAccount = await store.GetByIdAsync(accountId);
+            if (matchingAccount == null)
+                return Ok();
+            if (matchingAccount.PersonId == null)
+                return BadRequest("Only accounts associated with a mensch.ID can be deleted");
+            if (matchingAccount.PersonId != personId)
+                return StatusCode((int)HttpStatusCode.Forbidden, "Your current login indicates a different mensch.ID than the account you are trying to delete. If this is your account, please login using credentials corresponding to the mensch.ID associated with that account");
+            await store.DeleteAsync(accountId);
+            return Ok();
+        }
+
 
 
 

@@ -14,6 +14,7 @@ namespace Mensch.Id.API.Storage
             string emailOrMenschId);
         Task<ExternalAccount> GetExternalByIdAsync(LoginProvider loginProvider, string externalId);
         Task<Account> GetFromClaimsAsync(List<Claim> claims);
+        Task<List<Account>> GeAllForMenschIdAsync(string menschId);
         Task<StorageResult> ChangePasswordAsync(string accountId, string passwordHash);
         Task DeleteAllForPerson(string personId);
     }

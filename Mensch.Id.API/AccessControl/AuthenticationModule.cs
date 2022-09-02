@@ -38,7 +38,7 @@ namespace Mensch.Id.API.AccessControl
             return result.IsSuccess;
         }
 
-        public async Task<AuthenticationResult> AuthenticateLocalAsync(LoginInformation loginInformation)
+        public async Task<AuthenticationResult> AuthenticateLocalByEmailOrMenschIdAsync(LoginInformation loginInformation)
         {
             if(string.IsNullOrEmpty(loginInformation.Password))
                 return AuthenticationResult.Failed(AuthenticationErrorType.InvalidPassword);
@@ -65,6 +65,39 @@ namespace Mensch.Id.API.AccessControl
                 return BuildSecurityTokenForUser(account);
             }
             return AuthenticationResult.Failed(AuthenticationErrorType.InvalidPassword);
+        }
+
+        public async Task<AuthenticationResult> AuthenticateLocalByAccountIdAsync(
+            string accountId,
+            string password)
+        {
+            if(string.IsNullOrEmpty(password))
+                return AuthenticationResult.Failed(AuthenticationErrorType.InvalidPassword);
+            var account = await accountStore.GetByIdAsync(accountId) as LocalAnonymousAccount;
+            if(account == null)
+                return AuthenticationResult.Failed(AuthenticationErrorType.UserNotFound);
+            var verificationResult = passwordHasher.VerifyHashedPassword(account, account.PasswordHash, password);
+            switch (verificationResult)
+            {
+                case PasswordVerificationResult.Failed:
+                    return AuthenticationResult.Failed(AuthenticationErrorType.InvalidPassword);
+                case PasswordVerificationResult.SuccessRehashNeeded:
+                    account.PasswordHash = passwordHasher.HashPassword(account, password);
+                    await accountStore.StoreAsync(account);
+                    break;
+                case PasswordVerificationResult.Success:
+                    // No additional actions needed
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(verificationResult), $"Invalid verification result '{verificationResult}'");
+            }
+
+            if (account is LocalAccount localAccount)
+            {
+                if(!localAccount.IsEmailVerified)
+                    return AuthenticationResult.Failed(AuthenticationErrorType.EmailNotVerified);
+            }
+            return BuildSecurityTokenForUser(account);
         }
 
         public async Task<AuthenticationResult> AuthenticateExternalAsync(List<Claim> claims)

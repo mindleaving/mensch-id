@@ -44,11 +44,13 @@ namespace Mensch.Id.API.Storage
 
         public Task<bool> ExistsAsync(string id)
         {
+            if (id == null) throw new ArgumentNullException(nameof(id));
             return collection.Find(x => x.Id == id).AnyAsync();
         }
 
         public Task<T> GetByIdAsync(string id)
         {
+            if (id == null) throw new ArgumentNullException(nameof(id));
             return collection.Find(x => x.Id == id).FirstOrDefaultAsync();
         }
 

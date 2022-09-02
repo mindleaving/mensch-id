@@ -30,6 +30,7 @@ import { NewProfilePage } from './localComponents/pages/NewProfilePage';
 import { AccountType } from './localComponents/types/enums.d';
 import { AboutPage } from './localComponents/pages/AboutPage';
 import { PilotProjectHeidelbergPage } from './localComponents/pages/PilotProjectHeidelbergPage';
+import { AccountManagementPage } from './localComponents/pages/AccountManagementPage';
 
 defaultGlobalizer.instance = new Globalizer(
     navigator.languages.map(x => x.substring(0, 2)), 
@@ -113,6 +114,7 @@ function App() {
                 {isLoggedIn && accountType !== AccountType.Assigner ? <Route path="/me" element={<ProfilePage />} /> : null}
                 {isLoggedIn && accountType !== AccountType.Assigner ? <Route path="/new-profile" element={<NewProfilePage />} /> : null}
                 {isLoggedIn && accountType !== AccountType.Assigner ? <Route path="/challenges" element={<MyChallengesPage />} /> : null}
+                {isLoggedIn && accountType !== AccountType.Assigner ? <Route path="/accounts" element={<AccountManagementPage />} /> : null}
                 {isLoggedIn && accountType === AccountType.Assigner ? <Route path="/assigner" element={<AssignerPage />} /> : null}
                 
                 <Route path="/challenge" element={<SendChallengePage />} />

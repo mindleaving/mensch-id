@@ -1,5 +1,5 @@
 import React, { FormEvent, useState } from 'react';
-import { Alert, Col, Form, FormCheck, FormGroup, FormLabel, Row } from 'react-bootstrap';
+import { Alert, Col, Form, FormCheck, FormControl, FormGroup, FormLabel, Row } from 'react-bootstrap';
 import { AsyncButton } from '../../sharedCommonComponents/components/AsyncButton';
 import { RowFormGroup } from '../../sharedCommonComponents/components/RowFormGroup';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
@@ -133,18 +133,30 @@ export const RegistrationForm = (props: RegistrationFormProps) => {
                 isValid={email.includes('@')}
             />
             : null}
-            <RowFormGroup required
-                type='password'
-                label={resolveText("Password")}
-                value={password}
-                onChange={setPassword}
-            />
-            <RowFormGroup required
-                type='password'
-                label={resolveText("PasswordRepeat")}
-                value={passwordRepeat}
-                onChange={setPasswordRepeat}
-            />
+            <FormGroup as={Row} className='my-1'>
+                <FormLabel column xs={4}>{resolveText("Password")}</FormLabel>
+                <Col>
+                    <FormControl required
+                        type='password'
+                        value={password}
+                        onChange={(e:any) => setPassword(e.target.value)}
+                        isInvalid={password.length > 0 && password.length < 8}
+                    />
+                    <FormControl.Feedback type='invalid'>{resolveText("Register_TooShort")}</FormControl.Feedback>
+                </Col>
+            </FormGroup>
+            <FormGroup as={Row} className='my-1'>
+                <FormLabel column xs={4}>{resolveText("PasswordRepeat")}</FormLabel>
+                <Col>
+                    <FormControl required
+                        type='password'
+                        value={passwordRepeat}
+                        onChange={(e:any) => setPasswordRepeat(e.target.value)}
+                        isInvalid={passwordRepeat.length > 0 && passwordRepeat !== password}
+                    />
+                    <FormControl.Feedback type='invalid'>{resolveText("Register_PasswordsDoNotMatch")}</FormControl.Feedback>
+                </Col>
+            </FormGroup>
             {selectedAccountType === AccountType.Local
             ? <FormGroup>
                 <FormCheck required
@@ -168,7 +180,12 @@ export const RegistrationForm = (props: RegistrationFormProps) => {
                     activeText={"Register"}
                     executingText={"Submitting..."}
                     isExecuting={isSubmitting}
-                    disabled={(selectedAccountType === AccountType.Local && !acceptPrivacy) || !acceptTermsOfService}
+                    disabled={
+                        password.length === 0 
+                        || passwordRepeat !== password 
+                        || (selectedAccountType === AccountType.Local && !acceptPrivacy) 
+                        || !acceptTermsOfService
+                    }
                 />
             </Center>
         </Form>

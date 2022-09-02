@@ -24,6 +24,12 @@ export namespace Models {
         error?: Enums.AuthenticationErrorType | null;
     }
 
+    interface ChangePasswordRequest {
+        accountId: string;
+        currentPassword: string;
+        newPassword: string;
+    }
+
     interface ExternalAccount extends Models.Account {
         loginProvider: Enums.LoginProvider;
         externalId: string;

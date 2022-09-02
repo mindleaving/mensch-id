@@ -26,6 +26,7 @@ namespace Mensch.Id.API.Storage
 
         public async Task<LocalAccount> GetLocalByEmailAsync(string email)
         {
+            if (email == null) throw new ArgumentNullException(nameof(email));
             var filterBuilder = Builders<Account>.Filter;
             var filter = filterBuilder.Eq(nameof(LocalAccount.Email), email);
             return await collection.Find(filter).FirstOrDefaultAsync() as LocalAccount;
@@ -34,6 +35,7 @@ namespace Mensch.Id.API.Storage
         public async Task<List<LocalAnonymousAccount>> GetLocalsByMenschId(
             string menschId)
         {
+            if (menschId == null) throw new ArgumentNullException(nameof(menschId));
             var filterBuilder = Builders<Account>.Filter;
             var filter = filterBuilder.Eq(nameof(Account.PersonId), menschId);
             var localAccounts = await collection.Find(filter).ToListAsync();
@@ -80,19 +82,69 @@ namespace Mensch.Id.API.Storage
             return await GetExternalByIdAsync(loginProvider, externalId);
         }
 
+        public Task<List<Account>> GeAllForMenschIdAsync(
+            string menschId)
+        {
+            if (menschId == null) throw new ArgumentNullException(nameof(menschId));
+            return collection.Find(x => x.PersonId == menschId).ToListAsync();
+        }
+
         public async Task<StorageResult> ChangePasswordAsync(
             string accountId,
             string passwordHash)
         {
-            var updateBuilder = Builders<LocalAccount>.Update;
-            var result = await collection.OfType<LocalAccount>()
-                .UpdateOneAsync(
-                    x => x.Id == accountId,
-                    updateBuilder.Combine(
-                        updateBuilder.Set(x => x.PasswordHash, passwordHash),
-                        updateBuilder.Set(x => x.PasswordResetToken, null)
-                    ));
-            if(result.IsAcknowledged && result.MatchedCount == 1)
+            if (accountId == null) throw new ArgumentNullException(nameof(accountId));
+            var account = await GetByIdAsync(accountId);
+            if(account == null)
+                return StorageResult.Error(StoreErrorType.NoMatch);
+            UpdateResult result;
+            switch (account.AccountType)
+            {
+                case AccountType.Local:
+                    {
+                        var updateBuilder = Builders<LocalAccount>.Update;
+                        result = await collection
+                            .OfType<LocalAccount>()
+                            .UpdateOneAsync(
+                                x => x.Id == accountId,
+                                updateBuilder.Combine(
+                                    updateBuilder.Set(x => x.PasswordHash, passwordHash),
+                                    updateBuilder.Set(x => x.PasswordResetToken, null)
+                                )
+                            );
+                    }
+                    break;
+                case AccountType.LocalAnonymous:
+                    {
+                        var updateBuilder = Builders<LocalAnonymousAccount>.Update;
+                        result = await collection
+                            .OfType<LocalAnonymousAccount>()
+                            .UpdateOneAsync(
+                                x => x.Id == accountId,
+                                updateBuilder.Set(x => x.PasswordHash, passwordHash)
+                            );
+                        break;
+                    }
+                case AccountType.External:
+                    throw new InvalidOperationException("Cannot change password for external account");
+                case AccountType.Assigner:
+                    {
+                        var updateBuilder = Builders<AssignerAccount>.Update;
+                        result = await collection
+                            .OfType<AssignerAccount>()
+                            .UpdateOneAsync(
+                                x => x.Id == accountId,
+                                updateBuilder.Combine(
+                                    updateBuilder.Set(x => x.PasswordHash, passwordHash),
+                                    updateBuilder.Set(x => x.PasswordResetToken, null)
+                                )
+                            );
+                    }
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+            if (result.IsAcknowledged && result.MatchedCount == 1)
                 return StorageResult.Success();
             return StorageResult.Error(StoreErrorType.NoMatch);
         }
@@ -100,6 +152,7 @@ namespace Mensch.Id.API.Storage
         public Task DeleteAllForPerson(
             string personId)
         {
+            if (personId == null) throw new ArgumentNullException(nameof(personId));
             return collection.DeleteManyAsync(x => x.PersonId == personId);
         }
     }
