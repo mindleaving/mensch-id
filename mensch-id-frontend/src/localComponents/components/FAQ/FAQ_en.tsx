@@ -52,7 +52,7 @@ export const FAQ_EN = () => {
                 eventKey='faq-q4'
             >
                 <p>웃ID has been released in September 2022 and is currently being proposed to different German, Danish and European authorities and projects.</p>
-                <p>A <Link to="/pilot-project-hd">pilot project is planned to take place in Heidelberg, Germany</Link> starting in the first half of 2023.</p>
+                {/* <p>A <Link to="/pilot-project-hd">pilot project is planned to take place in Heidelberg, Germany</Link> starting in the first half of 2023.</p> */}
                 <p>Even though it is not widely used yet, I would appreciate if you could spread the word and give your 웃ID to your doctor and authorities. Please explain to them that this is a unique ID and point them to this website.</p>
             </AccordionCard>
         </Accordion>

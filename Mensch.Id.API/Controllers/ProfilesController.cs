@@ -56,6 +56,8 @@ namespace Mensch.Id.API.Controllers
             if (personId == null)
             {
                 var account = await accountStore.GetFromClaimsAsync(claims);
+                if (account.PersonId == null)
+                    return NotFound();
                 personId = account.PersonId;
             }
             var profileData = await personStore.GetByIdAsync(personId);
@@ -157,9 +159,12 @@ namespace Mensch.Id.API.Controllers
                 return BadRequest("No birthdate specified, but it's required for generating ID candidates");
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
             var account = await accountStore.GetFromClaimsAsync(claims);
-            var profileData = await personStore.GetByIdAsync(account.PersonId);
-            if (profileData != null)
-                return StatusCode((int)HttpStatusCode.Forbidden, "You already have a profile");
+            if (account.PersonId != null)
+            {
+                var profileData = await personStore.GetByIdAsync(account.PersonId);
+                if (profileData != null)
+                    return StatusCode((int)HttpStatusCode.Forbidden, "You already have a profile");
+            }
             var vm = await newProfileViewModelBuilder.BuildForNormalUser(birthDate, account.Id);
             return Ok(vm);
         }

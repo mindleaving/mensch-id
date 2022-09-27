@@ -313,7 +313,7 @@ namespace Mensch.Id.API.Controllers
             {
                 var jwtAccountId = jwtClaims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
                 if (jwtAccountId == null)
-                    return BadRequest("Your JWT bearer token doesn' contain an account ID");
+                    return BadRequest("Your JWT bearer token doesn't contain an account ID");
                 var originalAccount = await store.GetByIdAsync(jwtAccountId);
                 if(originalAccount?.PersonId == null)
                     return BadRequest("Your JWT bearer token doesn't contain a person ID. If you just created your profile please log out and back in again");
@@ -431,8 +431,6 @@ namespace Mensch.Id.API.Controllers
             await store.DeleteAsync(accountId);
             return Ok();
         }
-
-
 
 
         private bool IsLoggedIn()

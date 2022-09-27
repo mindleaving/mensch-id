@@ -60,7 +60,7 @@ export const FAQ_DE = () => {
                 eventKey='faq-q4'
             >
                 <p>웃ID wurde im September 2022 öffentlich zugänglich gemacht wird im Moment verschiedenen Projekten, Behörden und Entscheidungsträgern in Deutschland und der EU vorgestellt.</p>
-                <p>Außerdem ist ein <Link to="/pilot-project-hd">Pilotprojekt in Heidelberg</Link> geplant, das Anfang 2023 beginnen soll 웃ID zu verwenden.</p>
+                {/* <p>Außerdem ist ein <Link to="/pilot-project-hd">Pilotprojekt in Heidelberg</Link> geplant, das Anfang 2023 beginnen soll 웃ID zu verwenden.</p> */}
                 <p>
                     Obwohl 웃ID noch nicht breite Anwendung findet, kannst du das Projekt unterstützen indem du dir deine 웃ID erstellst 
                     und im Gesundheitswesen und bei Behörden angibst. Erkläre dort dass es eine eindeutige Identifikationsnummer ist und die gerne genutzt werden darf. 

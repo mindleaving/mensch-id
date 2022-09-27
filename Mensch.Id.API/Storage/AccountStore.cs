@@ -28,7 +28,9 @@ namespace Mensch.Id.API.Storage
         {
             if (email == null) throw new ArgumentNullException(nameof(email));
             var filterBuilder = Builders<Account>.Filter;
-            var filter = filterBuilder.Eq(nameof(LocalAccount.Email), email);
+            var filter = filterBuilder.And(
+                filterBuilder.Ne("_t", nameof(ExternalAccount)),
+                filterBuilder.Eq(nameof(LocalAccount.Email), email));
             return await collection.Find(filter).FirstOrDefaultAsync() as LocalAccount;
         }
 
@@ -37,7 +39,9 @@ namespace Mensch.Id.API.Storage
         {
             if (menschId == null) throw new ArgumentNullException(nameof(menschId));
             var filterBuilder = Builders<Account>.Filter;
-            var filter = filterBuilder.Eq(nameof(Account.PersonId), menschId);
+            var filter = filterBuilder.And(
+                filterBuilder.Ne("_t", nameof(ExternalAccount)),
+                filterBuilder.Eq(nameof(Account.PersonId), menschId));
             var localAccounts = await collection.Find(filter).ToListAsync();
             return localAccounts.Cast<LocalAnonymousAccount>().ToList();
         }

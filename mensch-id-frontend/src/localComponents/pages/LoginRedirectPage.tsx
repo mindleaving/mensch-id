@@ -4,7 +4,7 @@ import { apiClient } from '../../sharedCommonComponents/communication/ApiClient'
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { Models } from '../types/models';
 import { NotificationManager } from 'react-notifications';
-import { AuthenticationErrorType } from '../types/enums';
+import { AccountType } from '../types/enums.d';
 
 interface LoginRedirectPageProps {
     onLoggedIn: (authenticationResult: Models.AuthenticationResult) => void;
@@ -24,17 +24,14 @@ export const LoginRedirectPage = (props: LoginRedirectPageProps) => {
                     return;
                 }
                 const isLoggedInResponse = await response.json() as Models.IsLoggedInResponse;
-                if(loginProvider?.toLowerCase() === "jwt") {
-                    const jwtResponse = await apiClient.instance!.get("api/accounts/accesstoken", {});
-                    const authenticationResult = await jwtResponse.json() as Models.AuthenticationResult;
-                    if(authenticationResult.isAuthenticated) {
-                        props.onLoggedIn(authenticationResult);
-                    }
-                } else {
-                    props.onLoggedIn({
-                        isAuthenticated: true,
-                        accountType: isLoggedInResponse.accountType
-                    });
+                if(isLoggedInResponse.accountType !== AccountType.External) {
+                    navigate("/login");
+                    return;
+                }
+                const jwtResponse = await apiClient.instance!.get("api/accounts/accesstoken", {});
+                const authenticationResult = await jwtResponse.json() as Models.AuthenticationResult;
+                if(authenticationResult.isAuthenticated) {
+                    props.onLoggedIn(authenticationResult);
                 }
             } catch {
                 NotificationManager.error(resolveText("CouldNotLogIn"));

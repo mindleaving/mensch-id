@@ -124,7 +124,7 @@ function App() {
                 <Route path="/privacy" element={<PrivacyPage />} />
                 <Route path="/terms-of-service" element={<TermsOfServicePage />} />
                 <Route path="/about" element={<AboutPage />} />
-                <Route path="/pilot-project-hd" element={<PilotProjectHeidelbergPage />} />
+                {/* <Route path="/pilot-project-hd" element={<PilotProjectHeidelbergPage />} /> */}
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/" element={<HomePage />} />
                 <Route path="*" element={isLoggedIn ? <NotFoundPage /> : <LoginPage onLoggedIn={onLoggedIn} />} />

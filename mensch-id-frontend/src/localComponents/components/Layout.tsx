@@ -43,7 +43,8 @@ export const Layout = (props: PropsWithChildren<LayoutProps>) => {
                             <Nav.Link onClick={() => navigate("/terms-of-service")}>{resolveText("Menu_TermsOfService")}</Nav.Link>
                             <NavDropdown title={resolveText("Menu_About")}>
                                 <NavDropdown.Item onClick={() => navigate("/about")}>{resolveText("Menu_FAQ")}</NavDropdown.Item>
-                                <NavDropdown.Item onClick={() => navigate("/pilot-project-hd")}>{resolveText("PilotProject_Heidelberg")}</NavDropdown.Item>
+                                {/* <NavDropdown.Item onClick={() => navigate("/pilot-project-hd")}>{resolveText("PilotProject_Heidelberg")}</NavDropdown.Item> */}
+                                <NavDropdown.Item onClick={() => navigate("/contact")}>{resolveText("Impressum")}</NavDropdown.Item>
                             </NavDropdown>
                         </Nav>
                         <Nav className='me-auto' />
@@ -74,13 +75,6 @@ export const Layout = (props: PropsWithChildren<LayoutProps>) => {
                     </Col>
                 </Row>
             </Container>
-            <Navbar bg="dark" variant="dark" fixed='bottom'>
-                <Container>
-                    <Nav className='ms-auto me-auto'>
-                        <Nav.Link onClick={() => navigate("/contact")}>Impressum</Nav.Link>
-                    </Nav>
-                </Container>
-            </Navbar>
         </>
     );
 
