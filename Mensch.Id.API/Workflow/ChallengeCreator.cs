@@ -15,15 +15,19 @@ namespace Mensch.Id.API.Workflow
             this.challengeStore = challengeStore;
         }
 
-        public async Task<MenschIdChallenge> Create(string menschId)
+        public async Task<MenschIdChallenge> Create(
+            string menschId,
+            int challengeLength)
         {
+            if (challengeLength < 1)
+                throw new ArgumentOutOfRangeException(nameof(challengeLength), "Challenge length must be greater than 0");
             var challengeShortId = await GetUniqueChallengeIdForPerson(menschId);
             var challenge = new MenschIdChallenge
             {
                 Id = Guid.NewGuid().ToString(),
                 MenschId = menschId,
                 ChallengeShortId = challengeShortId,
-                ChallengeSecret = ChallengeSecretGenerator.Generate(),
+                ChallengeSecret = ChallengeSecretGenerator.Generate(challengeLength),
                 CreatedTimestamp = DateTime.UtcNow
             };
             return challenge;
