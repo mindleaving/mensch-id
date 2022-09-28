@@ -63,12 +63,16 @@ export const LocalLoginForm = (props: LocalLoginFormProps) => {
         <Form onSubmit={login}>
             <RowFormGroup required
                 label={`웃ID / ${resolveText("Email")}`}
+                id="username"
+                name='username'
                 value={emailOrMenschID}
                 onChange={setEmailOrMenschID}
             />
             <RowFormGroup required
                 type='password'
                 label={resolveText("Password")}
+                id="current-password"
+                name="current-password"
                 value={password}
                 onChange={setPassword}
             />

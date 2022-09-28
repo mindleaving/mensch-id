@@ -4,7 +4,7 @@
   "Account_ChangePassword": "Change password",
   "Account_ConfirmDelete_Message": "Are you sure you want to delete this account?",
   "Account_ConfirmDelete_Title": "Confirm delete account",
-  "Account_ConfirmDeleteLast_Message": "THIS IS YOUR LAST ACCOUNT! If you delete it, you are permanently and unrecoverably lose control over your 웃ID. Do you still want to delete your account?",
+  "Account_ConfirmDeleteLast_Message": "THIS IS YOUR LAST ACCOUNT! If you delete it, you permanently and unrecoverably lose control over your 웃ID. Do you still want to delete your account?",
   "Account_ConfirmDeleteLast_Title": "Confirm deletion of last account",
   "Account_CouldNotChangePassword": "Could not change password",
   "Account_CouldNotDelete": "Could not delete account",

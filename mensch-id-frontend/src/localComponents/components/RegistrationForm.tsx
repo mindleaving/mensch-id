@@ -127,10 +127,13 @@ export const RegistrationForm = (props: RegistrationFormProps) => {
             </FormGroup>
             {selectedAccountType === AccountType.Local
             ? <RowFormGroup required
+                type='email'
                 label={resolveText("Email")}
                 value={email}
                 onChange={setEmail}
                 isValid={email.includes('@')}
+                id="email"
+                name="email"
             />
             : null}
             <FormGroup as={Row} className='my-1'>
@@ -141,6 +144,8 @@ export const RegistrationForm = (props: RegistrationFormProps) => {
                         value={password}
                         onChange={(e:any) => setPassword(e.target.value)}
                         isInvalid={password.length > 0 && password.length < 8}
+                        id="new-password"
+                        name="new-password"
                     />
                     <FormControl.Feedback type='invalid'>{resolveText("Register_TooShort")}</FormControl.Feedback>
                 </Col>
@@ -153,6 +158,8 @@ export const RegistrationForm = (props: RegistrationFormProps) => {
                         value={passwordRepeat}
                         onChange={(e:any) => setPasswordRepeat(e.target.value)}
                         isInvalid={passwordRepeat.length > 0 && passwordRepeat !== password}
+                        id="new-password2"
+                        name="new-password2"
                     />
                     <FormControl.Feedback type='invalid'>{resolveText("Register_PasswordsDoNotMatch")}</FormControl.Feedback>
                 </Col>

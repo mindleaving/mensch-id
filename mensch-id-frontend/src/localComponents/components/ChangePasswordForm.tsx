@@ -45,27 +45,33 @@ export const ChangePasswordForm = (props: ChangePasswordFormProps) => {
         <Form onSubmit={changePassword}>
             <FormGroup>
                 <FormLabel>{resolveText("Account_CurrentPassword")}</FormLabel>
-                <FormControl
+                <FormControl required
                     type='password'
                     value={currentPassword}
                     onChange={(e:any) => setCurrentPassword(e.target.value)}
+                    id="current-password"
+                    name="current-password"
                 />
             </FormGroup>
             <FormGroup>
                 <FormLabel>{resolveText("ResetPassword_NewPassword")}</FormLabel>
-                <FormControl
+                <FormControl required
                     type='password'
                     value={newPassword}
                     onChange={(e:any) => setNewPassword(e.target.value)}
+                    id="new-password"
+                    name="new-password"
                 />
             </FormGroup>
             <FormGroup>
                 <FormLabel>{resolveText("ResetPassword_NewPasswordRepeat")}</FormLabel>
-                <FormControl
+                <FormControl required
                     type='password'
                     value={newPasswordRepeat}
                     onChange={(e:any) => setNewPasswordRepeat(e.target.value)}
                     isInvalid={newPasswordRepeat !== newPassword}
+                    id="new-password2"
+                    name="new-password2"
                 />
                 <FormControl.Feedback type='invalid'>{resolveText("ResetPassword_PasswordsDoNotMatch")}</FormControl.Feedback>
             </FormGroup>

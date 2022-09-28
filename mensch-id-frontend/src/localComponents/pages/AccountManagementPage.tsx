@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Badge, Button, Table } from 'react-bootstrap';
 import { DeleteButton } from '../../sharedCommonComponents/components/DeleteButon';
+import { openConfirmDeleteAlert } from '../../sharedCommonComponents/helpers/AlertHelpers';
 import { deleteObject } from '../../sharedCommonComponents/helpers/DeleteHelpers';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { loadObject } from '../../sharedCommonComponents/helpers/LoadingHelpers';
@@ -33,7 +34,18 @@ export const AccountManagementPage = (props: AccountManagementPageProps) => {
         loadAccounts();
     }, []);
 
-    const deleteAccount = async (accountId: string) => {
+    const deleteAccount = async (accountId: string, force: boolean = false) => {
+        if(accounts.length === 1) {
+            if(!force) {
+                setTimeout(() => openConfirmDeleteAlert(
+                    accountId,
+                    resolveText("Account_ConfirmDeleteLast_Title"),
+                    resolveText("Account_ConfirmDeleteLast_Message"),
+                    () => deleteAccount(accountId, true)
+                ), 300);
+                return;
+            }
+        }
         setIsDeleting(true);
         await deleteObject(
             `api/accounts/${accountId}`, {},

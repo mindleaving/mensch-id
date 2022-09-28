@@ -5,7 +5,7 @@ import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { sendPostRequest } from '../../sharedCommonComponents/helpers/StoringHelpers';
 import { Models } from '../types/models';
 import { NotificationManager } from 'react-notifications';
-import { StoreButton } from '../../sharedCommonComponents/components/StoreButton';
+import { AsyncButton } from '../../sharedCommonComponents/components/AsyncButton';
 
 interface ResetPasswordPageProps {
     onLoggedIn: (authenticationResult: Models.AuthenticationResult) => void;
@@ -66,24 +66,33 @@ export const ResetPasswordPage = (props: ResetPasswordPageProps) => {
             <Form onSubmit={resetPassword}>
                 <FormGroup>
                     <FormLabel>{resolveText("ResetPassword_NewPassword")}</FormLabel>
-                    <FormControl
+                    <FormControl required
                         type="password"
                         value={password}
                         onChange={(e:any) => setPassword(e.target.value)}
+                        minLength={8}
                         isInvalid={password.length === 0}
+                        id="new-password"
+                        name="new-password"
                     />
                 </FormGroup>
                 <FormGroup>
                     <FormLabel>{resolveText("ResetPassword_NewPasswordRepeat")}</FormLabel>
-                    <FormControl
+                    <FormControl required
                         type="password"
                         value={passwordRepeat}
                         onChange={(e:any) => setPasswordRepeat(e.target.value)}
                         isInvalid={passwordRepeat.length === 0 || passwordRepeat !== password}
+                        id="new-password2"
+                        name="new-password2"
                     />
                 </FormGroup>
-                <StoreButton
-                    isStoring={isSubmitting}
+                <AsyncButton
+                    type='submit'
+                    activeText={resolveText("Submit")}
+                    executingText={resolveText("Submitting...")}
+                    isExecuting={isSubmitting}
+                    disabled={password.length === 0 || passwordRepeat !== password}
                 />
             </Form>
         </>
