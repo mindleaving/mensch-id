@@ -4,9 +4,7 @@ import { FAQ_DE } from '../components/FAQ/FAQ_DE';
 import { FAQ_EN } from '../components/FAQ/FAQ_EN';
 import { Language } from '../types/enums.d';
 
-interface AboutPageProps {}
-
-export const AboutPage = (props: AboutPageProps) => {
+export const AboutPage = () => {
 
     return (
         <>

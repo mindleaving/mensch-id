@@ -1,20 +1,15 @@
-import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
+import { defaultGlobalizer, resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
+import { PrivacyPolicyDe } from '../components/PrivacyPolicy/PrivacyPolicy_DE';
+import { PrivacyPolicyEn } from '../components/PrivacyPolicy/PrivacyPolicy_EN';
+import { Language } from '../types/enums.d';
 
-interface PrivacyPageProps {}
-
-export const PrivacyPage = (props: PrivacyPageProps) => {
+export const PrivacyPage = () => {
 
     return (
         <>
             <h1>{resolveText("Privacy")}</h1>
-            <h2>{resolveText("Privacy_WhatIsBeingStored_Title")}</h2>
-            <p>
-                {resolveText("Privacy_WhatIsBeingStored_Text")}
-            </p>
-            <h2>{resolveText("Privacy_HowIsDataUsed_Title")}</h2>
-            <p>
-                {resolveText("Privacy_HowIsDataUsed_Text")}
-            </p>
+            {defaultGlobalizer.instance!.preferedLanguage === Language.de ? <PrivacyPolicyDe />
+            : <PrivacyPolicyEn />}
         </>
     );
 
