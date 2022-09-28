@@ -1,5 +1,5 @@
 import React, { FormEvent, useState } from 'react';
-import { Alert, Col, Form, FormCheck, FormGroup, FormLabel, Row } from 'react-bootstrap';
+import { Alert, Col, Form, FormCheck, FormControl, FormGroup, FormLabel, Row } from 'react-bootstrap';
 import { AsyncButton } from '../../sharedCommonComponents/components/AsyncButton';
 import { RowFormGroup } from '../../sharedCommonComponents/components/RowFormGroup';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
@@ -9,7 +9,7 @@ import { NotificationManager } from 'react-notifications';
 import { Center } from '../../sharedCommonComponents/components/Center';
 import { AccountType } from '../types/enums.d';
 import { confirmAlert } from 'react-confirm-alert';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface RegistrationFormProps {
     onLoggedIn: (authenticationResult: Models.AuthenticationResult) => void;
@@ -90,6 +90,14 @@ export const RegistrationForm = (props: RegistrationFormProps) => {
         );
     }
 
+    const insertLink = (str: string, linkTarget: string) => {
+        const placeholderGroup = str.match(/^(.*)\{(.+)\}(.*)$/);
+        if(!placeholderGroup) {
+            return str;
+        }
+        return (<>{placeholderGroup[1]}<Link to={linkTarget} target="_blank">{placeholderGroup[2]}</Link>{placeholderGroup[3]}</>);
+    }
+
     return (
         <Form onSubmit={validate}>
             <FormGroup>
@@ -119,35 +127,55 @@ export const RegistrationForm = (props: RegistrationFormProps) => {
             </FormGroup>
             {selectedAccountType === AccountType.Local
             ? <RowFormGroup required
+                type='email'
                 label={resolveText("Email")}
                 value={email}
                 onChange={setEmail}
                 isValid={email.includes('@')}
+                id="email"
+                name="email"
             />
             : null}
-            <RowFormGroup required
-                type='password'
-                label={resolveText("Password")}
-                value={password}
-                onChange={setPassword}
-            />
-            <RowFormGroup required
-                type='password'
-                label={resolveText("PasswordRepeat")}
-                value={passwordRepeat}
-                onChange={setPasswordRepeat}
-            />
+            <FormGroup as={Row} className='my-1'>
+                <FormLabel column xs={4}>{resolveText("Password")}</FormLabel>
+                <Col>
+                    <FormControl required
+                        type='password'
+                        value={password}
+                        onChange={(e:any) => setPassword(e.target.value)}
+                        isInvalid={password.length > 0 && password.length < 8}
+                        id="new-password"
+                        name="new-password"
+                    />
+                    <FormControl.Feedback type='invalid'>{resolveText("Register_TooShort")}</FormControl.Feedback>
+                </Col>
+            </FormGroup>
+            <FormGroup as={Row} className='my-1'>
+                <FormLabel column xs={4}>{resolveText("PasswordRepeat")}</FormLabel>
+                <Col>
+                    <FormControl required
+                        type='password'
+                        value={passwordRepeat}
+                        onChange={(e:any) => setPasswordRepeat(e.target.value)}
+                        isInvalid={passwordRepeat.length > 0 && passwordRepeat !== password}
+                        id="new-password2"
+                        name="new-password2"
+                    />
+                    <FormControl.Feedback type='invalid'>{resolveText("Register_PasswordsDoNotMatch")}</FormControl.Feedback>
+                </Col>
+            </FormGroup>
             {selectedAccountType === AccountType.Local
             ? <FormGroup>
                 <FormCheck required
-                    label={resolveText("Register_AcceptPrivacy")}
+                    label={insertLink(resolveText("Register_AcceptPrivacy"), "/privacy")}
+                    checked={acceptPrivacy}
                     onChange={(e:any) => setAcceptPrivacy(e.target.checked)}
                 />
             </FormGroup>
             : null}
             <FormGroup>
                 <FormCheck required
-                    label={resolveText("Register_AcceptTermsOfService")}
+                    label={insertLink(resolveText("Register_AcceptTermsOfService"), "/terms-of-service")}
                     checked={acceptTermsOfService}
                     onChange={(e:any) => setAcceptTermsOfService(e.target.checked)}
                 />
@@ -159,7 +187,12 @@ export const RegistrationForm = (props: RegistrationFormProps) => {
                     activeText={"Register"}
                     executingText={"Submitting..."}
                     isExecuting={isSubmitting}
-                    disabled={(selectedAccountType === AccountType.Local && !acceptPrivacy) || !acceptTermsOfService}
+                    disabled={
+                        password.length === 0 
+                        || passwordRepeat !== password 
+                        || (selectedAccountType === AccountType.Local && !acceptPrivacy) 
+                        || !acceptTermsOfService
+                    }
                 />
             </Center>
         </Form>

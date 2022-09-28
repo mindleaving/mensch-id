@@ -18,6 +18,9 @@ export const RegularUserMenu = (props: RegularUserMenuProps) => {
                 <NavDropdown.Item onClick={() => navigate("/challenges")}>
                     {resolveText("Menu_MyChallenges")}
                 </NavDropdown.Item>
+                <NavDropdown.Item onClick={() => navigate("/accounts")}>
+                    {resolveText("Menu_ManageAccounts")}
+                </NavDropdown.Item>
             </NavDropdown>
         </Nav>
     );

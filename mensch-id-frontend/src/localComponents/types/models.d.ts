@@ -7,23 +7,6 @@ export namespace Models {
         preferedLanguage: Enums.Language;
     }
 
-    interface LocalAnonymousAccount extends Models.Account {
-        salt: string;
-        passwordHash: string;
-        passwordResetToken: string;
-    }
-
-    interface LocalAccount extends Models.LocalAnonymousAccount {
-        email: string;
-        emailVerificationToken: string;
-        isEmailVerified: boolean;
-    }
-
-    interface ExternalAccount extends Models.Account {
-        loginProvider: Enums.LoginProvider;
-        externalId: string;
-    }
-
     interface AssignerAccount extends Models.LocalAccount {
         name: string;
     }
@@ -41,6 +24,17 @@ export namespace Models {
         error?: Enums.AuthenticationErrorType | null;
     }
 
+    interface ChangePasswordRequest {
+        accountId: string;
+        currentPassword: string;
+        newPassword: string;
+    }
+
+    interface ExternalAccount extends Models.Account {
+        loginProvider: Enums.LoginProvider;
+        externalId: string;
+    }
+
     interface IExternalLogin {
         loginProvider: Enums.LoginProvider;
         externalId: string;
@@ -52,6 +46,18 @@ export namespace Models {
 
     interface IsLoggedInResponse {
         accountType: Enums.AccountType;
+    }
+
+    interface LocalAccount extends Models.LocalAnonymousAccount {
+        email: string;
+        emailVerificationAndPasswordResetSalt: string;
+        emailVerificationToken: string;
+        isEmailVerified: boolean;
+    }
+
+    interface LocalAnonymousAccount extends Models.Account {
+        passwordHash: string;
+        passwordResetToken: string;
     }
 
     interface LoginInformation {

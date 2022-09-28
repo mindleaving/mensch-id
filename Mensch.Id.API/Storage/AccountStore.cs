@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Mensch.Id.API.AccessControl;
@@ -25,28 +26,36 @@ namespace Mensch.Id.API.Storage
 
         public async Task<LocalAccount> GetLocalByEmailAsync(string email)
         {
+            if (email == null) throw new ArgumentNullException(nameof(email));
             var filterBuilder = Builders<Account>.Filter;
-            var filter = filterBuilder.Eq(nameof(LocalAccount.Email), email);
+            var filter = filterBuilder.And(
+                filterBuilder.Ne("_t", nameof(ExternalAccount)),
+                filterBuilder.Eq(nameof(LocalAccount.Email), email));
             return await collection.Find(filter).FirstOrDefaultAsync() as LocalAccount;
         }
 
-        public async Task<LocalAnonymousAccount> GetLocalByMenschId(
+        public async Task<List<LocalAnonymousAccount>> GetLocalsByMenschId(
             string menschId)
         {
+            if (menschId == null) throw new ArgumentNullException(nameof(menschId));
             var filterBuilder = Builders<Account>.Filter;
-            var filter = filterBuilder.Eq(nameof(Account.PersonId), menschId);
-            return await collection.Find(filter).FirstOrDefaultAsync() as LocalAnonymousAccount;
+            var filter = filterBuilder.And(
+                filterBuilder.Ne("_t", nameof(ExternalAccount)),
+                filterBuilder.Eq(nameof(Account.PersonId), menschId));
+            var localAccounts = await collection.Find(filter).ToListAsync();
+            return localAccounts.Cast<LocalAnonymousAccount>().ToList();
         }
 
-        public async Task<LocalAnonymousAccount> GetLocalByEmailOrMenschIdAsync(string emailOrMenschId)
+        public async Task<List<LocalAnonymousAccount>> GetLocalsByEmailOrMenschIdAsync(string emailOrMenschId)
         {
             if (MenschIdGenerator.ValidateId(emailOrMenschId))
             {
-                return await GetLocalByMenschId(emailOrMenschId);
+                return await GetLocalsByMenschId(emailOrMenschId);
             }
             if (EmailValidator.IsValidEmailFormat(emailOrMenschId))
             {
-                return await GetLocalByEmailAsync(emailOrMenschId);
+                var localAccount = await GetLocalByEmailAsync(emailOrMenschId);
+                return new List<LocalAnonymousAccount> { localAccount };
             }
             return null;
         }
@@ -77,19 +86,69 @@ namespace Mensch.Id.API.Storage
             return await GetExternalByIdAsync(loginProvider, externalId);
         }
 
-        public async Task<StorageResult> ChangePasswordAsync(
-            string email,
-            string passwordBase64)
+        public Task<List<Account>> GeAllForMenschIdAsync(
+            string menschId)
         {
-            var updateBuilder = Builders<LocalAccount>.Update;
-            var result = await collection.OfType<LocalAccount>()
-                .UpdateOneAsync(
-                    x => x.Email == email,
-                    updateBuilder.Combine(
-                        updateBuilder.Set(x => x.PasswordHash, passwordBase64),
-                        updateBuilder.Set(x => x.PasswordResetToken, null)
-                    ));
-            if(result.IsAcknowledged && result.MatchedCount == 1)
+            if (menschId == null) throw new ArgumentNullException(nameof(menschId));
+            return collection.Find(x => x.PersonId == menschId).ToListAsync();
+        }
+
+        public async Task<StorageResult> ChangePasswordAsync(
+            string accountId,
+            string passwordHash)
+        {
+            if (accountId == null) throw new ArgumentNullException(nameof(accountId));
+            var account = await GetByIdAsync(accountId);
+            if(account == null)
+                return StorageResult.Error(StoreErrorType.NoMatch);
+            UpdateResult result;
+            switch (account.AccountType)
+            {
+                case AccountType.Local:
+                    {
+                        var updateBuilder = Builders<LocalAccount>.Update;
+                        result = await collection
+                            .OfType<LocalAccount>()
+                            .UpdateOneAsync(
+                                x => x.Id == accountId,
+                                updateBuilder.Combine(
+                                    updateBuilder.Set(x => x.PasswordHash, passwordHash),
+                                    updateBuilder.Set(x => x.PasswordResetToken, null)
+                                )
+                            );
+                    }
+                    break;
+                case AccountType.LocalAnonymous:
+                    {
+                        var updateBuilder = Builders<LocalAnonymousAccount>.Update;
+                        result = await collection
+                            .OfType<LocalAnonymousAccount>()
+                            .UpdateOneAsync(
+                                x => x.Id == accountId,
+                                updateBuilder.Set(x => x.PasswordHash, passwordHash)
+                            );
+                        break;
+                    }
+                case AccountType.External:
+                    throw new InvalidOperationException("Cannot change password for external account");
+                case AccountType.Assigner:
+                    {
+                        var updateBuilder = Builders<AssignerAccount>.Update;
+                        result = await collection
+                            .OfType<AssignerAccount>()
+                            .UpdateOneAsync(
+                                x => x.Id == accountId,
+                                updateBuilder.Combine(
+                                    updateBuilder.Set(x => x.PasswordHash, passwordHash),
+                                    updateBuilder.Set(x => x.PasswordResetToken, null)
+                                )
+                            );
+                    }
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+            if (result.IsAcknowledged && result.MatchedCount == 1)
                 return StorageResult.Success();
             return StorageResult.Error(StoreErrorType.NoMatch);
         }
@@ -97,6 +156,7 @@ namespace Mensch.Id.API.Storage
         public Task DeleteAllForPerson(
             string personId)
         {
+            if (personId == null) throw new ArgumentNullException(nameof(personId));
             return collection.DeleteManyAsync(x => x.PersonId == personId);
         }
     }

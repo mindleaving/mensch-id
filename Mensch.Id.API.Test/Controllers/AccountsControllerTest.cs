@@ -8,6 +8,7 @@ using Mensch.Id.API.Storage;
 using Mensch.Id.API.Workflow;
 using Mensch.Id.API.Workflow.Email;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Moq;
@@ -24,6 +25,7 @@ namespace Mensch.Id.API.Test.Controllers
         private AccountCreator accountCreator;
         private Mock<IEmailSender> emailSender;
         private Mock<IExternalLoginObscurer> externalLoginObscurer;
+        private Mock<IPasswordHasher<LocalAnonymousAccount>> passwordHasher;
 
         [SetUp]
         public void Setup()
@@ -32,7 +34,8 @@ namespace Mensch.Id.API.Test.Controllers
             httpContextAccessor = new Mock<IHttpContextAccessor>();
             authenticationModule = new Mock<IAuthenticationModule>();
             externalLoginObscurer = new Mock<IExternalLoginObscurer>();
-            accountCreator = new AccountCreator(accountStore.Object, externalLoginObscurer.Object);
+            passwordHasher = new Mock<IPasswordHasher<LocalAnonymousAccount>>();
+            accountCreator = new AccountCreator(accountStore.Object, externalLoginObscurer.Object, passwordHasher.Object);
             emailSender = new Mock<IEmailSender>();
             controller = new AccountsController(
                 accountStore.Object,

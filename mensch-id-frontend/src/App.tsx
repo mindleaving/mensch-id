@@ -28,6 +28,9 @@ import { ViewModels } from './localComponents/types/viewModels';
 import { AssignerPage } from './localComponents/pages/AssignerPage';
 import { NewProfilePage } from './localComponents/pages/NewProfilePage';
 import { AccountType } from './localComponents/types/enums.d';
+import { AboutPage } from './localComponents/pages/AboutPage';
+import { PilotProjectHeidelbergPage } from './localComponents/pages/PilotProjectHeidelbergPage';
+import { AccountManagementPage } from './localComponents/pages/AccountManagementPage';
 
 defaultGlobalizer.instance = new Globalizer(
     navigator.languages.map(x => x.substring(0, 2)), 
@@ -111,6 +114,7 @@ function App() {
                 {isLoggedIn && accountType !== AccountType.Assigner ? <Route path="/me" element={<ProfilePage />} /> : null}
                 {isLoggedIn && accountType !== AccountType.Assigner ? <Route path="/new-profile" element={<NewProfilePage />} /> : null}
                 {isLoggedIn && accountType !== AccountType.Assigner ? <Route path="/challenges" element={<MyChallengesPage />} /> : null}
+                {isLoggedIn && accountType !== AccountType.Assigner ? <Route path="/accounts" element={<AccountManagementPage />} /> : null}
                 {isLoggedIn && accountType === AccountType.Assigner ? <Route path="/assigner" element={<AssignerPage />} /> : null}
                 
                 <Route path="/challenge" element={<SendChallengePage />} />
@@ -119,9 +123,11 @@ function App() {
                 <Route path='/request-password-reset' element={<RequestPasswordResetPage />} />
                 <Route path="/privacy" element={<PrivacyPage />} />
                 <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+                <Route path="/about" element={<AboutPage />} />
+                {/* <Route path="/pilot-project-hd" element={<PilotProjectHeidelbergPage />} /> */}
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/" element={<HomePage />} />
-                <Route path="*" element={<NotFoundPage />} />
+                <Route path="*" element={isLoggedIn ? <NotFoundPage /> : <LoginPage onLoggedIn={onLoggedIn} />} />
             </Routes>
         </Layout>
     </UserContext.Provider>

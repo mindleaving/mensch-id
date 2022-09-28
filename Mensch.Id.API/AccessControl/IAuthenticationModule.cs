@@ -7,8 +7,9 @@ namespace Mensch.Id.API.AccessControl
 {
     public interface IAuthenticationModule
     {
-        Task<bool> ChangePasswordAsync(string email, string password, bool changePasswordOnNextLogin = false);
-        Task<AuthenticationResult> AuthenticateLocalAsync(LoginInformation loginInformation);
+        Task<bool> ChangePasswordAsync(string accountId, string password, bool changePasswordOnNextLogin = false);
+        Task<AuthenticationResult> AuthenticateLocalByEmailOrMenschIdAsync(LoginInformation loginInformation);
+        Task<AuthenticationResult> AuthenticateLocalByAccountIdAsync(string accountId, string password);
         Task<AuthenticationResult> AuthenticateExternalAsync(List<Claim> claims);
         AuthenticationResult BuildSecurityTokenForUser(LocalAnonymousAccount localAnonymousAccount);
     }

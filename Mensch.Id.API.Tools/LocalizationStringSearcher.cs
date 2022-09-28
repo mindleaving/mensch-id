@@ -54,6 +54,7 @@ namespace Mensch.Id.API.Tools
                 Console.WriteLine($"{resourceId}: {resourceDictionary[resourceId]}");
             }
 
+            resourceDictionary = SortDictionary(resourceDictionary);
             File.WriteAllText(localizationOutputFile, JsonConvert.SerializeObject(resourceDictionary, Formatting.Indented));
         }
 
@@ -78,9 +79,9 @@ namespace Mensch.Id.API.Tools
                     continue;
                 secondaryJObject[resourceId] = "";
             }
+
+            secondaryJObject = SortDictionary(secondaryJObject);
             File.WriteAllText(secondaryDictionaryFile, JsonConvert.SerializeObject(secondaryJObject, Formatting.Indented));
-
-
         }
 
         private static Dictionary<string,string> GetEnumResourceIds()
@@ -94,6 +95,13 @@ namespace Mensch.Id.API.Tools
                 }))
                 .ToDictionary(kvp => kvp.ResourceId, kvp => kvp.Value);
             return enumResources;
+        }
+
+        private JObject SortDictionary(
+            JObject jObject)
+        {
+            var properties = jObject.Properties().OrderBy(x => x.Name);
+            return new JObject(properties);
         }
     }
 }

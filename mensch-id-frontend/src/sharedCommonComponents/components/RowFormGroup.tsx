@@ -9,9 +9,13 @@ interface RowFormGroupProps {
     min?: number,
     max?: number,
     onChange: (changedValue: any) => void;
+    id?: string;
+    name?: string;
+    placeholder?: string;
     disabled?: boolean;
     required?: boolean;
     isValid?: boolean;
+    isInvalid?: boolean;
 }
 
 export const RowFormGroup = (props: PropsWithChildren<RowFormGroupProps>) => {
@@ -28,7 +32,11 @@ export const RowFormGroup = (props: PropsWithChildren<RowFormGroupProps>) => {
                     min={props.min}
                     max={props.max}
                     isValid={props.isValid}
+                    isInvalid={props.isInvalid}
                     onChange={(e:any) => props.onChange(e.target.value)}
+                    id={props.id}
+                    name={props.name}
+                    placeholder={props.placeholder}
                     disabled={props.disabled}
                 >
                     {props.children}

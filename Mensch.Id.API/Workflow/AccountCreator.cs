@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Mensch.Id.API.AccessControl;
 using Mensch.Id.API.Models;
 using Mensch.Id.API.Storage;
+using Microsoft.AspNetCore.Identity;
 
 namespace Mensch.Id.API.Workflow
 {
@@ -10,13 +11,16 @@ namespace Mensch.Id.API.Workflow
     {
         private readonly IStore<Account> accountStore;
         private readonly IExternalLoginObscurer externalLoginObscurer;
+        private readonly IPasswordHasher<LocalAnonymousAccount> passwordHasher;
 
         public AccountCreator(
             IStore<Account> accountStore,
-            IExternalLoginObscurer externalLoginObscurer)
+            IExternalLoginObscurer externalLoginObscurer,
+            IPasswordHasher<LocalAnonymousAccount> passwordHasher)
         {
             this.accountStore = accountStore;
             this.externalLoginObscurer = externalLoginObscurer;
+            this.passwordHasher = passwordHasher;
         }
 
         public async Task<LocalAnonymousAccount> CreateLocalAnonymous(
@@ -25,16 +29,13 @@ namespace Mensch.Id.API.Workflow
             string menschId = null)
         {
             var accountId = Guid.NewGuid().ToString();
-            var salt = PasswordHasher.CreateSalt();
-            var passwordHash = PasswordHasher.Hash(password, salt);
             var account = new LocalAnonymousAccount
             {
                 Id = accountId,
-                Salt = Convert.ToBase64String(salt),
-                PasswordHash = Convert.ToBase64String(passwordHash),
                 PreferedLanguage = preferedLanguage,
                 PersonId = menschId
             };
+            account.PasswordHash = passwordHasher.HashPassword(account, password);
             await accountStore.StoreAsync(account);
             return account;
         }
@@ -46,18 +47,17 @@ namespace Mensch.Id.API.Workflow
             string menschId = null)
         {
             var accountId = Guid.NewGuid().ToString();
-            var salt = PasswordHasher.CreateSalt();
-            var passwordHash = PasswordHasher.Hash(password, salt);
+            var emailVerificationAndPasswordResetSalt = Convert.ToBase64String(PasswordHasher.CreateSalt());
             var account = new LocalAccount
             {
                 Id = accountId,
                 Email = username,
                 IsEmailVerified = false,
-                Salt = Convert.ToBase64String(salt),
-                PasswordHash = Convert.ToBase64String(passwordHash),
+                EmailVerificationAndPasswordResetSalt = emailVerificationAndPasswordResetSalt,
                 PreferedLanguage = preferedLanguage,
                 PersonId = menschId
             };
+            account.PasswordHash = passwordHasher.HashPassword(account, password);
             await accountStore.StoreAsync(account);
             return account;
         }
@@ -82,20 +82,22 @@ namespace Mensch.Id.API.Workflow
 
         public async Task<LocalAnonymousAccount> CreateAssigner(
             string name,
+            string email,
             string password,
             Language preferedLanguage = Language.en)
         {
             var accountId = Guid.NewGuid().ToString();
-            var salt = PasswordHasher.CreateSalt();
-            var passwordHash = PasswordHasher.Hash(password, salt);
+            var emailVerificationAndPasswordResetSalt = Convert.ToBase64String(PasswordHasher.CreateSalt());
             var account = new AssignerAccount
             {
                 Id = accountId,
                 Name = name,
-                Salt = Convert.ToBase64String(salt),
-                PasswordHash = Convert.ToBase64String(passwordHash),
                 PreferedLanguage = preferedLanguage,
+                EmailVerificationAndPasswordResetSalt = emailVerificationAndPasswordResetSalt,
+                Email = email,
+                IsEmailVerified = false
             };
+            account.PasswordHash = passwordHasher.HashPassword(account, password);
             await accountStore.StoreAsync(account);
             return account;
         }

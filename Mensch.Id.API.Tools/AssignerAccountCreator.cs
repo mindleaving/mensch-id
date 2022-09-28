@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Mensch.Id.API.AccessControl;
 using Mensch.Id.API.Models;
 using Mensch.Id.API.Workflow;
+using Microsoft.AspNetCore.Identity;
 using MongoDB.Driver;
 using NUnit.Framework;
 
@@ -10,6 +10,8 @@ namespace Mensch.Id.API.Tools
 {
     public class AssignerAccountCreator : DatabaseAccess
     {
+        private readonly IPasswordHasher<LocalAnonymousAccount> passwordHasher = new PasswordHasher<LocalAnonymousAccount>();
+
         [Test]
         public async Task Create()
         {
@@ -26,18 +28,16 @@ namespace Mensch.Id.API.Tools
             var accountCollection = GetCollection<Account>();
             if (await IsEmailInUse(accountCollection, Email))
                 throw new Exception("Account with the same email already exists");
-            var salt = PasswordHasher.CreateSalt();
-            var passwordHash = PasswordHasher.Hash(password, salt);
             var account = new AssignerAccount
             {
                 Id = Guid.NewGuid().ToString(),
                 Name = Name,
                 Email = Email,
                 IsEmailVerified = true,
-                Salt = Convert.ToBase64String(salt),
-                PasswordHash = Convert.ToBase64String(passwordHash),
                 PreferedLanguage = PreferedLanguage
             };
+            account.PasswordHash = passwordHasher.HashPassword(account, password);
+
             await accountCollection.InsertOneAsync(account);
         }
 

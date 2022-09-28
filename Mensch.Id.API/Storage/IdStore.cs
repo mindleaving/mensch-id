@@ -19,6 +19,9 @@ namespace Mensch.Id.API.Storage
             IdType idType,
             string accountId)
         {
+            if (idCandidate == null) throw new ArgumentNullException(nameof(idCandidate));
+            if (accountId == null) throw new ArgumentNullException(nameof(accountId));
+
             var idObject = new MenschId
             {
                 Id = idCandidate,
@@ -40,6 +43,9 @@ namespace Mensch.Id.API.Storage
             string id,
             string accountId)
         {
+            if (id == null) throw new ArgumentNullException(nameof(id));
+            if (accountId == null) throw new ArgumentNullException(nameof(accountId));
+
             var result = await collection.UpdateOneAsync(
                 x => x.Id == id && x.ReservingAccountId == accountId,
                 Builders<MenschId>.Update.Set(x => x.IsClaimed, true));
@@ -48,6 +54,8 @@ namespace Mensch.Id.API.Storage
 
         public Task UnclaimId(string id)
         {
+            if (id == null) throw new ArgumentNullException(nameof(id));
+
             return collection.UpdateOneAsync(
                 x => x.Id == id,
                 Builders<MenschId>.Update.Set(x => x.IsClaimed, false));
@@ -57,11 +65,15 @@ namespace Mensch.Id.API.Storage
             string accountId,
             string idCandidate)
         {
+            if (accountId == null) throw new ArgumentNullException(nameof(accountId));
+            if (idCandidate == null) throw new ArgumentNullException(nameof(idCandidate));
+
             return collection.DeleteOneAsync(x => !x.IsClaimed && x.ReservingAccountId == accountId && x.Id == idCandidate);
         }
 
         public Task ReleaseReservations(string accountId)
         {
+            if (accountId == null) throw new ArgumentNullException(nameof(accountId));
             return collection.DeleteManyAsync(x => !x.IsClaimed && x.ReservingAccountId == accountId);
         }
 
@@ -69,6 +81,8 @@ namespace Mensch.Id.API.Storage
             string accountId,
             DateTime birthDate)
         {
+            if (accountId == null) throw new ArgumentNullException(nameof(accountId));
+
             var prefix = birthDate.ToString("yyyyMMdd");
             return collection.DeleteManyAsync(x => 
                 !x.IsClaimed

@@ -15,18 +15,24 @@ namespace Mensch.Id.API.Helpers
             return jwtClaims.FirstOrDefault(x => x.Type == JwtSecurityTokenBuilder.PersonIdClaimName)?.Value;
         }
 
-        public static LoginProvider GetLoginProvider(IEnumerable<Claim> claims)
+        public static LoginProvider GetLoginProvider(List<Claim> claims)
         {
-            var issuer = claims.Select(x => x.Issuer).Distinct().Single();
-            return issuer switch
+            if(!claims.Any())
+                throw new Exception("No claims made");
+            var externalClaims = claims.Where(x => x.Issuer != JwtSecurityTokenBuilder.Issuer).ToList();
+            if (externalClaims.Any())
             {
-                "Facebook" => LoginProvider.Facebook,
-                "Google" => LoginProvider.Google,
-                "Microsoft" => LoginProvider.Microsoft,
-                "Twitter" => LoginProvider.Twitter,
-                JwtSecurityTokenBuilder.Issuer => LoginProvider.LocalJwt,
-                _ => throw new NotImplementedException()
-            };
+                var issuer = externalClaims.Select(x => x.Issuer).Distinct().Single();
+                return issuer switch
+                {
+                    "Facebook" => LoginProvider.Facebook,
+                    "Google" => LoginProvider.Google,
+                    "Microsoft" => LoginProvider.Microsoft,
+                    "Twitter" => LoginProvider.Twitter,
+                    _ => throw new Exception($"Unknown claim issuer '{issuer}'")
+                };
+            }
+            return LoginProvider.LocalJwt;
         }
 
         public static string GetExternalId(List<Claim> claims)

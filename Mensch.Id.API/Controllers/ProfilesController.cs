@@ -7,6 +7,7 @@ using Mensch.Id.API.Models;
 using Mensch.Id.API.Storage;
 using Mensch.Id.API.Workflow;
 using Mensch.Id.API.Workflow.ViewModelBuilders;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -51,8 +52,15 @@ namespace Mensch.Id.API.Controllers
         public async Task<IActionResult> MyProfile()
         {
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
-            var account = await accountStore.GetFromClaimsAsync(claims);
-            var profileData = await personStore.GetByIdAsync(account.PersonId);
+            var personId = ClaimsHelpers.GetPersonId(claims);
+            if (personId == null)
+            {
+                var account = await accountStore.GetFromClaimsAsync(claims);
+                if (account.PersonId == null)
+                    return NotFound();
+                personId = account.PersonId;
+            }
+            var profileData = await personStore.GetByIdAsync(personId);
             if (profileData == null)
                 return NotFound();
             var vm = await profileViewModelBuilder.Build(profileData);
@@ -151,9 +159,12 @@ namespace Mensch.Id.API.Controllers
                 return BadRequest("No birthdate specified, but it's required for generating ID candidates");
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
             var account = await accountStore.GetFromClaimsAsync(claims);
-            var profileData = await personStore.GetByIdAsync(account.PersonId);
-            if (profileData != null)
-                return StatusCode((int)HttpStatusCode.Forbidden, "You already have a profile");
+            if (account.PersonId != null)
+            {
+                var profileData = await personStore.GetByIdAsync(account.PersonId);
+                if (profileData != null)
+                    return StatusCode((int)HttpStatusCode.Forbidden, "You already have a profile");
+            }
             var vm = await newProfileViewModelBuilder.BuildForNormalUser(birthDate, account.Id);
             return Ok(vm);
         }

@@ -104,7 +104,7 @@ export const ProfilePage = (props: ProfilePageProps) => {
                     >
                         <Row className='align-items-center'>
                             <Col xs={3}>{resolveText("Person_ID")}</Col>
-                            <Col xs={4} lg={2}>
+                            <Col xs={4} lg={2} className="px-2">
                                 <strong className='text-nowrap'>{profileData.id}</strong>
                             </Col>
                             <Col>

@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Mensch.Id.API.Models;
 using MongoDB.Driver;
 
@@ -13,12 +14,14 @@ namespace Mensch.Id.API.Storage
 
         public async Task<StorageOperation> StoreAsync(T item)
         {
+            if (item == null) throw new ArgumentNullException(nameof(item));
             var result = await collection.ReplaceOneAsync(x => x.Id == item.Id, item, new ReplaceOptions { IsUpsert = true });
             return result.MatchedCount == 1 ? StorageOperation.Changed : StorageOperation.Created;
         }
 
         public Task DeleteAsync(string id)
         {
+            if (id == null) throw new ArgumentNullException(nameof(id));
             return collection.DeleteOneAsync(x => x.Id == id);
         }
     }
