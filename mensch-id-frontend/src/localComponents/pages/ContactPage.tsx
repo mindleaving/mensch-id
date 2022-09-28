@@ -1,8 +1,6 @@
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 
-interface ContactPageProps {}
-
-export const ContactPage = (props: ContactPageProps) => {
+export const ContactPage = () => {
 
     return (
         <>
@@ -10,7 +8,7 @@ export const ContactPage = (props: ContactPageProps) => {
 
             <h2>{resolveText("Impressum_AccordingToLaw")}</h2>
             <p>
-                Jan Scholtyssek<br />
+                Jan Scholtyssek (웃ID: 19891117-XMwT3)<br />
                 Poststr. 28<br />
                 69115 Heidelberg<br />
                 Germany

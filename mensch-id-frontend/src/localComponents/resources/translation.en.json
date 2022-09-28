@@ -314,7 +314,7 @@
   "ReceiveChallenge_Secret_Description": "Read back this secret to prove that you own the 웃ID",
   "Redirecting...": "Redirecting...",
   "Register": "Register",
-  "Register_AcceptPrivacy": "I accept the {privacy statement}",
+  "Register_AcceptPrivacy": "I accept the {privacy policy}",
   "Register_AcceptTermsOfService": "I accept the {terms of service}",
   "Register_ConfirmAnonymous_Message": "You have selected the anonymous account: If you forget your password you permanently lose access to your account.",
   "Register_ConfirmAnonymous_No": "Cancel",
