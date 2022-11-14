@@ -67,7 +67,7 @@ namespace Mensch.Id.API.Controllers
                 return StatusCode((int)HttpStatusCode.InternalServerError, $"Could not claim ID '{idCandidate}'. Did you reserve it first?");
             var assignerControlledProfile = AssignerControlledProfileFactory.Create(idCandidate, accountId);
             await assignerControlledProfileStore.StoreAsync(assignerControlledProfile);
-            var person = new Person(idCandidate, DateTime.UtcNow);
+            var person = new Person(idCandidate, DateTime.UtcNow, accountId);
             await profileStore.StoreAsync(person);
             return Ok(person);
         }

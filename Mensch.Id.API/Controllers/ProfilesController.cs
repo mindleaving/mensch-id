@@ -89,7 +89,7 @@ namespace Mensch.Id.API.Controllers
             if (await personStore.ExistsAsync(id))
                 return Ok();
 
-            var profile = new Person(id, DateTime.UtcNow);
+            var profile = new Person(id, DateTime.UtcNow, account.Id);
             try
             {
                 await personStore.StoreAsync(profile);
@@ -119,10 +119,11 @@ namespace Mensch.Id.API.Controllers
         [HttpPost("take-control")]
         public async Task<IActionResult> TakeControlOfId([FromBody] TakeControlBody body)
         {
-            var owningAccount = await accountStore.FirstOrDefaultAsync(x => x.PersonId == body.Id);
+            var personId = body.Id;
+            var owningAccount = await accountStore.FirstOrDefaultAsync(x => x.PersonId == personId);
             if (owningAccount != null)
                 return StatusCode((int)HttpStatusCode.Forbidden, "ID is controlled by another account already");
-            var assignerControlledProfile = await assignerControlledProfileStore.GetByIdAsync(body.Id);
+            var assignerControlledProfile = await assignerControlledProfileStore.GetByIdAsync(personId);
             if (assignerControlledProfile == null)
                 return NotFound();
             if (body.OwnershipSecret != assignerControlledProfile.OwnershipSecret)
@@ -133,20 +134,20 @@ namespace Mensch.Id.API.Controllers
                 return StatusCode((int)HttpStatusCode.Unauthorized, "Assigners cannot take permanent control of profiles");
             if (account.PersonId != null)
             {
-                if (account.PersonId == body.Id)
+                if (account.PersonId == personId)
                     return Ok();
                 return StatusCode((int)HttpStatusCode.Forbidden, "Your account is already associated with a profile");
             }
 
-            var profile = await personStore.GetByIdAsync(body.Id);
+            var profile = await personStore.GetByIdAsync(personId);
             if (profile == null)
             {
-                profile = new Person(body.Id, DateTime.UtcNow);
+                profile = new Person(personId, DateTime.UtcNow, account.Id);
                 await personStore.StoreAsync(profile);
             }
-            account.PersonId = body.Id;
+            account.PersonId = personId;
             await accountStore.StoreAsync(account);
-            await assignerControlledProfileStore.DeleteAsync(body.Id);
+            await assignerControlledProfileStore.DeleteAsync(personId);
             return Ok(profile);
         }
 

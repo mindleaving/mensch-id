@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Button, Image } from 'react-bootstrap';
+import { Button, Col, Image, Row } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../../sharedCommonComponents/communication/ApiClient';
 import { Center } from '../../sharedCommonComponents/components/Center';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 
-interface HomePageProps {}
+interface HomePageProps {
+    isLoggedIn: boolean;
+}
 
 export const HomePage = (props: HomePageProps) => {
 
@@ -28,15 +30,40 @@ export const HomePage = (props: HomePageProps) => {
 
     return (
         <>
+            <Row>
+                <Col />
+                <Col xs="auto">
+                    {!props.isLoggedIn 
+                    ? <Button 
+                        onClick={() => navigate("/login")}
+                        size='lg'
+                        className='mx-2'
+                    >
+                        {resolveText("Login")}
+                    </Button> : null}
+                    <Button 
+                        onClick={() => navigate("/challenge")}
+                        size='lg'
+                        className='mx-2'
+                    >
+                        {resolveText("SendChallenge")}
+                    </Button>
+                </Col>
+                <Col />
+            </Row>
             <h1 className='mt-3'>웃ID - Mensch.ID</h1>
             <p>
                 {resolveText("Home_ClaimYouGlobalID")}
             </p>
             {randomId
             ? <p>
-                {resolveText("Home_SneakPeak")}: <b>{randomId}</b>
+                {resolveText("Home_SneakPeak")}: <span className='text-nowrap'><b>{randomId}</b></span>
             </p>
             : null}
+            <h2>{resolveText("Vision_Title")}</h2>
+            <p>
+                {resolveText("Vision_Text")}
+            </p>
             <h2>{resolveText("HowToUseMenschID_Title")}</h2>
             <p>
                 {resolveText("HowToUseMenschID_Text")}

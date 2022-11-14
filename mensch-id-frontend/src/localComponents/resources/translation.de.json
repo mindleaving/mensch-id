@@ -349,6 +349,7 @@
   "SendChallenge_ID_Description": "Gebe diese ID an die Person weiter die beweisen soll dass sie die 웃ID besitzt",
   "SendChallenge_Secret_Description": "Wenn die andere Person dieses Geheimwort nennen kann ist sie Eigentümer der 웃ID",
   "SendChallenge_Secret_KeepSecret": "Halte dieses Wort geheim",
+  "SendChallenge_Secret_Show": "Geheimwort anzeigen",
   "SendChallenge_Text": "Du kannst verifizieren dass eine Person eine bestimmte 웃ID besitzt. Gebe hierzu die ID unten an und schicke die Challenge ab. Wenn die Person das Geheimwort in ihrem Profil nachschlagen und vorlesen kann besitzt sie die angegebene 웃ID.",
   "Source": "Quelle",
   "Store": "Speichern",
@@ -361,7 +362,7 @@
   "TakeControl_TakingControl": "Übernehme die Kontrolle...",
   "TakeOverControl": "Übernehme die Kontrolle",
   "Telephone": "Telefon",
-  "TermsOfReference_Section1": "Tue Gutes...",
+  "TermsOfReference_Section1": "Bitte erstelle nur eine 웃ID für dich selber und sei kein Arsch...",
   "TermsOfService": "Teilnahmebedingungen",
   "Verified": "Verifiziert",
   "VerifyEmail_AccountOrTokenMissing": "Keine Konto-ID oder Rücksetzungstoken angegeben",
@@ -372,5 +373,7 @@
   "VerifyEmail_Resend": "Schicke nochmal",
   "VerifyEmail_Retry": "Versuche es nochmal",
   "VerifyEmail_SuccessfullyVerified": "Email erfolgreich verifiziert",
-  "VerifyEmail_Verifying...": "Verifiziere..."
+  "VerifyEmail_Verifying...": "Verifiziere...",
+  "Vision_Text": "Eine 웃ID auf allen Europäischen ID-Karten zu haben und die meisten Menschen ihre 웃ID auswendig können",
+  "Vision_Title": "Vision"
 }

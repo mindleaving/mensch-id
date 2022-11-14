@@ -1,5 +1,5 @@
-import React from 'react';
-import { Card, Row, Col } from 'react-bootstrap';
+import React, { useState } from 'react';
+import { Card, Row, Col, Button } from 'react-bootstrap';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { Models } from '../types/models';
 
@@ -9,6 +9,7 @@ interface ChallengeSenderCardProps {
 
 export const ChallengeSenderCard = (props: ChallengeSenderCardProps) => {
 
+    const [ showSecret, setShowSecret ] = useState<boolean>(false);
     return (
         <Card className='m-3'>
             <Card.Header>{resolveText("ChallengeData")}</Card.Header>
@@ -34,7 +35,11 @@ export const ChallengeSenderCard = (props: ChallengeSenderCardProps) => {
                             <small>{resolveText("SendChallenge_Secret_Description")}</small>
                         </div>
                     </Col>
-                    <Col><h3>{props.challengeData.challengeSecret}</h3></Col>
+                    <Col>
+                        {showSecret
+                        ? <h3>{props.challengeData.challengeSecret}</h3>
+                        : <Button variant='danger' onClick={() => setShowSecret(true)}>{resolveText("SendChallenge_Secret_Show")}</Button>}
+                    </Col>
                 </Row>
             </Card.Body>
         </Card>

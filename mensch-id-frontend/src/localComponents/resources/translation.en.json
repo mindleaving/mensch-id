@@ -69,7 +69,7 @@
   "GenericTypeCreateEditPage_CoultNotSubmit": "Could not submit",
   "Home_ClaimYouGlobalID": "Claim your global ID.",
   "Home_SneakPeak": "Sneak peak for humans born today",
-  "HowToUseMenschID_Text": "Add you 웃ID on government forms, in health care and anywhere else where you would like to enable connecting your data. In the early phases people probably don't know how to handle the ID, but as it becomes more widespread I hope that it will result in a more seamless digital experience in our everyday life.",
+  "HowToUseMenschID_Text": "Add your 웃ID on government forms, in health care and anywhere else where you would like to enable connecting your data. In the early phases people probably don't know how to handle the ID, but as it becomes more widespread I hope that it will result in a more seamless digital experience in our everyday life.",
   "HowToUseMenschID_Title": "How to use",
   "IdCandidate_Accept": "Accept",
   "IdCandidate_Accepting": "Accepting...",
@@ -346,6 +346,7 @@
   "SendChallenge_ID_Description": "Give this ID to the other person",
   "SendChallenge_Secret_Description": "The other person needs to repeat this secret to you to prove that they own the 웃ID",
   "SendChallenge_Secret_KeepSecret": "Keep this secret to yourself!",
+  "SendChallenge_Secret_Show": "Show secret",
   "SendChallenge_Text": "You can verify that another person owns a particular ID by challenging them. Enter their ID and send them a challenge that contains a secret that they must read back to you to proof they own the ID.",
   "Source": "Source",
   "Store": "Store",
@@ -358,7 +359,7 @@
   "TakeControl_TakingControl": "Taking over control...",
   "TakeOverControl": "Take over control of assigned 웃ID",
   "Telephone": "Telephone",
-  "TermsOfReference_Section1": "Don't be evil...",
+  "TermsOfReference_Section1": "Please only create one 웃ID for yourself and don't be evil...",
   "TermsOfService": "Terms of Service",
   "Verified": "Verified",
   "VerifyEmail_AccountOrTokenMissing": "Account ID or verification token missing",
@@ -369,5 +370,7 @@
   "VerifyEmail_Resend": "Resend verification email",
   "VerifyEmail_Retry": "Retry",
   "VerifyEmail_SuccessfullyVerified": "Successfully verified email",
-  "VerifyEmail_Verifying...": "Completing email verification..."
+  "VerifyEmail_Verifying...": "Completing email verification...",
+  "Vision_Title": "Vision",
+  "Vision_Text": "To have a 웃ID on all European ID-cards and most people have their 웃ID memorized"
 }

@@ -55,9 +55,10 @@ namespace Mensch.Id.API.Storage
             if (EmailValidator.IsValidEmailFormat(emailOrMenschId))
             {
                 var localAccount = await GetLocalByEmailAsync(emailOrMenschId);
-                return new List<LocalAnonymousAccount> { localAccount };
+                if(localAccount != null)
+                    return new List<LocalAnonymousAccount> { localAccount };
             }
-            return null;
+            return new List<LocalAnonymousAccount>();
         }
 
         public Task<ExternalAccount> GetExternalByIdAsync(

@@ -79,6 +79,7 @@ export namespace Models {
 
     interface Person extends Models.IId {
         creationDate: Date;
+        creationAccountId: string;
     }
 
     interface RegistrationInformation {
