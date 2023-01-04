@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.Extensions.Options;
 using Moq;
 using NUnit.Framework;
 
@@ -37,12 +38,14 @@ namespace Mensch.Id.API.Test.Controllers
             passwordHasher = new Mock<IPasswordHasher<LocalAnonymousAccount>>();
             accountCreator = new AccountCreator(accountStore.Object, externalLoginObscurer.Object, passwordHasher.Object);
             emailSender = new Mock<IEmailSender>();
+            var accountInjectorSettings = new AccountInjectionSettings();
             controller = new AccountsController(
                 accountStore.Object,
                 httpContextAccessor.Object,
                 authenticationModule.Object,
                 accountCreator,
-                emailSender.Object);
+                emailSender.Object,
+                new OptionsWrapper<AccountInjectionSettings>(accountInjectorSettings));
         }
 
         [Test]

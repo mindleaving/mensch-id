@@ -7,6 +7,15 @@ export namespace Models {
         preferedLanguage: Enums.Language;
     }
 
+    interface AccountInjectionSettings {
+        credentials: Models.AccountInjectorCredentials[];
+    }
+
+    interface AccountInjectorCredentials {
+        clientId: string;
+        secret: string;
+    }
+
     interface AssignerAccount extends Models.LocalAccount {
         name: string;
     }

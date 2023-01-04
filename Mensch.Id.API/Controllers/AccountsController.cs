@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.Authentication.Twitter;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using IAuthenticationModule = Mensch.Id.API.AccessControl.IAuthenticationModule;
 
 namespace Mensch.Id.API.Controllers
@@ -34,19 +35,22 @@ namespace Mensch.Id.API.Controllers
         private readonly IAuthenticationModule authenticationModule;
         private readonly IAccountCreator accountCreator;
         private readonly IEmailSender emailSender;
+        private readonly IOptions<AccountInjectionSettings> accountInjectionSettings;
 
         public AccountsController(
             IAccountStore store,
             IHttpContextAccessor httpContextAccessor,
             IAuthenticationModule authenticationModule,
             IAccountCreator accountCreator,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            IOptions<AccountInjectionSettings> accountInjectionSettings)
         {
             this.store = store;
             this.httpContextAccessor = httpContextAccessor;
             this.authenticationModule = authenticationModule;
             this.accountCreator = accountCreator;
             this.emailSender = emailSender;
+            this.accountInjectionSettings = accountInjectionSettings;
         }
 
         [Authorize]
@@ -169,7 +173,26 @@ namespace Mensch.Id.API.Controllers
             return Ok(authenticationResult);
         }
 
-        
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> InjectAccount(
+            [FromQuery] string injectorClientId,
+            [FromQuery] string injectorSecret,
+            [FromBody] Account body)
+        {
+            var matchingCredential = accountInjectionSettings.Value?.Credentials?
+                .Where(x => !string.IsNullOrWhiteSpace(x.ClientId) && !string.IsNullOrWhiteSpace(x.Secret))
+                .FirstOrDefault(x => x.ClientId == injectorClientId && x.Secret == injectorSecret);
+            if (matchingCredential == null)
+                return StatusCode((int)HttpStatusCode.Unauthorized);
+            throw new NotImplementedException("More checks for existing accounts and reservation of person ID");
+            var existingAccount = await store.GetLocalsByMenschId(body.PersonId);
+            if (existingAccount != null)
+                return StatusCode((int)HttpStatusCode.Conflict);
+            await store.StoreAsync(body);
+            return Ok();
+        }
+
 
         [Authorize]
         [AllowAnonymous]

@@ -1,4 +1,6 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
+﻿using Mensch.Id.API.Converters;
+using MongoDB.Bson.Serialization.Attributes;
+using Newtonsoft.Json;
 
 namespace Mensch.Id.API.Models
 {
@@ -8,6 +10,7 @@ namespace Mensch.Id.API.Models
         typeof(LocalAccount),
         typeof(AssignerAccount)
     )]
+    [JsonConverter(typeof(AccountJsonConverter))]
     public abstract class Account : IId
     {
         public string Id { get; set; }

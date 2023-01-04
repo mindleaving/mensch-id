@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Mensch.Id.API.Models;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -19,6 +20,7 @@ namespace Mensch.Id.API.Setups
                         options.SerializerSettings.Formatting = Formatting.None;
                     });;
             services.AddHttpContextAccessor();
+            services.Configure<AccountInjectionSettings>(configuration.GetSection(AccountInjectionSettings.AppSettingsSectionName));
         }
     }
 }
