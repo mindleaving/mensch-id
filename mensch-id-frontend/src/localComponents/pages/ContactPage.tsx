@@ -8,7 +8,7 @@ export const ContactPage = () => {
 
             <h2>{resolveText("Impressum_AccordingToLaw")}</h2>
             <p>
-                Jan Scholtyssek (웃ID: 19891117-XMwT3)<br />
+                Jan Scholtyssek (웃ID: 19891117-XMWT3)<br />
                 Poststr. 28<br />
                 69115 Heidelberg<br />
                 Germany
