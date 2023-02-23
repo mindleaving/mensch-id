@@ -56,7 +56,7 @@ export const AssignedProfilesTable = (props: AssignedProfilesTableProps) => {
                             variant='primary'
                             onClick={() => navigate(`/print/certificate/${profile.id}`)}
                         >
-                            {resolveText("AssignerControlledProfile_DownloadCertificate")}
+                            {resolveText("AssignerControlledProfile_PrintCertificate")}
                         </Button>
                     </td>
                 </tr>
