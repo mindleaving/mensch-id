@@ -1,5 +1,5 @@
 import React, { PropsWithChildren } from 'react';
-import { Button, Col, Container, Nav, Navbar, NavDropdown, Row } from 'react-bootstrap';
+import { Button, Col, Container, Nav, Navbar, NavDropdown, NavItem, Row } from 'react-bootstrap';
 import { NotificationContainer } from 'react-notifications';
 import { useNavigate } from 'react-router-dom';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
@@ -32,6 +32,12 @@ export const Layout = (props: PropsWithChildren<LayoutProps>) => {
     return (
         <>
             <NotificationContainer />
+            {window.location.hostname === 'localhost' || window.location.hostname.startsWith('test.')
+            ? <Navbar bg='warning' className='justify-content-center'>
+                <Nav>
+                    <NavItem>This is a test system</NavItem>
+                </Nav>
+            </Navbar> : null}
             <Navbar expand="lg" bg="dark" variant='dark' className='mb-3 no-print'>
                 <Container>
                     <Navbar.Brand className='clickable' onClick={() => navigate("/")}>웃ID</Navbar.Brand>
