@@ -14,15 +14,18 @@ namespace Mensch.Id.API.AccessControl
         private readonly IAccountStore accountStore;
         private readonly ISecurityTokenBuilder securityTokenBuilder;
         private readonly IPasswordHasher<LocalAnonymousAccount> passwordHasher;
+        private IClaimBuilder claimsBuilder;
 
         public AuthenticationModule(
             IAccountStore accountStore,
             ISecurityTokenBuilder securityTokenBuilder,
-            IPasswordHasher<LocalAnonymousAccount> passwordHasher)
+            IPasswordHasher<LocalAnonymousAccount> passwordHasher,
+            IClaimBuilder claimsBuilder)
         {
             this.accountStore = accountStore;
             this.securityTokenBuilder = securityTokenBuilder;
             this.passwordHasher = passwordHasher;
+            this.claimsBuilder = claimsBuilder;
         }
 
         public async Task<bool> ChangePasswordAsync(
@@ -100,23 +103,25 @@ namespace Mensch.Id.API.AccessControl
             return BuildSecurityTokenForUser(account);
         }
 
-        public async Task<AuthenticationResult> AuthenticateExternalAsync(List<Claim> claims)
+        public async Task<AuthenticationResult> AuthenticateExternalAsync(List<Claim> externalClaims)
         {
-            var loginProvider = ClaimsHelpers.GetLoginProvider(claims);
+            var loginProvider = ClaimsHelpers.GetLoginProvider(externalClaims);
             if (loginProvider == LoginProvider.Unknown)
                 throw new Exception("Could not determine login provider from claims");
             if (loginProvider == LoginProvider.LocalJwt)
                 throw new Exception("Cannot re-authenticate local account from claims. "
                                     + "The called authentication methods is intended for external login providers");
-            var externalId = ClaimsHelpers.GetExternalId(claims);
+            var externalId = ClaimsHelpers.GetExternalId(externalClaims);
             var account = await accountStore.GetExternalByIdAsync(loginProvider, externalId);
-            var token = securityTokenBuilder.BuildForExternalLoginProvider(account);
+            var menschIdClaims = claimsBuilder.BuildForExternalLoginProvider(account);
+            var token = securityTokenBuilder.Build(menschIdClaims);
             return AuthenticationResult.Success(token, account.AccountType);
         }
 
         public AuthenticationResult BuildSecurityTokenForUser(LocalAnonymousAccount account)
         {
-            var token = securityTokenBuilder.BuildForLocalUser(account);
+            var claims = claimsBuilder.BuildForLocalUser(account);
+            var token = securityTokenBuilder.Build(claims);
             return AuthenticationResult.Success(token, account.AccountType);
         }
     }

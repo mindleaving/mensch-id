@@ -1,6 +1,7 @@
 import { format } from 'date-fns';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import { CopyButton } from '../../../sharedCommonComponents/components/CopyButton';
 import { PagedTable } from '../../../sharedCommonComponents/components/PagedTable';
 import { resolveText } from '../../../sharedCommonComponents/helpers/Globalizer';
@@ -14,6 +15,7 @@ interface AssignedProfilesTableProps {
 export const AssignedProfilesTable = (props: AssignedProfilesTableProps) => {
 
     const [ profiles, setProfiles ] = useState<Models.AssignerControlledProfile[]>([]);
+    const navigate = useNavigate();
     const loader = useMemo(() => new PagedTableLoader(
         'api/assigner/assigned-ids', 
         resolveText("AssignerControlledProfiles_CouldNotLoad"),
@@ -45,14 +47,14 @@ export const AssignedProfilesTable = (props: AssignedProfilesTableProps) => {
                         <strong>{profile.id}</strong>
                         <CopyButton
                             value={profile.id}
-                            size='sm'
+                            size='xs'
                             className='ms-3'
                         />
                     </td>
                     <td>
                         <Button
                             variant='primary'
-                            onClick={() => alert("Not implemented")}
+                            onClick={() => navigate(`/print/certificate/${profile.id}`)}
                         >
                             {resolveText("AssignerControlledProfile_DownloadCertificate")}
                         </Button>

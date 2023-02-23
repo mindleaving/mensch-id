@@ -1,10 +1,10 @@
-﻿using Mensch.Id.API.Models;
+﻿using System.Collections.Generic;
+using System.Security.Claims;
 
 namespace Mensch.Id.API.AccessControl
 {
     public interface ISecurityTokenBuilder
     {
-        string BuildForLocalUser(LocalAnonymousAccount account);
-        string BuildForExternalLoginProvider(ExternalAccount account);
+        string Build(IEnumerable<Claim> claims);
     }
 }

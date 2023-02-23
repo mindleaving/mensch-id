@@ -9,6 +9,7 @@ export namespace Models {
 
     interface AssignerAccount extends Models.LocalAccount {
         name: string;
+        logoUrl: string;
     }
 
     interface AssignerControlledProfile extends Models.IId {

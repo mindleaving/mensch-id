@@ -12,6 +12,7 @@ export const AboutPage = () => {
             <div className='lead'>
                 <VerbatimText
                     text={resolveText("About_ElevatorPitch")}
+                    paragraphClassName='m-0'
                 />
             </div>
             <hr />

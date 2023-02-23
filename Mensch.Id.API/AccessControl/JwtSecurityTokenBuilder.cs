@@ -20,47 +20,10 @@ namespace Mensch.Id.API.AccessControl
             this.expirationTime = expirationTime;
         }
 
-        public const string PersonIdClaimName = "personId";
-        public const string AccountTypeClaimName = "accountType";
         public const string Audience = "mensch.ID";
         public const string Issuer = "mensch.ID";
 
-        public string BuildForLocalUser(LocalAnonymousAccount account)
-        {
-            var claims = new List<Claim>
-            {
-                new (ClaimTypes.NameIdentifier, account.Id),
-                new (AccountTypeClaimName, account.AccountType.ToString())
-            };
-            if (account.PersonId != null)
-                claims.Add(new Claim(PersonIdClaimName, account.PersonId));
-            return BuildFromClaims(claims);
-        }
-
-        public string BuildForExternalLoginProvider(ExternalAccount account)
-        {
-            var claims = new List<Claim>
-            {
-                new (ClaimTypes.NameIdentifier, account.Id),
-                new (AccountTypeClaimName, account.AccountType.ToString())
-            };
-            if(account.PersonId != null)
-                claims.Add(new Claim(PersonIdClaimName, account.PersonId));
-            //foreach (var externalClaim in externalClaims)
-            //{
-            //    claims.Add(externalClaim);
-            //    //var transformedExternalClaim = new Claim(
-            //    //    externalClaim.Type,
-            //    //    externalClaim.Value,
-            //    //    externalClaim.ValueType,
-            //    //    Issuer,
-            //    //    externalClaim.OriginalIssuer);
-            //    //claims.Add(transformedExternalClaim);
-            //}
-            return BuildFromClaims(claims);
-        }
-
-        private string BuildFromClaims(IEnumerable<Claim> claims)
+        public string Build(IEnumerable<Claim> claims)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var tokenDescriptor = new SecurityTokenDescriptor

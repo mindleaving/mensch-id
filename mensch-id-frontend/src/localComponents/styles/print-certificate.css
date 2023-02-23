@@ -1,0 +1,44 @@
+#logo {
+    position: fixed;
+    top: 10mm;
+    left: 10mm;
+    padding: 3mm;
+    background-color: #212529;
+    color: #f8f9fa;
+    font-size: x-large;
+    font-weight: bold;
+    border: solid gray;
+    border-radius: 10%;
+}
+#assigner-logo {
+    position: fixed;
+    top: 10mm;
+    right: 10mm;
+    width: 60mm;
+}
+#assigner-name {
+    font-weight: bold;
+}
+
+@media print {
+
+    .no-print {
+        display: none !important;
+    }
+
+    #certificate-info {
+        margin-top: 70mm;
+    }
+
+    #about-menschid {
+        position: fixed;
+        bottom: 10mm;
+        
+    }
+
+    @page {
+        size: A4;
+        orientation: portrait;
+    }
+
+}

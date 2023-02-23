@@ -32,7 +32,7 @@ export const Layout = (props: PropsWithChildren<LayoutProps>) => {
     return (
         <>
             <NotificationContainer />
-            <Navbar expand="lg" bg="dark" variant='dark' className='mb-3'>
+            <Navbar expand="lg" bg="dark" variant='dark' className='mb-3 no-print'>
                 <Container>
                     <Navbar.Brand className='clickable' onClick={() => navigate("/")}>웃ID</Navbar.Brand>
                     <Navbar.Toggle />

@@ -5,6 +5,7 @@ using Mensch.Id.API.AccessControl.Policies;
 using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Models;
 using Mensch.Id.API.Storage;
+using Mensch.Id.API.ViewModels;
 using Mensch.Id.API.Workflow;
 using Mensch.Id.API.Workflow.ViewModelBuilders;
 using Microsoft.AspNetCore.Authorization;
@@ -18,25 +19,68 @@ namespace Mensch.Id.API.Controllers
     [Route("api/[controller]")]
     public class AssignerController : ControllerBase
     {
+        private readonly IStore<Account> accountStore;
         private readonly IIdStore idStore;
         private readonly NewProfileViewModelBuilder newProfileViewModelBuilder;
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly IStore<Person> profileStore;
         private readonly IStore<AssignerControlledProfile> assignerControlledProfileStore;
+        private readonly SignedProfileBuilder signedProfileBuilder;
 
         public AssignerController(
+            IStore<Account> accountStore,
             NewProfileViewModelBuilder newProfileViewModelBuilder,
             IHttpContextAccessor httpContextAccessor,
             IIdStore idStore,
             IStore<Person> profileStore,
-            IStore<AssignerControlledProfile> assignerControlledProfileStore)
+            IStore<AssignerControlledProfile> assignerControlledProfileStore,
+            SignedProfileBuilder signedProfileBuilder)
         {
+            this.accountStore = accountStore;
             this.newProfileViewModelBuilder = newProfileViewModelBuilder;
             this.httpContextAccessor = httpContextAccessor;
             this.idStore = idStore;
             this.profileStore = profileStore;
             this.assignerControlledProfileStore = assignerControlledProfileStore;
+            this.signedProfileBuilder = signedProfileBuilder;
         }
+
+        [HttpGet("me")]
+        public async Task<IActionResult> GetMyInformation()
+        {
+            var accountId = ControllerHelpers.GetAccountId(httpContextAccessor);
+            var acount = await accountStore.GetByIdAsync(accountId);
+            if (acount is not AssignerAccount assignerAccount)
+                return NotFound();
+            return Ok(new AssignerAccountViewModel(assignerAccount));
+        }
+
+        [HttpPut("me/name")]
+        public async Task<IActionResult> SetName(
+            [FromBody] string name)
+        {
+            var accountId = ControllerHelpers.GetAccountId(httpContextAccessor);
+            var acount = await accountStore.GetByIdAsync(accountId);
+            if (acount is not AssignerAccount assignerAccount)
+                return NotFound();
+            assignerAccount.Name = name;
+            await accountStore.StoreAsync(assignerAccount);
+            return Ok(new AssignerAccountViewModel(assignerAccount));
+        }
+
+        [HttpPut("me/logo-url")]
+        public async Task<IActionResult> SetLogoUrl(
+            [FromBody] string logoUrl)
+        {
+            var accountId = ControllerHelpers.GetAccountId(httpContextAccessor);
+            var acount = await accountStore.GetByIdAsync(accountId);
+            if (acount is not AssignerAccount assignerAccount)
+                return NotFound();
+            assignerAccount.LogoUrl = logoUrl;
+            await accountStore.StoreAsync(assignerAccount);
+            return Ok(new AssignerAccountViewModel(assignerAccount));
+        }
+
 
         [HttpGet("candidate")]
         public async Task<IActionResult> GetIdCandidate(
@@ -85,6 +129,20 @@ namespace Mensch.Id.API.Controllers
                 x => x.CreationDate,
                 OrderDirection.Descending);
             return Ok(items);
+        }
+
+        [HttpGet("profiles/{personId}")]
+        public async Task<IActionResult> GetAssignerControlledProfile(
+            [FromRoute] string personId,
+            [FromQuery] bool signed = false)
+        {
+            var profile = await assignerControlledProfileStore.GetByIdAsync(personId);
+            if (profile == null)
+                return NotFound();
+            if(!signed)
+                return Ok(profile);
+            var signedProfile = signedProfileBuilder.Build(profile);
+            return Ok(signedProfile);
         }
 
     }

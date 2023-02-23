@@ -79,7 +79,7 @@ namespace Mensch.Id.API.Test.Controllers
             var personId = "20220609-XUTH9";
             var claims = new List<Claim>
             {
-                new(JwtSecurityTokenBuilder.PersonIdClaimName, personId, null, JwtSecurityTokenBuilder.Issuer)
+                new(MenschIdClaimTypes.PersonIdClaimName, personId, null, JwtSecurityTokenBuilder.Issuer)
             };
             var httpContext = new DefaultHttpContext
             {

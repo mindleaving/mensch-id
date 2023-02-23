@@ -31,6 +31,7 @@ import { AccountType } from './localComponents/types/enums.d';
 import { AboutPage } from './localComponents/pages/AboutPage';
 import { PilotProjectHeidelbergPage } from './localComponents/pages/PilotProjectHeidelbergPage';
 import { AccountManagementPage } from './localComponents/pages/AccountManagementPage';
+import { PrintCertificatePage } from './localComponents/pages/PrintCertificatePage';
 
 defaultGlobalizer.instance = new Globalizer(
     navigator.languages.map(x => x.substring(0, 2)), 
@@ -47,7 +48,8 @@ if(!!sessionStorage.getItem(SessionStoreKeys.AccessToken)) {
 function App() {
     const navigate = useNavigate();
     const [ isLoggedIn, setIsLoggedIn ] = useState<boolean>(false);
-    const [ profileData, setProfileData ] = useState<ViewModels.ProfileViewModel | undefined>();
+    const [ profileData, setProfileData ] = useState<ViewModels.ProfileViewModel>();
+    const [ assignerProfile, setAssignerProfile ] = useState<ViewModels.AssignerAccountViewModel>();
     const [ accountType, setAccountType ] = useState<AccountType>();
 
     useEffect(() => {
@@ -104,7 +106,7 @@ function App() {
     }
 
     return (
-    <UserContext.Provider value={{ profileData, setProfileData }}>
+    <UserContext.Provider value={{ profileData, setProfileData, assignerProfile, setAssignerProfile }}>
         <Layout isLoggedIn={isLoggedIn} accountType={accountType} onLogOut={logOut}>
             <Routes>
                 {!isLoggedIn ? <Route path="/login" element={<LoginPage onLoggedIn={onLoggedIn} />} /> : null}
@@ -116,6 +118,7 @@ function App() {
                 {isLoggedIn && accountType !== AccountType.Assigner ? <Route path="/challenges" element={<MyChallengesPage />} /> : null}
                 {isLoggedIn && accountType !== AccountType.Assigner ? <Route path="/accounts" element={<AccountManagementPage />} /> : null}
                 {isLoggedIn && accountType === AccountType.Assigner ? <Route path="/assigner" element={<AssignerPage />} /> : null}
+                {isLoggedIn && accountType === AccountType.Assigner ? <Route path="/print/certificate/:personId" element={<PrintCertificatePage />} /> : null}
                 
                 <Route path="/challenge" element={<SendChallengePage />} />
                 <Route path='/verify-email' element={<VerifyEmailPage />} />

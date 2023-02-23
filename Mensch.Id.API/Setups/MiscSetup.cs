@@ -11,6 +11,10 @@ namespace Mensch.Id.API.Setups
             IConfiguration configuration)
         {
             services.AddScoped<ChallengeCreator>();
+
+            services.Configure<CertificateSettings>(configuration.GetSection(CertificateSettings.AppSettingsSectionName));
+            services.AddScoped<ClaimsSigner>();
+            services.AddScoped<SignedProfileBuilder>();
         }
     }
 }

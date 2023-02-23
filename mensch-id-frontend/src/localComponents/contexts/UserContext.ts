@@ -5,6 +5,8 @@ import { ViewModels } from "../types/viewModels";
 interface UserContextState {
     profileData?: ViewModels.ProfileViewModel;
     setProfileData: (profileData?: ViewModels.ProfileViewModel) => void;
+    assignerProfile?: ViewModels.AssignerAccountViewModel;
+    setAssignerProfile?: (assignerProfile?: ViewModels.AssignerAccountViewModel) => void;
 }
 const UserContext = createContext<UserContextState>({
     setProfileData: () => {}

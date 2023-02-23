@@ -12,7 +12,7 @@ namespace Mensch.Id.API.Helpers
         public static string GetPersonId(List<Claim> claims)
         {
             var jwtClaims = claims.Where(x => x.Issuer == JwtSecurityTokenBuilder.Issuer).ToList();
-            return jwtClaims.FirstOrDefault(x => x.Type == JwtSecurityTokenBuilder.PersonIdClaimName)?.Value;
+            return jwtClaims.FirstOrDefault(x => x.Type == MenschIdClaimTypes.PersonIdClaimName)?.Value;
         }
 
         public static LoginProvider GetLoginProvider(List<Claim> claims)
@@ -76,7 +76,7 @@ namespace Mensch.Id.API.Helpers
                     return AccountType.External;
                 case LoginProvider.LocalJwt:
                     {
-                        var accountTypeString = claims.Single(x => x.Type == JwtSecurityTokenBuilder.AccountTypeClaimName).Value;
+                        var accountTypeString = claims.Single(x => x.Type == MenschIdClaimTypes.AccountTypeClaimName).Value;
                         return Enum.Parse<AccountType>(accountTypeString);
                     }
                 default:
