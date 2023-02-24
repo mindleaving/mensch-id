@@ -6,8 +6,7 @@ export enum AccountType {
 }
 export enum AuthenticationErrorType {
     Unknown = "Unknown",
-    UserNotFound = "UserNotFound",
-    InvalidPassword = "InvalidPassword",
+    InvalidUserOrPassword = "InvalidUserOrPassword",
     AuthenticationMethodNotAvailable = "AuthenticationMethodNotAvailable",
     EmailNotVerified = "EmailNotVerified"
 }

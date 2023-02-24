@@ -48,10 +48,14 @@ namespace Mensch.Id.API.Setups
                     {
                         options.TokenValidationParameters = new TokenValidationParameters
                         {
+                            ValidateIssuer = true,
+                            ValidateAudience = true,
                             ValidateIssuerSigningKey = true,
                             IssuerSigningKey = jwtPrivateKey,
-                            ValidAudience = "mensch.ID",
-                            ValidIssuer = "mensch.ID"
+                            ValidAlgorithms = new[] { "HS256" },
+                            ValidTypes = new[] { "JWT" },
+                            ValidAudience = JwtSecurityTokenBuilder.Audience,
+                            ValidIssuer = JwtSecurityTokenBuilder.Issuer
                         };
                     })
                 .AddGoogle(

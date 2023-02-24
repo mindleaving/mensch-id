@@ -7,8 +7,7 @@ namespace Mensch.Id.API.Models
     public enum AuthenticationErrorType
     {
         Unknown = 0,
-        UserNotFound = 1,
-        InvalidPassword = 2,
+        InvalidUserOrPassword = 2,
         AuthenticationMethodNotAvailable = 3,
         EmailNotVerified = 4
     }

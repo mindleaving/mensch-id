@@ -393,11 +393,9 @@ namespace Mensch.Id.API.Controllers
             {
                 switch (authenticationResult.Error)
                 {
-                    case AuthenticationErrorType.UserNotFound:
-                        return NotFound();
                     case AuthenticationErrorType.AuthenticationMethodNotAvailable:
                         return StatusCode((int)HttpStatusCode.ServiceUnavailable);
-                    case AuthenticationErrorType.InvalidPassword:
+                    case AuthenticationErrorType.InvalidUserOrPassword:
                     case AuthenticationErrorType.Unknown:
                     case AuthenticationErrorType.EmailNotVerified:
                     case null:

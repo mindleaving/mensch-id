@@ -14,7 +14,10 @@ namespace Mensch.Id.API.AccessControl.Policies
             AuthorizationHandlerContext context,
             AssignerRequirement requirement)
         {
-            var accountType = ClaimsHelpers.GetAccountType(context.User.Claims.ToList());
+            var claims = context.User.Claims.ToList();
+            if (!claims.Any())
+                return Task.CompletedTask;
+            var accountType = ClaimsHelpers.GetAccountType(claims);
             if(accountType != AccountType.Assigner)
                 return Task.CompletedTask;
             context.Succeed(requirement);

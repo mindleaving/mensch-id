@@ -44,10 +44,10 @@ namespace Mensch.Id.API.AccessControl
         public async Task<AuthenticationResult> AuthenticateLocalByEmailOrMenschIdAsync(LoginInformation loginInformation)
         {
             if(string.IsNullOrEmpty(loginInformation.Password))
-                return AuthenticationResult.Failed(AuthenticationErrorType.InvalidPassword);
+                return AuthenticationResult.Failed(AuthenticationErrorType.InvalidUserOrPassword);
             var accounts = await accountStore.GetLocalsByEmailOrMenschIdAsync(loginInformation.EmailOrMenschId);
             if(accounts.Count == 0)
-                return AuthenticationResult.Failed(AuthenticationErrorType.UserNotFound);
+                return AuthenticationResult.Failed(AuthenticationErrorType.InvalidUserOrPassword);
             foreach (var account in accounts)
             {
                 var verificationResult = passwordHasher.VerifyHashedPassword(account, account.PasswordHash, loginInformation.Password);
@@ -67,7 +67,7 @@ namespace Mensch.Id.API.AccessControl
                 }
                 return BuildSecurityTokenForUser(account);
             }
-            return AuthenticationResult.Failed(AuthenticationErrorType.InvalidPassword);
+            return AuthenticationResult.Failed(AuthenticationErrorType.InvalidUserOrPassword);
         }
 
         public async Task<AuthenticationResult> AuthenticateLocalByAccountIdAsync(
@@ -75,15 +75,15 @@ namespace Mensch.Id.API.AccessControl
             string password)
         {
             if(string.IsNullOrEmpty(password))
-                return AuthenticationResult.Failed(AuthenticationErrorType.InvalidPassword);
+                return AuthenticationResult.Failed(AuthenticationErrorType.InvalidUserOrPassword);
             var account = await accountStore.GetByIdAsync(accountId) as LocalAnonymousAccount;
             if(account == null)
-                return AuthenticationResult.Failed(AuthenticationErrorType.UserNotFound);
+                return AuthenticationResult.Failed(AuthenticationErrorType.InvalidUserOrPassword);
             var verificationResult = passwordHasher.VerifyHashedPassword(account, account.PasswordHash, password);
             switch (verificationResult)
             {
                 case PasswordVerificationResult.Failed:
-                    return AuthenticationResult.Failed(AuthenticationErrorType.InvalidPassword);
+                    return AuthenticationResult.Failed(AuthenticationErrorType.InvalidUserOrPassword);
                 case PasswordVerificationResult.SuccessRehashNeeded:
                     account.PasswordHash = passwordHasher.HashPassword(account, password);
                     await accountStore.StoreAsync(account);
