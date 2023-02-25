@@ -30,7 +30,8 @@ namespace Mensch.Id.API
                 new CorsSetup(),
                 new OpenApiSetup(),
                 new ViewModelSetup(),
-                new MiscSetup()
+                new MiscSetup(),
+                new RateLimitingSetup()
             };
             foreach (var setup in setups)
             {
@@ -66,10 +67,11 @@ namespace Mensch.Id.API
             app.UseAuthentication();
             app.AddMultiIdentityAuthentication();
             app.UseAuthorization();
+            app.UseRateLimiter();
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapControllers();
+                endpoints.MapControllers().RequireRateLimiting(RateLimitingSetup.DefaultPolicy);
             });
         }
     }
