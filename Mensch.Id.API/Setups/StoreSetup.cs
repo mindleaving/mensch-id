@@ -22,7 +22,11 @@ namespace Mensch.Id.API.Setups
             {
                 new EnumRepresentationConvention(BsonType.String)
             }, type => true);
-            services.AddSingleton<IMongoClient>(new MongoClient());
+            var mongoSettings = new MongoClientSettings
+            {
+                Credential = MongoCredential.CreateCredential("admin", configuration["MongoDB:User"], configuration["MongoDB:Password"])
+            };
+            services.AddSingleton<IMongoClient>(new MongoClient(mongoSettings));
             services.AddSingleton<IMongoDatabase>(
                 provider =>
                 {
