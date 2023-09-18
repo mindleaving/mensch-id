@@ -3,7 +3,7 @@
 ## Bugs
 - Can register multiple anonymous accounts linked to same mensch.ID, but only one password works. Desired behavior: Prohibit multiple anonymous accounts for same mensch.ID.
 - External login redirects to /login
-- Ensure access token removed from ApiClient when logging out (HealthSharingPortal).
+- Assigner accounts shown in account list for private user: Omit assigner accounts in list of accounts associated with mensch.ID
 
 ## Features
 - Delete logins (and account when last login is deleted. Show confirmation dialogue)
