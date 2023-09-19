@@ -2,7 +2,6 @@ import React, { useMemo, useState } from 'react';
 import { Accordion, FormGroup, FormLabel } from 'react-bootstrap';
 import { apiClient } from '../../sharedCommonComponents/communication/ApiClient';
 import { AccordionCard } from '../../sharedCommonComponents/components/AccordionCard';
-import { NotificationManager } from 'react-notifications';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { Models } from '../types/models';
 import { format } from 'date-fns';
@@ -10,6 +9,7 @@ import { DeleteButton } from '../../sharedCommonComponents/components/DeleteButo
 import { Autocomplete } from '../../sharedCommonComponents/components/Autocompletes/Autocomplete';
 import { AutocompleteRunner } from '../../sharedCommonComponents/helpers/AutocompleteRunner';
 import { ChallengeReceiverCard } from '../components/ChallengeReceiverCard';
+import { showErrorAlert, showSuccessAlert } from '../../sharedCommonComponents/helpers/AlertHelpers';
 
 interface MyChallengesPageProps {}
 
@@ -24,9 +24,9 @@ export const MyChallengesPage = (props: MyChallengesPageProps) => {
         try {
             await apiClient.instance!.delete(`api/challenges/${challengeId}`, {});
             setChallenges(state => state.filter(x => x.id !== challengeId));
-            NotificationManager.success(resolveText("Challenge_SuccessfullyDeleted"));
+            showSuccessAlert(resolveText("Challenge_SuccessfullyDeleted"));
         } catch(error: any) {
-            NotificationManager.error(error.message, resolveText("Challenge_CouldNotDelete"));
+            showErrorAlert(error.message, resolveText("Challenge_CouldNotDelete"));
         } finally {
             setIsDeleting(false);
         }

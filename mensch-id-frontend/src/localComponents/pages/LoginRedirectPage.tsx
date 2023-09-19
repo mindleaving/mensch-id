@@ -3,8 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { apiClient } from '../../sharedCommonComponents/communication/ApiClient';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { Models } from '../types/models';
-import { NotificationManager } from 'react-notifications';
 import { AccountType } from '../types/enums.d';
+import { showErrorAlert } from '../../sharedCommonComponents/helpers/AlertHelpers';
 
 interface LoginRedirectPageProps {
     onLoggedIn: (authenticationResult: Models.AuthenticationResult) => void;
@@ -34,7 +34,7 @@ export const LoginRedirectPage = (props: LoginRedirectPageProps) => {
                     props.onLoggedIn(authenticationResult);
                 }
             } catch {
-                NotificationManager.error(resolveText("CouldNotLogIn"));
+                showErrorAlert(resolveText("CouldNotLogIn"));
                 navigate("/login");
             }
         };

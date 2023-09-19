@@ -1,4 +1,3 @@
-import React from 'react';
 import { confirmAlert } from 'react-confirm-alert';
 import { resolveText } from '../helpers/Globalizer';
 import { AsyncButton } from './AsyncButton';
@@ -9,6 +8,7 @@ interface DeleteButtonProps {
     requireConfirm: boolean;
     confirmDialogTitle?: string;
     confirmDialogMessage?: string;
+    className?: string;
 }
 
 export const DeleteButton = (props: DeleteButtonProps) => {
@@ -29,7 +29,7 @@ export const DeleteButton = (props: DeleteButtonProps) => {
                 },
                 {
                     label: resolveText('Delete_Yes'),
-                    onClick: props.onClick
+                    onClick: () => props.onClick(true)
                 }
             ]
         });
@@ -38,11 +38,11 @@ export const DeleteButton = (props: DeleteButtonProps) => {
     return (
         <AsyncButton
             variant="danger"
-            className="m-2"
+            className={props.className ?? 'm-2'}
             activeText={resolveText('Delete')}
             executingText={resolveText('Deleting...')}
             isExecuting={props.isDeleting}
-            onClick={!props.requireConfirm ? props.onClick : confirmDelete}
+            onClick={props.requireConfirm ? confirmDelete : () => props.onClick(false)}
         />
     );
 

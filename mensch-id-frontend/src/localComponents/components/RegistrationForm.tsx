@@ -1,15 +1,16 @@
 import React, { FormEvent, useState } from 'react';
 import { Alert, Col, Form, FormCheck, FormControl, FormGroup, FormLabel, Row } from 'react-bootstrap';
 import { AsyncButton } from '../../sharedCommonComponents/components/AsyncButton';
-import { RowFormGroup } from '../../sharedCommonComponents/components/RowFormGroup';
+import { RowFormGroup } from '../../sharedCommonComponents/components/FormControls/RowFormGroup';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { sendPostRequest } from '../../sharedCommonComponents/helpers/StoringHelpers';
 import { Models } from '../types/models';
-import { NotificationManager } from 'react-notifications';
 import { Center } from '../../sharedCommonComponents/components/Center';
 import { AccountType } from '../types/enums.d';
 import { confirmAlert } from 'react-confirm-alert';
 import { Link, useNavigate } from 'react-router-dom';
+import { showErrorAlert } from '../../sharedCommonComponents/helpers/AlertHelpers';
+import PasswordFormControl from '../../sharedCommonComponents/components/FormControls/PasswordFormControl';
 
 interface RegistrationFormProps {
     onLoggedIn: (authenticationResult: Models.AuthenticationResult) => void;
@@ -30,7 +31,7 @@ export const RegistrationForm = (props: RegistrationFormProps) => {
     const validate = async (e?: FormEvent) => {
         e?.preventDefault();
         if(password !== passwordRepeat) {
-            NotificationManager.error(resolveText("Register_PasswordsDoNotMatch"));
+            showErrorAlert(resolveText("Register_PasswordsDoNotMatch"));
             return;
         }
         if(selectedAccountType === AccountType.LocalAnonymous) {
@@ -62,7 +63,7 @@ export const RegistrationForm = (props: RegistrationFormProps) => {
             password: password
         };
         await sendPostRequest(
-            'api/accounts/register-local',
+            'api/accounts/register-local', {},
             resolveText("Register_CouldNotRegister"),
             registrationInformation,
             async response => {
@@ -126,21 +127,24 @@ export const RegistrationForm = (props: RegistrationFormProps) => {
                 ))}
             </FormGroup>
             {selectedAccountType === AccountType.Local
-            ? <RowFormGroup required
-                type='email'
-                label={resolveText("Email")}
-                value={email}
-                onChange={setEmail}
-                isValid={email.includes('@')}
-                id="email"
-                name="email"
-            />
+            ? <FormGroup as={Row}>
+                <FormLabel column xs={4}>{resolveText("Email")}</FormLabel>
+                <Col>
+                    <FormControl required
+                        type='email'
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        isValid={email.includes('@')}
+                        id="email"
+                        name="email"
+                    />
+                </Col>
+            </FormGroup>
             : null}
             <FormGroup as={Row} className='my-1'>
                 <FormLabel column xs={4}>{resolveText("Password")}</FormLabel>
                 <Col>
-                    <FormControl required
-                        type='password'
+                    <PasswordFormControl required
                         value={password}
                         onChange={(e:any) => setPassword(e.target.value)}
                         isInvalid={password.length > 0 && password.length < 8}
@@ -153,8 +157,7 @@ export const RegistrationForm = (props: RegistrationFormProps) => {
             <FormGroup as={Row} className='my-1'>
                 <FormLabel column xs={4}>{resolveText("PasswordRepeat")}</FormLabel>
                 <Col>
-                    <FormControl required
-                        type='password'
+                    <PasswordFormControl required
                         value={passwordRepeat}
                         onChange={(e:any) => setPasswordRepeat(e.target.value)}
                         isInvalid={passwordRepeat.length > 0 && passwordRepeat !== password}

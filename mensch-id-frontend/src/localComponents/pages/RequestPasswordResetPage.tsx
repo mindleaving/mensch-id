@@ -3,9 +3,9 @@ import { Form, FormControl, FormGroup, FormLabel } from 'react-bootstrap';
 import { StoreButton } from '../../sharedCommonComponents/components/StoreButton';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { sendPostRequest } from '../../sharedCommonComponents/helpers/StoringHelpers';
-import { NotificationManager } from 'react-notifications';
 import { useNavigate } from 'react-router-dom';
 import { Models } from '../types/models';
+import { showSuccessAlert } from '../../sharedCommonComponents/helpers/AlertHelpers';
 
 interface RequestPasswordResetPageProps {}
 
@@ -22,11 +22,11 @@ export const RequestPasswordResetPage = (props: RequestPasswordResetPageProps) =
             email: email
         };
         await sendPostRequest(
-            `api/accounts/request-password-reset`,
+            `api/accounts/request-password-reset`, {},
             resolveText("ResetPassword_CouldNotRequest"),
             body,
             () => {
-                NotificationManager.success(resolveText("ResetPassword_SuccessfullySubmittedRequest"));
+                showSuccessAlert(resolveText("ResetPassword_SuccessfullySubmittedRequest"));
                 navigate("/");
             }
         )

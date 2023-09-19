@@ -55,7 +55,7 @@ function App() {
     useEffect(() => {
         const checkLoginState = async () => {
             try {
-                const response = await apiClient.instance!.get('api/accounts/is-logged-in', {});
+                const response = await apiClient.instance!.get('api/accounts/is-logged-in', {}, { handleError: false });
                 if(response.status === 200) {
                     const loggedInInfo = await response.json() as Models.IsLoggedInResponse;
                     setIsLoggedIn(true);
@@ -92,12 +92,12 @@ function App() {
     
     const logOut = async () => {
         await sendPostRequest(
-            `api/accounts/logout`,
+            `api/accounts/logout`, {},
             resolveText('CouldNotLogOut'),
             null,
             () => {
                 setProfileData(undefined);
-                apiClient.instance!.setAccessToken('');
+                apiClient.instance!.clearAccessToken();
                 sessionStorage.removeItem(SessionStoreKeys.AccessToken);
                 setIsLoggedIn(false);
                 navigate("/");

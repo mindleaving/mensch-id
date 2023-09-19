@@ -27,7 +27,7 @@ export const ChangePasswordForm = (props: ChangePasswordFormProps) => {
             newPassword: newPassword
         };
         await sendPostRequest(
-            `api/accounts/${props.accountId}/change-password`,
+            `api/accounts/${props.accountId}/change-password`, {},
             resolveText("Account_CouldNotChangePassword"),
             body,
             () => {

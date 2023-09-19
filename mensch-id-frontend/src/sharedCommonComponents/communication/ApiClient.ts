@@ -1,5 +1,7 @@
-import { resolveText } from '../helpers/Globalizer';
+import { translateErrorMessage } from '../helpers/ErrorMessageTranslator';
+import { extractJwtBody } from '../helpers/JwtHelpers';
 import { buildUrl } from '../helpers/UrlBuilder';
+import { QueryParameters } from '../types/frontendTypes';
 import { ApiError } from './ApiError';
 
 export interface ApiClientOptions {
@@ -12,6 +14,7 @@ export class ApiClient {
     serverAddress: string;
     port: number;
     accessToken: string | undefined;
+    expirationTime: Date | undefined;
     defaultOptions: ApiClientOptions;
 
     constructor(serverAddress: string, port: number) {
@@ -27,7 +30,7 @@ export class ApiClient {
     }
 
     isLoggedIn = async () => {
-        const response = await this.get('api/logins/is-logged-in', {}, { handleError: false });
+        const response = await this.get('api/logins/is-logged-in', [], { handleError: false });
         if(response.ok) {
             return true;
         }
@@ -38,38 +41,44 @@ export class ApiClient {
         return false;
     }
 
-    get = async (path: string, params: { [key: string]: string }, options?: ApiClientOptions) => {
+    get = async (path: string, params?: QueryParameters, options?: ApiClientOptions) => {
         return await this._sendRequest("GET", path, params, undefined, options);
     }
 
-    put = async (path: string, params: { [key: string]: string }, body: any, options?: ApiClientOptions) => {
+    put = async (path: string, body: any, params?: QueryParameters, options?: ApiClientOptions) => {
         return await this._sendRequest("PUT", path, params, body, options);
     }
 
-    post = async (path: string, params: { [key: string]: string }, body: any, options?: ApiClientOptions) => {
+    post = async (path: string, body: any, params?: QueryParameters, options?: ApiClientOptions) => {
         return await this._sendRequest("POST", path, params, body, options);
     }
 
-    patch = async (path: string, params: { [key: string]: string }, body: any, options?: ApiClientOptions) => {
+    patch = async (path: string, body: any, params?: QueryParameters, options?: ApiClientOptions) => {
         return await this._sendRequest("PATCH", path, params, body, options);
     }
 
-    delete = async (path: string, params: { [key: string]: string }, options?: ApiClientOptions) => {
+    delete = async (path: string, params?: QueryParameters, options?: ApiClientOptions) => {
         return await this._sendRequest("DELETE", path, params, undefined, options);
     }
 
     setAccessToken = (accessToken: string) => {
         this.accessToken = accessToken;
+        this.expirationTime = new Date(extractJwtBody(accessToken).exp * 1000);
     }
 
-    buildUrl = (path: string, params: {}) => {
+    clearAccessToken = () => {
+        this.accessToken = undefined;
+        this.expirationTime = undefined;
+    }
+
+    buildUrl = (path: string, params?: QueryParameters) => {
         return buildUrl(`https://${this.serverAddress}:${this.port}`, path, params);
     }
 
     _sendRequest = async (
         method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
         path: string, 
-        params: { [key: string]: string },
+        params?: QueryParameters,
         body?: any,
         options?: ApiClientOptions) => {
 
@@ -117,9 +126,7 @@ export class ApiClient {
                 throw new ApiError(response.status, errors.join(', '));
             }
         }
-        const translatedErrorText = errorText.startsWith("resolveText:")
-            ? resolveText(errorText.replace("resolveText:", ""))
-            : errorText;
+        const translatedErrorText = translateErrorMessage(errorText);
         throw new ApiError(response.status, translatedErrorText);
     }
 }

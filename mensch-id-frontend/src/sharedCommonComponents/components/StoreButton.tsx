@@ -1,4 +1,3 @@
-import React from 'react';
 import { resolveText } from '../helpers/Globalizer';
 import { AsyncButton } from './AsyncButton';
 
@@ -7,7 +6,9 @@ interface StoreButtonProps {
     form?: string;
     onClick?: () => void;
     isStoring: boolean;
+    isStored?: boolean;
     disabled?: boolean;
+    size?: 'sm' | 'lg';
     className?: string;
 }
 
@@ -19,10 +20,12 @@ export const StoreButton = (props: StoreButtonProps) => {
             form={props.form}
             onClick={props.onClick}
             className={props.className ?? 'm-2'}
-            activeText={resolveText('Store')}
+            activeText={props.isStored ? resolveText('Stored') : resolveText('Store')}
             executingText={resolveText('Storing...')}
             isExecuting={props.isStoring}
-            disabled={props.disabled}
+            disabled={props.disabled || props.isStored}
+            size={props.size}
+            variant={props.isStored ? 'success' : 'primary'}
         />
     );
 

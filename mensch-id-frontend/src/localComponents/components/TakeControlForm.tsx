@@ -25,7 +25,7 @@ export const TakeControlForm = (props: TakeControlFormProps) => {
             ownershipSecret: ownershipSecret.replaceAll(/[^A-Z0-9]/g, "")
         };
         await sendPostRequest(
-            `api/profiles/take-control`,
+            `api/profiles/take-control`, {},
             resolveText("TakeControl_CouldNotTakeControl"),
             body,
             () => {

@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
-import { NotificationManager } from 'react-notifications';
 import { apiClient } from '../../sharedCommonComponents/communication/ApiClient';
+import { showErrorAlert, showSuccessAlert } from '../../sharedCommonComponents/helpers/AlertHelpers';
 
 interface LinkAccountRedirectPageProps {}
 
@@ -15,10 +15,10 @@ export const LinkAccountRedirectPage = (props: LinkAccountRedirectPageProps) => 
                 if(!apiClient.instance!.accessToken) {
                     throw new Error("No access token set");
                 }
-                await apiClient.instance!.post('api/accounts/link/external', {}, null);
-                NotificationManager.success(resolveText("LinkAccount_SuccessfullyLinked"));
+                await apiClient.instance!.post('api/accounts/link/external', null);
+                showSuccessAlert(resolveText("LinkAccount_SuccessfullyLinked"));
             } catch {
-                NotificationManager.error(resolveText("LinkAccount_CouldNotLink"));
+                showErrorAlert(resolveText("LinkAccount_CouldNotLink"));
             } finally {
                 navigate("/me");
             }

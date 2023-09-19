@@ -1,9 +1,10 @@
 import { apiClient } from "../communication/ApiClient";
-import { NotificationManager } from 'react-notifications';
+import { QueryParameters } from "../types/frontendTypes";
+import { showErrorAlert } from "./AlertHelpers";
 
 export const buildLoadObjectFunc = <T extends unknown>(
     apiPath: string,
-    params: { [key:string]: string } = {},
+    params: QueryParameters = {},
     errorText: string,
     onItemLoaded: (item: T) => void,
     onFailure?: () => void,
@@ -12,7 +13,7 @@ export const buildLoadObjectFunc = <T extends unknown>(
 }
 export const loadObject = async <T extends unknown>(
     apiPath: string,
-    params: { [key:string]: string } = {},
+    params: QueryParameters = {},
     errorText: string,
     onItemLoaded: (item: T) => void,
     onFailure?: () => void,
@@ -26,7 +27,7 @@ export const loadObject = async <T extends unknown>(
         if(onFailure) {
             onFailure();
         }
-        NotificationManager.error(error.message, errorText);
+        showErrorAlert(errorText, error.message);
     } finally {
         if(onFinally) {
             onFinally();

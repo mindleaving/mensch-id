@@ -2,14 +2,14 @@ import { FormEvent, useContext, useState } from 'react';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import UserContext from '../contexts/UserContext';
 import { Models } from '../types/models';
-import { NotificationManager } from 'react-notifications';
 import { apiClient } from '../../sharedCommonComponents/communication/ApiClient';
 import { AuthenticationErrorType } from '../types/enums.d';
 import { useNavigate } from 'react-router-dom';
 import { Button, Col, Form, Row } from 'react-bootstrap';
 import { AsyncButton } from '../../sharedCommonComponents/components/AsyncButton';
 import { Center } from '../../sharedCommonComponents/components/Center';
-import { RowFormGroup } from '../../sharedCommonComponents/components/RowFormGroup';
+import { RowFormGroup } from '../../sharedCommonComponents/components/FormControls/RowFormGroup';
+import { showErrorAlert } from '../../sharedCommonComponents/helpers/AlertHelpers';
 
 interface LocalLoginFormProps {
     onSubmit?: (loginInformation: Models.LoginInformation) => Promise<void>;
@@ -39,7 +39,7 @@ export const LocalLoginForm = (props: LocalLoginFormProps) => {
             }
         } else {
             try {
-                const response = await apiClient.instance!.post('api/accounts/login', {}, loginInformation, { handleError: false });
+                const response = await apiClient.instance!.post('api/accounts/login', loginInformation, {}, { handleError: false });
                 const authenticationResult = await response.json() as Models.AuthenticationResult;
                 if(!authenticationResult) {
                     throw new Error("Could not log in");
@@ -52,7 +52,7 @@ export const LocalLoginForm = (props: LocalLoginFormProps) => {
                     throw new Error("Could not log in");
                 }
             } catch {
-                NotificationManager.error(resolveText("Login_CouldNotLogIn"));
+                showErrorAlert(resolveText("Login_CouldNotLogIn"));
             } finally {
                 setIsSubmitting(false);
             }

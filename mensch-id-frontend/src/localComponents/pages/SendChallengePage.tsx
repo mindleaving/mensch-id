@@ -21,7 +21,7 @@ export const SendChallengePage = (props: SendChallengePageProps) => {
 
         setIsSending(true);
         await sendPostRequest(
-            `api/id/${menschId}/challenge?challengeLength=${challengeLength}`,
+            `api/id/${menschId}/challenge?challengeLength=${challengeLength}`, {},
             resolveText("Challenge_CouldNotSend"),
             null,
             async response => {

@@ -4,8 +4,8 @@ import { apiClient } from '../../sharedCommonComponents/communication/ApiClient'
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { Alert, Button } from 'react-bootstrap';
 import { ResendVerificationEmailForm } from './ResendVerificationEmailForm';
-import { NotificationManager } from 'react-notifications';
 import { HorizontalLineWithText } from '../../sharedCommonComponents/components/HorizontalLineWithText';
+import { showInfoAlert } from '../../sharedCommonComponents/helpers/AlertHelpers';
 
 interface VerifyEmailPageProps {}
 
@@ -27,13 +27,13 @@ export const VerifyEmailPage = (props: VerifyEmailPageProps) => {
             await apiClient.instance!.get(`api/accounts/${accountId}/verify-email`, { token: verificationToken });
             setIsVerified(true);
             setTimeout(() => navigate("/login"), 3000);
-            NotificationManager.info(resolveText("Redirecting..."));
+            showInfoAlert(resolveText("Redirecting..."));
         } catch {
             setIsVerified(false);
         } finally {
             setIsSubmitting(false);
         }
-    }, [ accountId, verificationToken]);
+    }, [ accountId, verificationToken, navigate ]);
 
     useEffect(() => {  
         verifyEmail();

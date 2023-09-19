@@ -4,8 +4,8 @@ import { useSearchParams } from 'react-router-dom';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { sendPostRequest } from '../../sharedCommonComponents/helpers/StoringHelpers';
 import { Models } from '../types/models';
-import { NotificationManager } from 'react-notifications';
 import { AsyncButton } from '../../sharedCommonComponents/components/AsyncButton';
+import { showErrorAlert, showInfoAlert, showSuccessAlert } from '../../sharedCommonComponents/helpers/AlertHelpers';
 
 interface ResetPasswordPageProps {
     onLoggedIn: (authenticationResult: Models.AuthenticationResult) => void;
@@ -26,7 +26,7 @@ export const ResetPasswordPage = (props: ResetPasswordPageProps) => {
             return;
         }
         if(password !== passwordRepeat) {
-            NotificationManager.error(resolveText("ResetPassword_PasswordsDoNotMatch"));
+            showErrorAlert(resolveText("ResetPassword_PasswordsDoNotMatch"));
             return;
         }
         setIsSubmitting(true);
@@ -36,14 +36,14 @@ export const ResetPasswordPage = (props: ResetPasswordPageProps) => {
             resetToken: resetToken
         };
         await sendPostRequest(
-            `api/accounts/reset-password`,
+            `api/accounts/reset-password`, {},
             resolveText("ResetPassword_CouldNotReset"),
             body,
             async response => {
                 const authenticationResult = await response.json() as Models.AuthenticationResult;
                 if(authenticationResult.isAuthenticated) {
-                    NotificationManager.success(resolveText("ResetPassword_SuccessfullyChanged"));
-                    NotificationManager.info(resolveText("Redirecting..."));
+                    showSuccessAlert(resolveText("ResetPassword_SuccessfullyChanged"));
+                    showInfoAlert(resolveText("Redirecting..."));
                     props.onLoggedIn(authenticationResult);
                 }
             },

@@ -1,11 +1,11 @@
 import React, { PropsWithChildren } from 'react';
 import { Button, Col, Container, Nav, Navbar, NavDropdown, NavItem, Row } from 'react-bootstrap';
-import { NotificationContainer } from 'react-notifications';
 import { useNavigate } from 'react-router-dom';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { AccountType } from '../types/enums.d';
 import { AssignerMenu } from './Menus/AssignerMenu';
 import { RegularUserMenu } from './Menus/RegularUserMenu';
+import { ToastContainer } from 'react-toastify';
 
 interface LayoutProps {
     isLoggedIn: boolean;
@@ -31,7 +31,9 @@ export const Layout = (props: PropsWithChildren<LayoutProps>) => {
 
     return (
         <>
-            <NotificationContainer />
+            <ToastContainer 
+                theme='colored'
+            />
             {window.location.hostname === 'localhost' || window.location.hostname.startsWith('test.')
             ? <Navbar bg='warning' className='justify-content-center'>
                 <Nav>

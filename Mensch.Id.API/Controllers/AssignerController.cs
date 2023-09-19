@@ -26,6 +26,7 @@ namespace Mensch.Id.API.Controllers
         private readonly IStore<Person> profileStore;
         private readonly IStore<AssignerControlledProfile> assignerControlledProfileStore;
         private readonly SignedProfileBuilder signedProfileBuilder;
+        private readonly AssignedProfileFillterExpressionBuilder filterExpressionBuilder;
 
         public AssignerController(
             IStore<Account> accountStore,
@@ -34,7 +35,8 @@ namespace Mensch.Id.API.Controllers
             IIdStore idStore,
             IStore<Person> profileStore,
             IStore<AssignerControlledProfile> assignerControlledProfileStore,
-            SignedProfileBuilder signedProfileBuilder)
+            SignedProfileBuilder signedProfileBuilder,
+            AssignedProfileFillterExpressionBuilder filterExpressionBuilder)
         {
             this.accountStore = accountStore;
             this.newProfileViewModelBuilder = newProfileViewModelBuilder;
@@ -43,6 +45,7 @@ namespace Mensch.Id.API.Controllers
             this.profileStore = profileStore;
             this.assignerControlledProfileStore = assignerControlledProfileStore;
             this.signedProfileBuilder = signedProfileBuilder;
+            this.filterExpressionBuilder = filterExpressionBuilder;
         }
 
         [HttpGet("me")]
@@ -117,15 +120,18 @@ namespace Mensch.Id.API.Controllers
         }
 
         [HttpGet("assigned-ids")]
+        [HttpGet("assigned-ids/search")]
         public async Task<IActionResult> AssignedIds(
-            [FromQuery] int? count = null,
-            [FromQuery] int skip = 0)
+            [FromQuery] AssignedProfilesRequestParameters queryParameters)
         {
             var accountId = ControllerHelpers.GetAccountId(httpContextAccessor);
+            var filterExpressions = filterExpressionBuilder.Build(queryParameters);
+            filterExpressions.Add(x => x.AssignerAccountId == accountId);
+            var combinedFilter = SearchExpressionBuilder.And(filterExpressions.ToArray());
             var items = await assignerControlledProfileStore.SearchAsync(
-                x => x.AssignerAccountId == accountId,
-                count,
-                skip,
+                combinedFilter,
+                queryParameters.Count,
+                queryParameters.Skip,
                 x => x.CreationDate,
                 OrderDirection.Descending);
             return Ok(items);

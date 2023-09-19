@@ -7,6 +7,14 @@ export namespace Models {
         preferedLanguage: Enums.Language;
     }
 
+    interface AssignedProfilesRequestParameters {
+        count?: number | null;
+        skip: number;
+        searchText?: string;
+        timeRangeStart?: Date | null;
+        timeRangeEnd?: Date | null;
+    }
+
     interface AssignerAccount extends Models.LocalAccount {
         name: string;
         logoUrl: string;

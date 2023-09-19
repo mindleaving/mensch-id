@@ -17,7 +17,7 @@ export const IdCandidateAlert = (props: IdCandidateAlertProps) => {
     const acceptId = async () => {
         setIsSubmitting(true);
         await sendPostRequest(
-            `api/assigner/claim/${props.idCandidate}`,
+            `api/assigner/claim/${props.idCandidate}`, {},
             resolveText("Assigner_CouldNotClaimId"),
             null,
             () => {
@@ -31,7 +31,7 @@ export const IdCandidateAlert = (props: IdCandidateAlertProps) => {
     const rejectId = async () => {
         setIsSubmitting(true);
         await sendPostRequest(
-            `api/assigner/reject/${props.idCandidate}`,
+            `api/assigner/reject/${props.idCandidate}`, {},
             resolveText("Assigner_CouldNotRejectId"),
             null,
             () => {

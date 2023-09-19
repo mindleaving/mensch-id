@@ -4,11 +4,11 @@ import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { buildLoadObjectFunc } from '../../sharedCommonComponents/helpers/LoadingHelpers';
 import { LoginProvider } from '../types/enums.d';
 import { ViewModels } from '../types/viewModels';
-import { NotificationManager } from 'react-notifications';
 import { Models } from '../types/models';
 import { LoginForm } from '../components/LoginForm';
 import { useNavigate } from 'react-router-dom';
 import { sendPostRequest } from '../../sharedCommonComponents/helpers/StoringHelpers';
+import { showErrorAlert, showSuccessAlert } from '../../sharedCommonComponents/helpers/AlertHelpers';
 
 interface LinkAccountPageProps {
     onLoggedIn: (authenticationResult: Models.AuthenticationResult) => void;
@@ -42,7 +42,7 @@ export const LinkAccountPage = (props: LinkAccountPageProps) => {
                 apiClient.instance!.setAccessToken(authenticationResult.accessToken!);
                 sessionStorage.setItem("accesstoken", authenticationResult.accessToken!);
             } catch {
-                NotificationManager.error(resolveText("LinkAccount_CouldNotSetupLink"));
+                showErrorAlert(resolveText("LinkAccount_CouldNotSetupLink"));
                 return;
             }
         }
@@ -53,11 +53,11 @@ export const LinkAccountPage = (props: LinkAccountPageProps) => {
 
     const linkLocalAccount = async (loginInformation: Models.LoginInformation) => {
         await sendPostRequest(
-            'api/accounts/link/local',
+            'api/accounts/link/local', {},
             resolveText("LinkAccount_CouldNotLink"),
             loginInformation,
             () => {
-                NotificationManager.success(resolveText("LinkAccount_SuccessfullyLinked"));
+                showSuccessAlert(resolveText("LinkAccount_SuccessfullyLinked"));
                 navigate("/me");
             }
         );

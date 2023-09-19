@@ -25,6 +25,7 @@ namespace Mensch.Id.API
             {
                 new StoreSetup(),
                 new ControllerSetup(),
+                new FilterSetup(),
                 new AccessControlSetup(),
                 new EmailSetup(),
                 new CorsSetup(),

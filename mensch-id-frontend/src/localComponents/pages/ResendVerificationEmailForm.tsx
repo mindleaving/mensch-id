@@ -22,7 +22,7 @@ export const ResendVerificationEmailForm = (props: ResendVerificationEmailFormPr
             email: email
         };
         await sendPostRequest(
-            `api/accounts/resend-verification-email`,
+            `api/accounts/resend-verification-email`, {},
             resolveText("VerifyEmail_CouldNotSend"),
             body,
             () => {

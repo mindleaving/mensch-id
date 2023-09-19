@@ -1,4 +1,4 @@
-import React from "react"
+import { ReactNode } from "react"
 import { Button } from "react-bootstrap";
 
 interface AsyncButtonProps {
@@ -8,8 +8,8 @@ interface AsyncButtonProps {
     variant?: string;
     size?: "sm" | "lg";
     isExecuting?: boolean;
-    activeText: string;
-    executingText: string;
+    activeText: ReactNode;
+    executingText: ReactNode;
     className?: string;
     disabled?: boolean;
 }

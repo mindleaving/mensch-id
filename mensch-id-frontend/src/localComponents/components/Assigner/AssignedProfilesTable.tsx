@@ -7,24 +7,29 @@ import { PagedTable } from '../../../sharedCommonComponents/components/PagedTabl
 import { resolveText } from '../../../sharedCommonComponents/helpers/Globalizer';
 import PagedTableLoader from '../../../sharedCommonComponents/helpers/PagedTableLoader';
 import { Models } from '../../types/models';
+import { AssignedProfilesFilter } from '../../types/frontendTypes';
 
 interface AssignedProfilesTableProps {
+    filter: AssignedProfilesFilter;
     latestAssignedId?: string;
 }
 
 export const AssignedProfilesTable = (props: AssignedProfilesTableProps) => {
 
+    const { filter, latestAssignedId } = props;
     const [ profiles, setProfiles ] = useState<Models.AssignerControlledProfile[]>([]);
     const navigate = useNavigate();
     const loader = useMemo(() => new PagedTableLoader(
         'api/assigner/assigned-ids', 
         resolveText("AssignerControlledProfiles_CouldNotLoad"),
-        setProfiles), []);
+        setProfiles,
+        filter), 
+    [ filter ]);
 
     useEffect(() => {
         loader.load(0, 10);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [ props.latestAssignedId ]);
+    }, [ loader, latestAssignedId ]);
 
     return (
         <PagedTable

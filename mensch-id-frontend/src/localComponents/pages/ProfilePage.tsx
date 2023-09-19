@@ -2,7 +2,6 @@ import '../styles/profile.css';
 import { useEffect, useState } from 'react';
 import { Alert, Badge, Button, Col, Row } from 'react-bootstrap';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
-import { NotificationManager } from 'react-notifications';
 import { apiClient } from '../../sharedCommonComponents/communication/ApiClient';
 import { ApiError } from '../../sharedCommonComponents/communication/ApiError';
 import { CopyButton } from '../../sharedCommonComponents/components/CopyButton';
@@ -10,6 +9,7 @@ import { LoginProvider } from '../types/enums.d';
 import { useContext } from 'react';
 import UserContext from '../contexts/UserContext';
 import { useNavigate } from 'react-router-dom';
+import { showErrorAlert } from '../../sharedCommonComponents/helpers/AlertHelpers';
 
 interface ProfilePageProps {}
 
@@ -37,7 +37,7 @@ export const ProfilePage = (props: ProfilePageProps) => {
                     setProfileData(result);
                 }
             } catch(error: any) {
-                NotificationManager.error(error.message, resolveText("Person_CouldNotLoad"));
+                showErrorAlert(error.message, resolveText("Person_CouldNotLoad"));
             } finally {
                 setIsLoading(false);
             }

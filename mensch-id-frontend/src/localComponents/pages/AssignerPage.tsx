@@ -6,15 +6,19 @@ import { AssignedProfilesTable } from '../components/Assigner/AssignedProfilesTa
 import { IdCandidateAlert } from '../components/Assigner/IdCandidateAlert';
 import { NewIdCandidateForm } from '../components/Assigner/NewIdCandidateForm';
 import UserContext from '../contexts/UserContext';
+import { AssignedProfilesFilterView } from '../components/Assigner/AssignedProfilesFilterView';
+import { AssignedProfilesFilter } from '../types/frontendTypes';
 
 interface AssignerPageProps {}
 
 export const AssignerPage = (props: AssignerPageProps) => {
 
+    const { assignerProfile, setAssignerProfile} = useContext(UserContext)!;
+
     const [ birthDate, setBirthDate ] = useState<string>('');
     const [ idCandidate, setIdCandidate ] = useState<string>();
     const [ latestAssignedId, setLatestAssignedId ] = useState<string>();
-    const { assignerProfile, setAssignerProfile} = useContext(UserContext)!;
+    const [ filter, setFilter ] = useState<AssignedProfilesFilter>({});
 
     useEffect(() => {
         if(assignerProfile || !setAssignerProfile) {
@@ -56,7 +60,14 @@ export const AssignerPage = (props: AssignerPageProps) => {
             </Alert>
             <hr className='my-3' />
             <h3>{resolveText("AssignedIDs")}</h3>
-            <AssignedProfilesTable latestAssignedId={latestAssignedId} />
+            <AssignedProfilesFilterView
+                filter={filter}
+                onChange={setFilter}
+            />
+            <AssignedProfilesTable 
+                latestAssignedId={latestAssignedId} 
+                filter={filter}
+            />
         </>
     );
 
