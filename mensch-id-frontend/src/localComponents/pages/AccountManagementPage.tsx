@@ -21,10 +21,10 @@ export const AccountManagementPage = (props: AccountManagementPageProps) => {
 
     const loadAccounts = async () => {
         setIsLoading(true);
-        await loadObject(
+        await loadObject<Models.Account[]>(
             'api/accounts', {},
             resolveText("Accounts_CouldNotLoad"),
-            setAccounts,
+            items => setAccounts(items.filter(x => x.accountType !== AccountType.Assigner)),
             undefined,
             () => setIsLoading(false)
         )

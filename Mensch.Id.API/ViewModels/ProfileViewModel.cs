@@ -3,7 +3,7 @@ using Mensch.Id.API.Models;
 
 namespace Mensch.Id.API.ViewModels
 {
-    public class ProfileViewModel
+    public class ProfileViewModel : IUserViewModel
     {
         public ProfileViewModel(
             string id,
@@ -15,6 +15,7 @@ namespace Mensch.Id.API.ViewModels
             Verifications = verifications;
         }
 
+        public UserType UserType => UserType.Person;
         public string Id { get; }
         public List<LoginProvider> LoginProviders { get; }
         public List<Verification> Verifications { get; }

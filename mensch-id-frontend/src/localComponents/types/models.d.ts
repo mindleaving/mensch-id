@@ -18,6 +18,7 @@ export namespace Models {
     interface AssignerAccount extends Models.LocalAccount {
         name: string;
         logoUrl: string;
+        contact: Models.Contact;
     }
 
     interface AssignerControlledProfile extends Models.IId {
@@ -37,6 +38,20 @@ export namespace Models {
         accountId: string;
         currentPassword: string;
         newPassword: string;
+    }
+
+    interface Contact {
+        name: string;
+        address: Models.Address;
+        phoneNumber: string;
+        email: string;
+    }
+
+    interface Address {
+        street: string;
+        postalCode: string;
+        city: string;
+        country: string;
     }
 
     interface ExternalAccount extends Models.Account {

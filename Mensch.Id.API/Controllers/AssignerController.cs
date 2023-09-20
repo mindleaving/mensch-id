@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Mensch.Id.API.AccessControl.Policies;
 using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Models;
@@ -70,6 +71,20 @@ namespace Mensch.Id.API.Controllers
             await accountStore.StoreAsync(assignerAccount);
             return Ok(new AssignerAccountViewModel(assignerAccount));
         }
+
+        [HttpPut("me/contact")]
+        public async Task<IActionResult> SetContact(
+            [FromBody] Contact body)
+        {
+            var accountId = ControllerHelpers.GetAccountId(httpContextAccessor);
+            var acount = await accountStore.GetByIdAsync(accountId);
+            if (acount is not AssignerAccount assignerAccount)
+                return NotFound();
+            assignerAccount.Contact = body;
+            await accountStore.StoreAsync(assignerAccount);
+            return Ok(new AssignerAccountViewModel(assignerAccount));
+        }
+
 
         [HttpPut("me/logo-url")]
         public async Task<IActionResult> SetLogoUrl(

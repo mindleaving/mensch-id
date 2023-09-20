@@ -7,10 +7,9 @@ import { PagedTable } from '../../../sharedCommonComponents/components/PagedTabl
 import { resolveText } from '../../../sharedCommonComponents/helpers/Globalizer';
 import PagedTableLoader from '../../../sharedCommonComponents/helpers/PagedTableLoader';
 import { Models } from '../../types/models';
-import { AssignedProfilesFilter } from '../../types/frontendTypes';
 
 interface AssignedProfilesTableProps {
-    filter: AssignedProfilesFilter;
+    filter: Models.AssignedProfilesRequestParameters;
     latestAssignedId?: string;
 }
 

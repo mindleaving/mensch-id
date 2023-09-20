@@ -10,12 +10,17 @@ import { useContext } from 'react';
 import UserContext from '../contexts/UserContext';
 import { useNavigate } from 'react-router-dom';
 import { showErrorAlert } from '../../sharedCommonComponents/helpers/AlertHelpers';
+import { ViewModels } from '../types/viewModels';
+import { LoadingAlert } from '../../sharedCommonComponents/components/LoadingAlert';
 
-interface ProfilePageProps {}
+interface ProfilePageProps {
+    setUserViewModel: (profileData: ViewModels.ProfileViewModel) => void;
+}
 
 export const ProfilePage = (props: ProfilePageProps) => {
 
-    const { profileData, setProfileData } = useContext(UserContext);
+    const { setUserViewModel } = props;
+    const profileData = useContext(UserContext)! as ViewModels.ProfileViewModel;
     const [ isLoading, setIsLoading ] = useState<boolean>(true);
     const navigate = useNavigate();
 
@@ -34,7 +39,7 @@ export const ProfilePage = (props: ProfilePageProps) => {
                     }
                 } else {
                     const result = await response.json();
-                    setProfileData(result);
+                    setUserViewModel(result);
                 }
             } catch(error: any) {
                 showErrorAlert(error.message, resolveText("Person_CouldNotLoad"));
@@ -47,7 +52,7 @@ export const ProfilePage = (props: ProfilePageProps) => {
 
 
     if(isLoading) {
-        return (<h3>{resolveText("Loading...")}</h3>);
+        return (<LoadingAlert />);
     }
 
     if(!profileData) {

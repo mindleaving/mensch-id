@@ -7,27 +7,33 @@ import { IdCandidateAlert } from '../components/Assigner/IdCandidateAlert';
 import { NewIdCandidateForm } from '../components/Assigner/NewIdCandidateForm';
 import UserContext from '../contexts/UserContext';
 import { AssignedProfilesFilterView } from '../components/Assigner/AssignedProfilesFilterView';
-import { AssignedProfilesFilter } from '../types/frontendTypes';
+import { ViewModels } from '../types/viewModels';
+import { Models } from '../types/models';
 
-interface AssignerPageProps {}
+interface AssignerPageProps {
+    setUserViewModel: (assignerProfile: ViewModels.AssignerAccountViewModel) => void;
+}
 
 export const AssignerPage = (props: AssignerPageProps) => {
 
-    const { assignerProfile, setAssignerProfile} = useContext(UserContext)!;
+    const { setUserViewModel } = props;
+    const assignerProfile = useContext(UserContext)! as ViewModels.AssignerAccountViewModel;
 
     const [ birthDate, setBirthDate ] = useState<string>('');
     const [ idCandidate, setIdCandidate ] = useState<string>();
     const [ latestAssignedId, setLatestAssignedId ] = useState<string>();
-    const [ filter, setFilter ] = useState<AssignedProfilesFilter>({});
+    const [ filter, setFilter ] = useState<Models.AssignedProfilesRequestParameters>({
+        skip: 0
+    });
 
     useEffect(() => {
-        if(assignerProfile || !setAssignerProfile) {
+        if(assignerProfile) {
             return;
         }
         const loadAssignerProfile = buildLoadObjectFunc(
             'api/assigner/me', {},
             resolveText("Assigner_CouldNotLoadProfile"),
-            setAssignerProfile
+            setUserViewModel
         );
         loadAssignerProfile();
     }, []);

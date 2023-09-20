@@ -32,6 +32,7 @@ import { AboutPage } from './localComponents/pages/AboutPage';
 import { PilotProjectHeidelbergPage } from './localComponents/pages/PilotProjectHeidelbergPage';
 import { AccountManagementPage } from './localComponents/pages/AccountManagementPage';
 import { PrintCertificatePage } from './localComponents/pages/PrintCertificatePage';
+import AssignerAccountManagementPage from './localComponents/pages/AssignerAccountManagementPage';
 
 defaultGlobalizer.instance = new Globalizer(
     navigator.languages.map(x => x.substring(0, 2)), 
@@ -48,8 +49,11 @@ if(!!sessionStorage.getItem(SessionStoreKeys.AccessToken)) {
 function App() {
     const navigate = useNavigate();
     const [ isLoggedIn, setIsLoggedIn ] = useState<boolean>(false);
-    const [ profileData, setProfileData ] = useState<ViewModels.ProfileViewModel>();
-    const [ assignerProfile, setAssignerProfile ] = useState<ViewModels.AssignerAccountViewModel>();
+    const [ userViewModel, setUserViewModel ] = useState<ViewModels.IUserViewModel | undefined>(
+        !!sessionStorage.getItem(SessionStoreKeys.UserViewModel) 
+            ? JSON.parse(sessionStorage.getItem(SessionStoreKeys.UserViewModel)!)
+            : undefined
+    );
     const [ accountType, setAccountType ] = useState<AccountType>();
 
     useEffect(() => {
@@ -89,6 +93,13 @@ function App() {
             navigate("/me");
         }
     }
+
+    useEffect(() => {
+        if(!userViewModel) {
+            return;
+        }
+        sessionStorage.setItem(SessionStoreKeys.UserViewModel, JSON.stringify(userViewModel));
+    }, [ userViewModel ]);
     
     const logOut = async () => {
         await sendPostRequest(
@@ -96,9 +107,10 @@ function App() {
             resolveText('CouldNotLogOut'),
             null,
             () => {
-                setProfileData(undefined);
+                setUserViewModel(undefined);
                 apiClient.instance!.clearAccessToken();
                 sessionStorage.removeItem(SessionStoreKeys.AccessToken);
+                sessionStorage.removeItem(SessionStoreKeys.UserViewModel);
                 setIsLoggedIn(false);
                 navigate("/");
             }
@@ -106,18 +118,19 @@ function App() {
     }
 
     return (
-    <UserContext.Provider value={{ profileData, setProfileData, assignerProfile, setAssignerProfile }}>
+    <UserContext.Provider value={userViewModel}>
         <Layout isLoggedIn={isLoggedIn} accountType={accountType} onLogOut={logOut}>
             <Routes>
                 {!isLoggedIn ? <Route path="/login" element={<LoginPage onLoggedIn={onLoggedIn} />} /> : null}
                 <Route path="/login/redirect" element={<LoginRedirectPage onLoggedIn={onLoggedIn} />} />
                 {isLoggedIn ? <Route path="/linkaccount" element={<LinkAccountPage onLoggedIn={onLoggedIn} />} /> : null}
                 {isLoggedIn ? <Route path="/linkaccount/finish" element={<LinkAccountRedirectPage />} /> : null}
-                {isLoggedIn && accountType !== AccountType.Assigner ? <Route path="/me" element={<ProfilePage />} /> : null}
+                {isLoggedIn && accountType !== AccountType.Assigner ? <Route path="/me" element={<ProfilePage setUserViewModel={setUserViewModel} />} /> : null}
                 {isLoggedIn && accountType !== AccountType.Assigner ? <Route path="/new-profile" element={<NewProfilePage />} /> : null}
                 {isLoggedIn && accountType !== AccountType.Assigner ? <Route path="/challenges" element={<MyChallengesPage />} /> : null}
                 {isLoggedIn && accountType !== AccountType.Assigner ? <Route path="/accounts" element={<AccountManagementPage />} /> : null}
-                {isLoggedIn && accountType === AccountType.Assigner ? <Route path="/assigner" element={<AssignerPage />} /> : null}
+                {isLoggedIn && accountType === AccountType.Assigner ? <Route path="/account" element={<AssignerAccountManagementPage />} /> : null}
+                {isLoggedIn && accountType === AccountType.Assigner ? <Route path="/assigner" element={<AssignerPage setUserViewModel={setUserViewModel} />} /> : null}
                 {isLoggedIn && accountType === AccountType.Assigner ? <Route path="/print/certificate/:personId" element={<PrintCertificatePage />} /> : null}
                 
                 <Route path="/challenge" element={<SendChallengePage />} />

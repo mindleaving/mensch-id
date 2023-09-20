@@ -10,6 +10,7 @@ import { AsyncButton } from '../../sharedCommonComponents/components/AsyncButton
 import { Center } from '../../sharedCommonComponents/components/Center';
 import { RowFormGroup } from '../../sharedCommonComponents/components/FormControls/RowFormGroup';
 import { showErrorAlert } from '../../sharedCommonComponents/helpers/AlertHelpers';
+import { ViewModels } from '../types/viewModels';
 
 interface LocalLoginFormProps {
     onSubmit?: (loginInformation: Models.LoginInformation) => Promise<void>;
@@ -18,7 +19,7 @@ interface LocalLoginFormProps {
 
 export const LocalLoginForm = (props: LocalLoginFormProps) => {
 
-    const { profileData } = useContext(UserContext);
+    const profileData = useContext(UserContext)! as ViewModels.ProfileViewModel;
     const [ emailOrMenschID, setEmailOrMenschID ] = useState<string>(profileData?.id ?? '');
     const [ password, setPassword ] = useState<string>('');
     const [ isSubmitting, setIsSubmitting ] = useState<boolean>(false);

@@ -19,7 +19,7 @@ export const PrintCertificatePage = (props: PrintCertificatePageProps) => {
     const { personId } = useParams();
     const [ isLoading, setIsLoading ] = useState<boolean>(false);
     const [ assignerControlledProfile, setAssignerControlledProfile ] = useState<ViewModels.SignedAssignerControlledProfile>();
-    const { assignerProfile } = useContext(UserContext);
+    const assignerProfile = useContext(UserContext)! as ViewModels.AssignerAccountViewModel;
 
     useEffect(() => {
         if(!personId) {

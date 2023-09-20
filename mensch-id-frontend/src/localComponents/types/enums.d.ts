@@ -210,3 +210,7 @@ export enum OrderDirection {
     Ascending = "Ascending",
     Descending = "Descending"
 }
+export enum UserType {
+    Person = "Person",
+    Assigner = "Assigner"
+}

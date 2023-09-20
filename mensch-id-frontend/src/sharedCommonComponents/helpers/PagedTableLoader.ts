@@ -35,7 +35,10 @@ export default class PagedTableLoader<T> {
             }
             let apiMethodPath = this.apiControllerPath;
             if(this.filter) {
-                Object.assign(params, this.filter);
+                params = {
+                    ...this.filter,
+                    ...params
+                };
             }
             const response = await apiClient.instance!.get(apiMethodPath, params);
             const items = await response.json() as T[];

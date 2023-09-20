@@ -1,12 +1,14 @@
+import { Col, FormGroup, FormLabel, Row } from "react-bootstrap";
 import { AccordionCard } from "../../../sharedCommonComponents/components/AccordionCard";
+import { DateRangeFormControl } from "../../../sharedCommonComponents/components/FormControls/DateRangeFormControl";
 import { RowFormGroup } from "../../../sharedCommonComponents/components/FormControls/RowFormGroup";
 import { resolveText } from "../../../sharedCommonComponents/helpers/Globalizer";
 import { Update } from "../../../sharedCommonComponents/types/frontendTypes";
-import { AssignedProfilesFilter } from "../../types/frontendTypes";
+import { Models } from "../../types/models";
 
 interface AssignedProfilesFilterViewProps {
-    filter: AssignedProfilesFilter;
-    onChange: (update: Update<AssignedProfilesFilter>) => void;
+    filter: Models.AssignedProfilesRequestParameters;
+    onChange: (update: Update<Models.AssignedProfilesRequestParameters>) => void;
 }
 
 export const AssignedProfilesFilterView = (props: AssignedProfilesFilterViewProps) => {
@@ -26,6 +28,32 @@ export const AssignedProfilesFilterView = (props: AssignedProfilesFilterViewProp
                 searchText: searchText
             }))}
         />
+        <FormGroup as={Row}>
+            <FormLabel column>{resolveText("TimeRange")}</FormLabel>
+            <Col>
+                <DateRangeFormControl
+                    value={filter?.timeRangeStart && filter?.timeRangeEnd 
+                        ? [ filter.timeRangeStart, filter.timeRangeEnd ]
+                        : undefined}
+                    onChange={(startDate, endDate) => {
+                        if(startDate && endDate) {
+                            onChange(state => ({
+                                ...state,
+                                timeRangeStart: startDate,
+                                timeRangeEnd: endDate
+                            }));
+                        } else {
+                            onChange(state => ({
+                                ...state,
+                                timeRangeStart: undefined,
+                                timeRangeEnd: undefined
+                            }));
+                        }
+                    }}
+                    triggerOnChangeForUndefinedRange
+                />
+            </Col>
+        </FormGroup>
     </AccordionCard>);
 
 }

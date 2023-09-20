@@ -1,11 +1,8 @@
 export enum SessionStoreKeys {
-    AccessToken = "AccessToken"
+    AccessToken = "AccessToken",
+    UserViewModel = "UserViewModel"
 }
 export interface TimeRange {
     start?: Date;
     end?: Date;
-}
-export interface AssignedProfilesFilter {
-    searchText?: string;
-    timeRange?: TimeRange;
 }
