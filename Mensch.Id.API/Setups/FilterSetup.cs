@@ -1,4 +1,5 @@
-﻿using Mensch.Id.API.Workflow;
+﻿using Mensch.Id.API.Models;
+using Mensch.Id.API.Workflow.FilterExpressionBuilders;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,7 +11,7 @@ namespace Mensch.Id.API.Setups
             IServiceCollection services,
             IConfiguration configuration)
         {
-            services.AddScoped<AssignedProfileFillterExpressionBuilder>();
+            services.AddScoped<IFilterExpressionBuilder<AssignerControlledProfile,AssignedProfilesRequestParameters>, AssignedProfileFillterExpressionBuilder>();
         }
     }
 }

@@ -8,6 +8,7 @@ using Mensch.Id.API.Models;
 using Mensch.Id.API.Storage;
 using Mensch.Id.API.ViewModels;
 using Mensch.Id.API.Workflow;
+using Mensch.Id.API.Workflow.FilterExpressionBuilders;
 using Mensch.Id.API.Workflow.ViewModelBuilders;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -27,7 +28,7 @@ namespace Mensch.Id.API.Controllers
         private readonly IStore<Person> profileStore;
         private readonly IStore<AssignerControlledProfile> assignerControlledProfileStore;
         private readonly SignedProfileBuilder signedProfileBuilder;
-        private readonly AssignedProfileFillterExpressionBuilder filterExpressionBuilder;
+        private readonly IFilterExpressionBuilder<AssignerControlledProfile,AssignedProfilesRequestParameters> filterExpressionBuilder;
 
         public AssignerController(
             IStore<Account> accountStore,
@@ -37,7 +38,7 @@ namespace Mensch.Id.API.Controllers
             IStore<Person> profileStore,
             IStore<AssignerControlledProfile> assignerControlledProfileStore,
             SignedProfileBuilder signedProfileBuilder,
-            AssignedProfileFillterExpressionBuilder filterExpressionBuilder)
+            IFilterExpressionBuilder<AssignerControlledProfile,AssignedProfilesRequestParameters> filterExpressionBuilder)
         {
             this.accountStore = accountStore;
             this.newProfileViewModelBuilder = newProfileViewModelBuilder;
