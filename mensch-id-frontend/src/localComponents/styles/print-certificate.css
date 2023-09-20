@@ -26,6 +26,12 @@
         display: none !important;
     }
 
+    #print-area {
+        position: absolute;
+        top: 0;
+        right: 0;
+    }
+
     #certificate-info {
         margin-top: 70mm;
     }
@@ -39,6 +45,7 @@
     @page {
         size: A4;
         orientation: portrait;
+        margin: 10mm 10mm 10mm 10mm;
     }
 
 }

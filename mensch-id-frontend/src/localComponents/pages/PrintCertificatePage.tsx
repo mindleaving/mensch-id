@@ -51,7 +51,7 @@ export const PrintCertificatePage = (props: PrintCertificatePageProps) => {
     }
 
     return (
-    <Container className=''>
+    <Container>
         <Row className='no-print'>
             <Col />
             <Col xs="auto">
@@ -63,43 +63,46 @@ export const PrintCertificatePage = (props: PrintCertificatePageProps) => {
                 </Button>
             </Col>
         </Row>
-        <div id='logo'>
-            <MenschId />
-        </div>
-        {assignerProfile
-        ? <div id='assigner-logo'>
-            {assignerProfile.logoUrl ? <img src={assignerProfile.logoUrl} width='100%' alt='assigner-logo' className='mb-2' /> 
-            : assignerProfile.name ? <span id='assigner-name'>{assignerProfile.name}</span> 
-            : null}
-        </div> : null}
-        <div id='certificate-info'>
-            <p className='mt-5'>
-                {resolveText("Certificate_Congratulations")}
-            </p>
-            <Center className='my-2'>
-                <h3>{assignerControlledProfile.id}</h3>
-            </Center>
-            <p className='mt-3'>
-                {resolveText("Certificate_TakeControl").replace("{menschIdUrl}", "https://mensch.id/login")}
-            </p>
-            <p>
-                {resolveText("Certificate_YouOwnershipSecret")}
-            </p>
-            <Center>
-                <h3>{formatOwnershipSecret(assignerControlledProfile.ownershipSecret)}</h3>
-            </Center>
-        </div>
-        <div id='about-menschid'>
-            <h5>{resolveText("Certificate_AboutTitle")}</h5>
-            <VerbatimText 
-                text={resolveText("Certificate_AboutText")}
-            />
-            <hr />
-            <div id='signature'>
-                <small>Time: {new Date(assignerControlledProfile.timestamp).toISOString()}, Signature: {assignerControlledProfile.signature}</small>
+        <Center>
+            <div id="print-area">
+                <div id='logo'>
+                    <MenschId />
+                </div>
+                {assignerProfile
+                ? <div id='assigner-logo'>
+                    {assignerProfile.logoUrl ? <img src={assignerProfile.logoUrl} width='100%' alt='assigner-logo' className='mb-2' />
+                        : assignerProfile.name ? <span id='assigner-name'>{assignerProfile.name}</span>
+                            : null}
+                </div> : null}
+                <div id='certificate-info'>
+                    <p className='mt-5'>
+                        {resolveText("Certificate_Congratulations")}
+                    </p>
+                    <Center className='my-2'>
+                        <h3>{assignerControlledProfile.id}</h3>
+                    </Center>
+                    <p className='mt-3'>
+                        {resolveText("Certificate_TakeControl").replace("{menschIdUrl}", "https://mensch.id/login")}
+                    </p>
+                    <p>
+                        {resolveText("Certificate_YouOwnershipSecret")}
+                    </p>
+                    <Center>
+                        <h3>{formatOwnershipSecret(assignerControlledProfile.ownershipSecret)}</h3>
+                    </Center>
+                </div>
+                <div id='about-menschid'>
+                    <h5>{resolveText("Certificate_AboutTitle")}</h5>
+                    <VerbatimText
+                        text={resolveText("Certificate_AboutText")}
+                    />
+                    <hr />
+                    <div id='signature'>
+                        <small>Time: {new Date(assignerControlledProfile.timestamp).toISOString()}, Signature: {assignerControlledProfile.signature}</small>
+                    </div>
+                </div>
             </div>
-        </div>
-    </Container>
-    );
+        </Center>
+    </Container>);
 
 }
