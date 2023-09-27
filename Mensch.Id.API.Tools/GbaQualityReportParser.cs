@@ -37,6 +37,7 @@ namespace Mensch.Id.API.Tools
             //Console.WriteLine("Geburtskliniken:");
             //Console.WriteLine("----------------------");
             var obstetricsHospitalsCount = 0;
+            var birthRelatedOpsCodes = new Regex(@"5\-7[24]");
             foreach (var report in reports)
             {
                 if(!HasObstetrics(report, out var obstetricsDepartment))
@@ -46,11 +47,15 @@ namespace Mensch.Id.API.Tools
                     continue;
                 //Console.WriteLine($"{report.Id}-{report.LocationId}: {report.InstitutionName} / {report.LocationName} / {obstetricsDepartment.Name} ({report.StreetName} {report.HouseNumber}, {report.PostalCode} {report.City})");
                 var contactPerson = obstetricsDepartment.ContactPerson;
+                var birthRelatedCases = obstetricsDepartment.Cases
+                    .Where(x => birthRelatedOpsCodes.IsMatch(x.OpsCode))
+                    .Sum(x => x.Count);
                 var outputLine = StripNewLines($"{report.Id};"
                              + $"{report.LocationId};"
                              + $"{report.InstitutionName};"
                              + $"{report.LocationName};"
                              + $"{obstetricsDepartment.Name};"
+                             + $"{birthRelatedCases};"
                              + $"{address.StreetName};"
                              + $"{address.HouseNumber};"
                              + $"{address.PostalCode};"
@@ -61,7 +66,7 @@ namespace Mensch.Id.API.Tools
                              + $"{contactPerson?.Role};"
                              + $"{contactPerson?.PhoneNumber};"
                              + $"{contactPerson?.Email}");
-                if (outputLine.Count(c => c == ';') != 14)
+                if (outputLine.Count(c => c == ';') != 15)
                     throw new FormatException("Found unexpected semicolon");
                 Console.WriteLine(outputLine);
                 obstetricsHospitalsCount++;
@@ -168,12 +173,14 @@ namespace Mensch.Id.API.Tools
                 var arzt = aerztlicheLeitung?.Element("Chefarzt") ?? aerztlicheLeitung?.Element("Leitender_Belegarzt");
                 var arztProfil = GetContact(arzt?.Element("Kontakt_Person_lang"));
                 var abteilungsAdresse = GetAddress(arzt?.Element("Kontakt_Zugang"));
+                var cases = GetCases(fachAbteilung);
                 var department = new GbaQualityReport.Department
                 {
                     Name = TakeUntilSemicolon(name),
                     Codes = schluesselCodes,
                     ContactPerson = arztProfil,
-                    DepartmentAddress = abteilungsAdresse
+                    DepartmentAddress = abteilungsAdresse,
+                    Cases = cases
                 };
                 departments.Add(department);
             }
@@ -190,6 +197,43 @@ namespace Mensch.Id.API.Tools
                 LocationAddress = GetAddress(standortAddress),
                 Departments = departments
             };
+        }
+
+        private List<GbaQualityReport.CaseStatistics> GetCases(
+            XElement qualitaetsBericht)
+        {
+            var cases = new List<GbaQualityReport.CaseStatistics>();
+            var stationaerFaelle = qualitaetsBericht
+                .Element("Prozeduren")?
+                .Element("Verpflichtende_Angabe")?
+                .Elements("Prozedur") ?? new List<XElement>();
+            foreach (var stationaererFall in stationaerFaelle)
+            {
+                var @case = new GbaQualityReport.CaseStatistics
+                {
+                    Type = GbaQualityReport.CaseStatistics.CaseType.Stationaer,
+                    OpsCode = stationaererFall.Element("OPS_301").Value,
+                    Count = int.Parse(stationaererFall.Element("Anzahl")?.Value ?? "0")
+                };
+                cases.Add(@case);
+            }
+
+
+            var ambulanteFaelle = qualitaetsBericht
+                .Element("Ambulante_Operationen")?
+                .Element("Verpflichtende_Angabe")?
+                .Elements("Ambulante_Operation") ?? new List<XElement>();
+            foreach (var ambulanterFall in ambulanteFaelle)
+            {
+                var @case = new GbaQualityReport.CaseStatistics
+                {
+                    Type = GbaQualityReport.CaseStatistics.CaseType.Ambulant,
+                    OpsCode = ambulanterFall.Element("OPS_301").Value,
+                    Count = int.Parse(ambulanterFall.Element("Anzahl")?.Value ?? "0")
+                };
+                cases.Add(@case);
+            }
+            return cases;
         }
 
         private static string TakeUntilSemicolon(
@@ -284,6 +328,20 @@ namespace Mensch.Id.API.Tools
             public Address DepartmentAddress { get; set; }
             public Contact ContactPerson { get; set; }
             public List<string> Codes { get; set; }
+            public List<CaseStatistics> Cases { get; set; }
+        }
+
+        public class CaseStatistics
+        {
+            public CaseType Type { get; set; }
+            public string OpsCode { get; set; }
+            public int Count { get; set; }
+
+            public enum CaseType
+            {
+                Stationaer,
+                Ambulant
+            }
         }
     }
 }
