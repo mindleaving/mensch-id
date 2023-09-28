@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Mensch.Id.API.Models.AccessControl;
+using Newtonsoft.Json;
 using TypescriptGenerator.Attributes;
 
 namespace Mensch.Id.API.Models

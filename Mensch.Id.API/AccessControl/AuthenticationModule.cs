@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Models;
+using Mensch.Id.API.Models.AccessControl;
 using Mensch.Id.API.Storage;
 using Microsoft.AspNetCore.Identity;
 

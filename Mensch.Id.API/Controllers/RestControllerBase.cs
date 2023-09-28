@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using Commons.Extensions;
 using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Models;
 using Mensch.Id.API.Storage;
@@ -10,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using SearchTermSplitter = Mensch.Id.API.Helpers.SearchTermSplitter;
 
 namespace Mensch.Id.API.Controllers
 {
@@ -62,8 +64,8 @@ namespace Mensch.Id.API.Controllers
                 searchExpression = x => true;
             }
             var orderByExpression = BuildOrderByExpression(orderBy);
-            var items = await store.SearchAsync(searchExpression, count, skip, orderByExpression, orderDirection);
-            var transformedItems = await TransformItems(items, language);
+            var items = store.SearchAsync(searchExpression, count, skip, orderByExpression, orderDirection);
+            var transformedItems = TransformItems(items, language);
             return Ok(transformedItems);
         }
 
@@ -101,11 +103,9 @@ namespace Mensch.Id.API.Controllers
             return Ok();
         }
 
-        protected async Task<List<object>> TransformItems(IEnumerable<T> items, Language language)
+        protected IAsyncEnumerable<object> TransformItems(IAsyncEnumerable<T> items, Language language)
         {
-            var transformTasks = items.Select(item => TransformItem(item, language)).ToList();
-            await Task.WhenAll(transformTasks);
-            return transformTasks.Select(x => x.Result).ToList();
+            return items.SelectParallelAsync((item, _) => TransformItem(item, language)).Cast<object>();
         }
 
         protected abstract Task<object> TransformItem(T item, Language language = Language.en);

@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import { Alert, Button, Col, Container, Row } from 'react-bootstrap';
 import { useParams } from 'react-router-dom';
 import { Center } from '../../sharedCommonComponents/components/Center';
@@ -20,6 +20,8 @@ export const PrintCertificatePage = (props: PrintCertificatePageProps) => {
     const [ isLoading, setIsLoading ] = useState<boolean>(false);
     const [ assignerControlledProfile, setAssignerControlledProfile ] = useState<ViewModels.SignedAssignerControlledProfile>();
     const assignerProfile = useContext(UserContext)! as ViewModels.AssignerAccountViewModel;
+    const contactInformation = useMemo(() => assignerProfile.contactInformation, [ assignerProfile ]);
+    const address = useMemo(() => contactInformation.address, [ contactInformation ]);
 
     useEffect(() => {
         if(!personId) {
@@ -97,6 +99,15 @@ export const PrintCertificatePage = (props: PrintCertificatePageProps) => {
                         text={resolveText("Certificate_AboutText")}
                     />
                     <hr />
+                    <div id="issuer">
+                        <small>
+                            {resolveText("IssuedBy")}: {contactInformation.name} (
+                                {address.street}, {address.postalCode} {address.city}, {address.country}
+                            ), 
+                            <span className='text-nowrap'><i className='fa fa-phone mx-2' /> {contactInformation.phoneNumber},</span>
+                            <span className='text-nowrap'><i className='fa fa-envelope mx-2' /> {contactInformation.email}</span>
+                        </small>
+                    </div>
                     <div id='signature'>
                         <small>Time: {new Date(assignerControlledProfile.timestamp).toISOString()}, Signature: {assignerControlledProfile.signature}</small>
                     </div>

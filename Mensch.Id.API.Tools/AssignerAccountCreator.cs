@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Mensch.Id.API.Models;
+using Mensch.Id.API.Models.AccessControl;
 using Mensch.Id.API.Workflow;
 using Microsoft.AspNetCore.Identity;
 using MongoDB.Driver;

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Mensch.Id.API.AccessControl;
 using Mensch.Id.API.Controllers;
 using Mensch.Id.API.Models;
+using Mensch.Id.API.Models.AccessControl;
 using Mensch.Id.API.Storage;
 using Mensch.Id.API.Workflow;
 using Mensch.Id.API.Workflow.Email;

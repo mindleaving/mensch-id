@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Claims;
 using Mensch.Id.API.AccessControl;
 using Mensch.Id.API.Models;
+using Mensch.Id.API.Models.AccessControl;
 
 namespace Mensch.Id.API.Helpers
 {

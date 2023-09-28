@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Models;
+using Mensch.Id.API.Models.RequestParameters;
 
 namespace Mensch.Id.API.Workflow.FilterExpressionBuilders;
 

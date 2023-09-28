@@ -7,8 +7,8 @@ import { Update } from "../../../sharedCommonComponents/types/frontendTypes";
 import { Models } from "../../types/models";
 
 interface AssignedProfilesFilterViewProps {
-    filter: Models.AssignedProfilesRequestParameters;
-    onChange: (update: Update<Models.AssignedProfilesRequestParameters>) => void;
+    filter: Models.RequestParameters.AssignedProfilesRequestParameters;
+    onChange: (update: Update<Models.RequestParameters.AssignedProfilesRequestParameters>) => void;
 }
 
 export const AssignedProfilesFilterView = (props: AssignedProfilesFilterViewProps) => {

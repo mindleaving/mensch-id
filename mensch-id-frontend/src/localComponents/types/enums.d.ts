@@ -1,9 +1,3 @@
-export enum AccountType {
-    Local = "Local",
-    LocalAnonymous = "LocalAnonymous",
-    External = "External",
-    Assigner = "Assigner"
-}
 export enum AuthenticationErrorType {
     Unknown = "Unknown",
     InvalidUserOrPassword = "InvalidUserOrPassword",
@@ -209,6 +203,21 @@ export enum IdType {
 export enum OrderDirection {
     Ascending = "Ascending",
     Descending = "Descending"
+}
+export enum Currency {
+    EUR = "EUR"
+}
+export enum OrderStatus {
+    Placed = "Placed",
+    Fulfilled = "Fulfilled",
+    Cancelled = "Cancelled"
+}
+export enum AccountType {
+    Local = "Local",
+    LocalAnonymous = "LocalAnonymous",
+    External = "External",
+    Assigner = "Assigner",
+    Admin = "Admin"
 }
 export enum UserType {
     Person = "Person",

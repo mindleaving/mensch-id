@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Mensch.Id.API.AccessControl;
 using Mensch.Id.API.Models;
+using Mensch.Id.API.Models.AccessControl;
 using Mensch.Id.API.Storage;
 using Microsoft.AspNetCore.Identity;
 

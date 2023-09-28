@@ -9,7 +9,7 @@ import PagedTableLoader from '../../../sharedCommonComponents/helpers/PagedTable
 import { Models } from '../../types/models';
 
 interface AssignedProfilesTableProps {
-    filter: Models.AssignedProfilesRequestParameters;
+    filter: Models.RequestParameters.AssignedProfilesRequestParameters;
     latestAssignedId?: string;
 }
 

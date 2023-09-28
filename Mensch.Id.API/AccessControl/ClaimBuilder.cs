@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Security.Claims;
 using Mensch.Id.API.Models;
+using Mensch.Id.API.Models.AccessControl;
 
 namespace Mensch.Id.API.AccessControl
 {

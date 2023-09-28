@@ -14,14 +14,14 @@ interface AccountManagementPageProps {}
 export const AccountManagementPage = (props: AccountManagementPageProps) => {
 
     const [ isLoading, setIsLoading] = useState<boolean>(true);
-    const [ accounts, setAccounts ] = useState<Models.Account[]>([]);
-    const [ selectedAccount, setSelectedAccount ] = useState<Models.Account>();
+    const [ accounts, setAccounts ] = useState<Models.AccessControl.Account[]>([]);
+    const [ selectedAccount, setSelectedAccount ] = useState<Models.AccessControl.Account>();
     const [ isDeleting, setIsDeleting ] = useState<boolean>(false);
 
 
     const loadAccounts = async () => {
         setIsLoading(true);
-        await loadObject<Models.Account[]>(
+        await loadObject<Models.AccessControl.Account[]>(
             'api/accounts', {},
             resolveText("Accounts_CouldNotLoad"),
             items => setAccounts(items.filter(x => x.accountType !== AccountType.Assigner)),
@@ -58,16 +58,16 @@ export const AccountManagementPage = (props: AccountManagementPageProps) => {
         );
     }
 
-    const formatAccount = (account: Models.Account) => {
+    const formatAccount = (account: Models.AccessControl.Account) => {
         switch(account.accountType) {
             case AccountType.External:
-                const externalAccount = account as Models.ExternalAccount;
+                const externalAccount = account as Models.AccessControl.ExternalAccount;
                 return resolveText(`LoginProvider_${externalAccount.loginProvider}`);
             case AccountType.LocalAnonymous:
                 return '';
             case AccountType.Local:
             case AccountType.Assigner:
-                const localAccount = account as Models.LocalAccount;
+                const localAccount = account as Models.AccessControl.LocalAccount;
                 return (<>
                     {localAccount.email}
                     {localAccount.isEmailVerified

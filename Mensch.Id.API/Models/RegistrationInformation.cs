@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Mensch.Id.API.Models.AccessControl;
 using TypescriptGenerator.Attributes;
 
 namespace Mensch.Id.API.Models

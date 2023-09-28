@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Mensch.Id.API.Models;
+using Mensch.Id.API.Models.AccessControl;
 
 namespace Mensch.Id.API.Storage
 {

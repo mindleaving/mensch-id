@@ -1,11 +1,12 @@
 import React, { PropsWithChildren } from 'react';
-import { Button, Col, Container, Nav, Navbar, NavDropdown, NavItem, Row } from 'react-bootstrap';
+import { Button, Col, Container, Nav, Navbar, NavItem, Row } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { AccountType } from '../types/enums.d';
 import { AssignerMenu } from './Menus/AssignerMenu';
 import { RegularUserMenu } from './Menus/RegularUserMenu';
 import { ToastContainer } from 'react-toastify';
+import { CommonMenu } from './Menus/CommonMenu';
 
 interface LayoutProps {
     isLoggedIn: boolean;
@@ -46,15 +47,7 @@ export const Layout = (props: PropsWithChildren<LayoutProps>) => {
                     <Navbar.Toggle />
                     <Navbar.Collapse>
                         {userMenu}
-                        <Nav>
-                            <Nav.Link onClick={() => navigate("/privacy")}>{resolveText("Menu_Privacy")}</Nav.Link>
-                            <Nav.Link onClick={() => navigate("/terms-of-service")}>{resolveText("Menu_TermsOfService")}</Nav.Link>
-                            <NavDropdown title={resolveText("Menu_About")}>
-                                <NavDropdown.Item onClick={() => navigate("/about")}>{resolveText("Menu_FAQ")}</NavDropdown.Item>
-                                {/* <NavDropdown.Item onClick={() => navigate("/pilot-project-hd")}>{resolveText("PilotProject_Heidelberg")}</NavDropdown.Item> */}
-                                <NavDropdown.Item onClick={() => navigate("/contact")}>{resolveText("Impressum")}</NavDropdown.Item>
-                            </NavDropdown>
-                        </Nav>
+                        <CommonMenu />
                         <Nav className='me-auto' />
                         {props.isLoggedIn
                         ? <Navbar.Text>

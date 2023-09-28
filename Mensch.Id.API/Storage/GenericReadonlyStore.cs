@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Models;
 using MongoDB.Driver;
 
@@ -20,12 +21,12 @@ namespace Mensch.Id.API.Storage
             collection = mongoDatabase.GetCollection<T>(collectionName ?? typeof(T).Name);
         }
 
-        public Task<List<T>> GetAllAsync()
+        public IAsyncEnumerable<T> GetAllAsync()
         {
-            return collection.Find(FilterDefinition<T>.Empty).ToListAsync();
+            return collection.Find(FilterDefinition<T>.Empty).ToAsyncEnumerable();
         }
 
-        public Task<List<T>> SearchAsync(
+        public IAsyncEnumerable<T> SearchAsync(
             Expression<Func<T, bool>> filter,
             int? count = null,
             int? skip = null,
@@ -39,7 +40,7 @@ namespace Mensch.Id.API.Storage
                     ? findExpression.SortBy(orderBy) 
                     : findExpression.SortByDescending(orderBy);
             }
-            return findExpression.Skip(skip).Limit(count).ToListAsync();
+            return findExpression.Skip(skip).Limit(count).ToAsyncEnumerable();
         }
 
         public Task<bool> ExistsAsync(string id)

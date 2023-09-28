@@ -58,9 +58,9 @@ namespace Mensch.Id.API.Controllers
             if (account.PersonId == null)
                 return StatusCode((int)HttpStatusCode.ServiceUnavailable, "You cannot see challenges yet because you haven't finished you profile yet");
             var upperSearchText = searchText.ToUpper();
-            var items = await challengeStore.SearchAsync(x => 
-                x.MenschId == account.PersonId 
-                && (x.ChallengeShortId.StartsWith(upperSearchText) || x.Id.ToUpper().StartsWith(upperSearchText)),
+            var items = challengeStore.SearchAsync(x => 
+                    x.MenschId == account.PersonId 
+                    && (x.ChallengeShortId.StartsWith(upperSearchText) || x.Id.ToUpper().StartsWith(upperSearchText)),
                 count,
                 skip,
                 x => x.CreatedTimestamp,

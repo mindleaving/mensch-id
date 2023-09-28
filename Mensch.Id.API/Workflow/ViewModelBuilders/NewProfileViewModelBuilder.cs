@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Commons.Extensions;
 using Mensch.Id.API.Models;
 using Mensch.Id.API.Storage;
 using Mensch.Id.API.ViewModels;
@@ -24,7 +25,7 @@ namespace Mensch.Id.API.Workflow.ViewModelBuilders
             int idCandidateCount = 10)
         {
             await idStore.ReleaseReservationsNotMatchingBirthdate(accountId, birthDate);
-            var reservedIds = await idStore.SearchAsync(x => x.ReservingAccountId == accountId);
+            var reservedIds = await idStore.SearchAsync(x => x.ReservingAccountId == accountId).ToListAsync();
             var claimedId = reservedIds.SingleOrDefault(x => x.IsClaimed);
             if(claimedId != null)
                 return new NewProfileViewModel(new List<string>{ claimedId.Id });
@@ -49,14 +50,14 @@ namespace Mensch.Id.API.Workflow.ViewModelBuilders
             int idCandidateCount = 1)
         {
             var birthDatePrefix = birthDate.ToString("yyyyMMdd");
-            var reservedIds = await idStore.SearchAsync(x => 
+            var reservedIds = idStore.SearchAsync(x => 
                 x.ReservingAccountId == accountId
                 && !x.IsClaimed
                 && x.Id.StartsWith(birthDatePrefix)
                 && x.Type == IdType.MenschID);
-            var idCandidates = reservedIds
+            var idCandidates = await reservedIds
                 .Select(x => x.Id)
-                .ToList();
+                .ToListAsync();
             while (idCandidates.Count < idCandidateCount)
             {
                 var idCandidate = idGenerator.Generate(birthDate);

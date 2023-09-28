@@ -9,6 +9,7 @@ import UserContext from '../contexts/UserContext';
 import { AssignedProfilesFilterView } from '../components/Assigner/AssignedProfilesFilterView';
 import { ViewModels } from '../types/viewModels';
 import { Models } from '../types/models';
+import { OrderDirection } from '../../sharedCommonComponents/types/enums.d';
 
 interface AssignerPageProps {
     setUserViewModel: (assignerProfile: ViewModels.AssignerAccountViewModel) => void;
@@ -22,7 +23,8 @@ export const AssignerPage = (props: AssignerPageProps) => {
     const [ birthDate, setBirthDate ] = useState<string>('');
     const [ idCandidate, setIdCandidate ] = useState<string>();
     const [ latestAssignedId, setLatestAssignedId ] = useState<string>();
-    const [ filter, setFilter ] = useState<Models.AssignedProfilesRequestParameters>({
+    const [ filter, setFilter ] = useState<Models.RequestParameters.AssignedProfilesRequestParameters>({
+        orderDirection: OrderDirection.Ascending,
         skip: 0
     });
 

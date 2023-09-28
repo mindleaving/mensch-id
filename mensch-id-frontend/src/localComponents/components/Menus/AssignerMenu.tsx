@@ -13,6 +13,7 @@ export const AssignerMenu = (props: AssignerMenuProps) => {
             <NavDropdown title={resolveText("Menu_Actions")}>
                 <NavDropdown.Item onClick={() => navigate("/challenge")}>{resolveText("SendChallenge")}</NavDropdown.Item>
                 <NavDropdown.Item onClick={() => navigate("/account")}>{resolveText("Menu_ManageAccount")}</NavDropdown.Item>
+                <NavDropdown.Item onClick={() => navigate("/shop")}>{resolveText("Menu_Shop")}</NavDropdown.Item>
             </NavDropdown>
         </Nav>
     );

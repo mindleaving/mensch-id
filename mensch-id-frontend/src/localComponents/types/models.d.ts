@@ -1,24 +1,11 @@
 import * as Enums from './enums.d';
 
 export namespace Models {
-    interface Account extends Models.IId {
-        accountType: Enums.AccountType;
-        personId: string;
-        preferedLanguage: Enums.Language;
-    }
-
-    interface AssignedProfilesRequestParameters {
-        count?: number | null;
-        skip: number;
-        searchText?: string;
-        timeRangeStart?: Date | null;
-        timeRangeEnd?: Date | null;
-    }
-
-    interface AssignerAccount extends Models.LocalAccount {
-        name: string;
-        logoUrl: string;
-        contact: Models.Contact;
+    interface AssignerAccountRequest extends Models.IId {
+        contactPersonName: string;
+        email: string;
+        expectedAssignmentsPerYear: number;
+        note: string;
     }
 
     interface AssignerControlledProfile extends Models.IId {
@@ -54,34 +41,12 @@ export namespace Models {
         country: string;
     }
 
-    interface ExternalAccount extends Models.Account {
-        loginProvider: Enums.LoginProvider;
-        externalId: string;
-    }
-
-    interface IExternalLogin {
-        loginProvider: Enums.LoginProvider;
-        externalId: string;
-    }
-
     interface IId {
         id: string;
     }
 
     interface IsLoggedInResponse {
         accountType: Enums.AccountType;
-    }
-
-    interface LocalAccount extends Models.LocalAnonymousAccount {
-        email: string;
-        emailVerificationAndPasswordResetSalt: string;
-        emailVerificationToken: string;
-        isEmailVerified: boolean;
-    }
-
-    interface LocalAnonymousAccount extends Models.Account {
-        passwordHash: string;
-        passwordResetToken: string;
     }
 
     interface LoginInformation {
@@ -136,5 +101,91 @@ export namespace Models {
         personId: string;
         verifierId: string;
         timestamp: Date;
+    }
+
+    export namespace Shop {
+        interface Money {
+            currency: Enums.Currency;
+            value: number;
+        }
+    
+        interface Order extends Models.IId {
+            creationTimestamp: Date;
+            orderedByAccountId: string;
+            shippingAddress: Models.Address;
+            items: Models.Shop.OrderItem[];
+            status: Enums.OrderStatus;
+            fulfilledTimestamp?: Date | null;
+        }
+    
+        interface OrderItem {
+            product: Models.Shop.Product;
+            amount: number;
+        }
+    
+        interface Product extends Models.IId {
+            name: string;
+            price: Models.Shop.Money;
+            category: string;
+        }
+    }
+
+    export namespace RequestParameters {
+        interface AssignedProfilesRequestParameters extends Models.RequestParameters.GenericItemsRequestParameters {
+            timeRangeStart?: Date | null;
+            timeRangeEnd?: Date | null;
+        }
+    
+        interface GenericItemsRequestParameters {
+            count?: number | null;
+            skip: number;
+            searchText?: string;
+            orderBy?: string;
+            orderDirection: Enums.OrderDirection;
+        }
+    
+        interface ProductRequestParameters extends Models.RequestParameters.GenericItemsRequestParameters {
+            category: string;
+        }
+    }
+
+    export namespace AccessControl {
+        interface Account extends Models.IId {
+            accountType: Enums.AccountType;
+            personId: string;
+            preferedLanguage: Enums.Language;
+        }
+    
+        interface AdminAccount extends Models.AccessControl.LocalAccount {
+            
+        }
+    
+        interface AssignerAccount extends Models.AccessControl.LocalAccount {
+            name: string;
+            logoUrl: string;
+            contact: Models.Contact;
+        }
+    
+        interface ExternalAccount extends Models.AccessControl.Account {
+            loginProvider: Enums.LoginProvider;
+            externalId: string;
+        }
+    
+        interface IExternalLogin {
+            loginProvider: Enums.LoginProvider;
+            externalId: string;
+        }
+    
+        interface LocalAccount extends Models.AccessControl.LocalAnonymousAccount {
+            email: string;
+            emailVerificationAndPasswordResetSalt: string;
+            emailVerificationToken: string;
+            isEmailVerified: boolean;
+        }
+    
+        interface LocalAnonymousAccount extends Models.AccessControl.Account {
+            passwordHash: string;
+            passwordResetToken: string;
+        }
     }
 }

@@ -1,4 +1,6 @@
 ﻿using Mensch.Id.API.Models;
+using Mensch.Id.API.Models.AccessControl;
+using Mensch.Id.API.Models.Shop;
 using Mensch.Id.API.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -39,11 +41,14 @@ namespace Mensch.Id.API.Setups
         {
             SetupTypeStores<Account>(services);
             services.AddScoped<IAccountStore, AccountStore>();
+            SetupTypeStores<AssignerAccountRequest>(services);
             SetupTypeStores<AssignerControlledProfile>(services);
+            services.AddScoped<IIdStore, IdStore>();
             SetupTypeStores<MenschIdChallenge>(services);
             SetupTypeStores<MenschId>(services);
-            services.AddScoped<IIdStore, IdStore>();
+            SetupTypeStores<Order>(services);
             SetupTypeStores<Person>(services);
+            SetupTypeStores<Product>(services);
             SetupTypeStores<Verification>(services);
         }
 

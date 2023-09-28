@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Net;
 using System.Threading.Tasks;
+using Commons.Extensions;
 using Mensch.Id.API.AccessControl.Policies;
 using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Models;
+using Mensch.Id.API.Models.AccessControl;
 using Mensch.Id.API.Storage;
 using Mensch.Id.API.Workflow;
 using Mensch.Id.API.Workflow.ViewModelBuilders;
@@ -130,8 +132,8 @@ namespace Mensch.Id.API.Controllers
                 return StatusCode((int)HttpStatusCode.Unauthorized, "Invalid ownership secret");
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
             var account = await accountStore.GetFromClaimsAsync(claims);
-            if(account.AccountType == AccountType.Assigner)
-                return StatusCode((int)HttpStatusCode.Unauthorized, "Assigners cannot take permanent control of profiles");
+            if(!account.AccountType.InSet(AccountType.External, AccountType.Local, AccountType.LocalAnonymous))
+                return StatusCode((int)HttpStatusCode.Unauthorized, "Assigners and admins cannot take permanent control of profiles");
             if (account.PersonId != null)
             {
                 if (account.PersonId == personId)
@@ -183,7 +185,7 @@ namespace Mensch.Id.API.Controllers
                 return StatusCode((int)HttpStatusCode.Forbidden, "You must have a profile and be verified yourself to verify other profiles");
             if (myAccount.PersonId == id)
                 return StatusCode((int)HttpStatusCode.Forbidden, "You cannot verify yourself :D");
-            var myVerifications = await verificationStore.SearchAsync(x => x.PersonId == myAccount.PersonId);
+            var myVerifications = await verificationStore.SearchAsync(x => x.PersonId == myAccount.PersonId).ToListAsync();
             if (myVerifications.Count == 0)
                 return StatusCode((int)HttpStatusCode.Forbidden, "You must be verified yourself to verify other profiles");
             var verification = new Verification

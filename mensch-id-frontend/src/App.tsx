@@ -33,6 +33,8 @@ import { PilotProjectHeidelbergPage } from './localComponents/pages/PilotProject
 import { AccountManagementPage } from './localComponents/pages/AccountManagementPage';
 import { PrintCertificatePage } from './localComponents/pages/PrintCertificatePage';
 import AssignerAccountManagementPage from './localComponents/pages/AssignerAccountManagementPage';
+import AssignerShopPage from './localComponents/pages/AssignerShopPage';
+import RequestAssignerAccountPage from './localComponents/pages/RequestAssignerAccountPage';
 
 defaultGlobalizer.instance = new Globalizer(
     navigator.languages.map(x => x.substring(0, 2)), 
@@ -119,7 +121,7 @@ function App() {
 
     return (
     <UserContext.Provider value={userViewModel}>
-        <Layout isLoggedIn={isLoggedIn} accountType={accountType} onLogOut={logOut}>
+        <Layout isLoggedIn={isLoggedIn} accountType={accountType} onLogOut={logOut}> 
             <Routes>
                 {!isLoggedIn ? <Route path="/login" element={<LoginPage onLoggedIn={onLoggedIn} />} /> : null}
                 <Route path="/login/redirect" element={<LoginRedirectPage onLoggedIn={onLoggedIn} />} />
@@ -132,11 +134,13 @@ function App() {
                 {isLoggedIn && accountType === AccountType.Assigner ? <Route path="/account" element={<AssignerAccountManagementPage />} /> : null}
                 {isLoggedIn && accountType === AccountType.Assigner ? <Route path="/assigner" element={<AssignerPage setUserViewModel={setUserViewModel} />} /> : null}
                 {isLoggedIn && accountType === AccountType.Assigner ? <Route path="/print/certificate/:personId" element={<PrintCertificatePage />} /> : null}
+                {isLoggedIn && accountType === AccountType.Assigner ? <Route path="/shop" element={<AssignerShopPage />} /> : null}
                 
                 <Route path="/challenge" element={<SendChallengePage />} />
                 <Route path='/verify-email' element={<VerifyEmailPage />} />
                 <Route path='/reset-password' element={<ResetPasswordPage onLoggedIn={onLoggedIn} />} />
                 <Route path='/request-password-reset' element={<RequestPasswordResetPage />} />
+                <Route path='/request-assigner-account' element={<RequestAssignerAccountPage />} />
                 <Route path="/privacy" element={<PrivacyPage />} />
                 <Route path="/terms-of-service" element={<TermsOfServicePage />} />
                 <Route path="/about" element={<AboutPage />} />

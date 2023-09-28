@@ -8,10 +8,10 @@ namespace Mensch.Id.API.Storage
 {
     public interface IReadonlyStore<T> where T: IId
     {
-        Task<List<T>> GetAllAsync();
+        IAsyncEnumerable<T> GetAllAsync();
         Task<bool> ExistsAsync(string id);
         Task<T> GetByIdAsync(string id);
-        Task<List<T>> SearchAsync(
+        IAsyncEnumerable<T> SearchAsync(
             Expression<Func<T, bool>> filter,
             int? count = null,
             int? skip = null,

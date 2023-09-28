@@ -45,7 +45,7 @@ namespace Mensch.Id.API.Helpers
         public static Expression<Func<T, bool>> And<T>(params Expression<Func<T, bool>>[] expressions)
         {
             if (!expressions.Any())
-                throw new ArgumentException("At least one expressions must be passed to OR");
+                throw new ArgumentException("At least one expressions must be passed to AND");
             if (expressions.Length == 1)
                 return expressions[0];
             Expression<Func<T, bool>> left = expressions[0];

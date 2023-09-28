@@ -6,6 +6,7 @@ using Mensch.Id.API.AccessControl;
 using Mensch.Id.API.AccessControl.EventHandlers;
 using Mensch.Id.API.AccessControl.Policies;
 using Mensch.Id.API.Models;
+using Mensch.Id.API.Models.AccessControl;
 using Mensch.Id.API.Workflow;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -91,12 +92,13 @@ namespace Mensch.Id.API.Setups
                         options.EventsType = typeof(MicrosoftAuthenticationEvents);
                     });
 
-            services.AddSingleton<IAuthorizationHandler, AssignerPolicy>();
+            services.AddSingleton<IAuthorizationHandler, AccountTypeRequirementHandler>();
             services.AddSingleton<IAuthorizationHandler, RegularUserPolicy>();
             services.AddAuthorization(
                 options =>
                 {
-                    options.AddPolicy(AssignerPolicy.PolicyName, policy => policy.AddRequirements(new AssignerRequirement()));
+                    options.AddPolicy(AccountTypeRequirement.AssignerPolicyName, policy => policy.AddRequirements(new AccountTypeRequirement(AccountType.Assigner)));
+                    options.AddPolicy(AccountTypeRequirement.AdminPolicyName, policy => policy.AddRequirements(new AccountTypeRequirement(AccountType.Admin)));
                     options.AddPolicy(RegularUserPolicy.PolicyName, policy => policy.AddRequirements(new RegularUserRequirement()));
                 });
         }
