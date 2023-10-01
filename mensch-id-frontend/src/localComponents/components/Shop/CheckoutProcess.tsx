@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 interface CheckoutProcessProps {
     order: Models.Shop.Order;
     onChange: (update: Update<Models.Shop.Order>) => void;
+    onPrevious?: () => void;
 }
 
 enum CheckoutStep {
@@ -22,7 +23,7 @@ enum CheckoutStep {
 }
 export const CheckoutProcess = (props: CheckoutProcessProps) => {
 
-    const { order, onChange } = props;
+    const { order, onChange, onPrevious } = props;
 
     const [ step, setStep ] = useState<CheckoutStep>(CheckoutStep.ShoppingCart);
     const navigate = useNavigate();
@@ -33,7 +34,7 @@ export const CheckoutProcess = (props: CheckoutProcessProps) => {
             return (<ShoppingCartShopStep
                 order={order}
                 onChange={onChange}
-                onPrevious={() => navigate("/shop")}
+                onPrevious={onPrevious ?? (() => navigate("/shop"))}
                 onNext={() => setStep(CheckoutStep.ContactInformation)}
             />);
         case CheckoutStep.ContactInformation:

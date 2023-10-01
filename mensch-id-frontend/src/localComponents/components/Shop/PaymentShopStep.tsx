@@ -27,6 +27,7 @@ export const PaymentShopStep = (props: PaymentShopStepProps) => {
                 <Row>
                     <Col xs="auto">
                         <FormCheck
+                            type="radio"
                             checked={order.paymentMethod === paymentMethod}
                             onClick={() => onChange(state => ({
                                 ...state,

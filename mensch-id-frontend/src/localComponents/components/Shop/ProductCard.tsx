@@ -72,14 +72,16 @@ export const ProductCard = (props: ProductCardProps) => {
                             <strong>{resolveText("Product_Price")}: {formatMoney(product.price)}</strong>
                         </span>
                     </Col>
-                    <Col xs="auto">
+                    {isInShoppingCart
+                    ? null
+                    : <Col xs="auto">
                         <FormControl
                             type="number"
                             value={amount}
                             onChange={e => setAmount(Number(e.target.value))}
-                            min={0}
+                            min={1}
                         />
-                    </Col>
+                    </Col>}
                     <Col xs="auto">
                         {isInShoppingCart
                         ? <Button

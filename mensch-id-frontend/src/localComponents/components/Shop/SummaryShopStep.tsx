@@ -6,6 +6,9 @@ import { useState, FormEvent } from "react";
 import { showSuccessAlert } from "../../../sharedCommonComponents/helpers/AlertHelpers";
 import { sendPostRequest } from "../../../sharedCommonComponents/helpers/StoringHelpers";
 import { AsyncButton } from "../../../sharedCommonComponents/components/AsyncButton";
+import { ContactInformationViewer } from "./ContactInformationViewer";
+import { ShoppingCartTable } from "./ShoppingCartTable";
+import { useNavigate } from "react-router-dom";
 
 interface SummaryShopStepProps {
     order: Models.Shop.Order;
@@ -18,6 +21,7 @@ export const SummaryShopStep = (props: SummaryShopStepProps) => {
 
     const [ hasAcceptedTermsAndConditions, setHasAcceptedTermsAndConditions ] = useState<boolean>(false);
     const [ isSubmitting, setIsSubmitting ] = useState<boolean>(false);
+    const navigate = useNavigate();
 
     const submit = async (e?: FormEvent) => {
         e?.preventDefault();
@@ -36,6 +40,7 @@ export const SummaryShopStep = (props: SummaryShopStepProps) => {
                 showSuccessAlert(resolveText("Order_SuccessfullyPlaced"));
                 // TODO: Reset order
                 setHasAcceptedTermsAndConditions(false);
+                navigate('/shop');
             },
             undefined,
             () => setIsSubmitting(false)
@@ -51,7 +56,11 @@ export const SummaryShopStep = (props: SummaryShopStepProps) => {
                 <Card.Title>{resolveText("Order_Items")}</Card.Title>
             </Card.Header>
             <Card.Body>
-
+                <ShoppingCartTable
+                    isReadOnly
+                    order={order}
+                    onChange={_ => {}}
+                />
             </Card.Body>
         </Card>
         <Card className="my-2">
@@ -59,12 +68,26 @@ export const SummaryShopStep = (props: SummaryShopStepProps) => {
                 <Card.Title>{resolveText("ContactInformation")}</Card.Title>
             </Card.Header>
             <Card.Body>
-                <Row>
+                <Row className="g-3">
                     <Col lg>
+                        <div className="mb-3">
+                            <h5>{resolveText("Order_PaymentMethod")}: {resolveText(`PaymentMethod_${order.paymentMethod}`)}</h5>
+                        </div>
 
+                        <strong>{resolveText("Order_InvoiceAddress")}</strong>
+                        <ContactInformationViewer
+                            contactInformation={order.invoiceAddress}
+                        />
                     </Col>
                     <Col lg>
+                        <div className="mb-3">
+                            <h5>{resolveText("Order_ShippingMethod")}: {resolveText(`ShippingMethod_${order.shippingMethod}`)}</h5>
+                        </div>
 
+                        <strong>{resolveText("Order_ShippingAddress")}</strong>
+                        <ContactInformationViewer
+                            contactInformation={order.shippingAddress}
+                        />
                     </Col>
                 </Row>
             </Card.Body>
@@ -78,13 +101,15 @@ export const SummaryShopStep = (props: SummaryShopStepProps) => {
             onPrevious={onPrevious}
             onNext={submit}
             canMoveNext={hasAcceptedTermsAndConditions}
-        />
-        <AsyncButton
-            onClick={submit}
-            isExecuting={isSubmitting}
-            activeText={resolveText("Submit")}
-            executingText={resolveText("Submitting...")}
-            disabled={order.items.length === 0 || !hasAcceptedTermsAndConditions}
+            nextButton={
+                <AsyncButton
+                    onClick={submit}
+                    isExecuting={isSubmitting}
+                    activeText={resolveText("Order_Submit")}
+                    executingText={resolveText("Submitting...")}
+                    disabled={order.items.length === 0 || !hasAcceptedTermsAndConditions}
+                />
+            }
         />
     </>);
 

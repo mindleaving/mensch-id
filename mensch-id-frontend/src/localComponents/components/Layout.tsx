@@ -1,5 +1,5 @@
-import React, { PropsWithChildren } from 'react';
-import { Button, Col, Container, Nav, Navbar, NavItem, Row } from 'react-bootstrap';
+import { PropsWithChildren, Suspense } from 'react';
+import { Button, Container, Nav, Navbar, NavItem } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { AccountType } from '../types/enums.d';
@@ -7,6 +7,7 @@ import { AssignerMenu } from './Menus/AssignerMenu';
 import { RegularUserMenu } from './Menus/RegularUserMenu';
 import { ToastContainer } from 'react-toastify';
 import { CommonMenu } from './Menus/CommonMenu';
+import { LoadingAlert } from '../../sharedCommonComponents/components/LoadingAlert';
 
 interface LayoutProps {
     isLoggedIn: boolean;
@@ -69,13 +70,9 @@ export const Layout = (props: PropsWithChildren<LayoutProps>) => {
                     </Navbar.Collapse>
                 </Container>
             </Navbar>
-            <Container style={{ marginBottom: '100px'}}>
-                <Row>
-                    <Col>
-                        {props.children}
-                    </Col>
-                </Row>
-            </Container>
+            <Suspense fallback={<LoadingAlert />}>
+                {props.children}
+            </Suspense>
         </>
     );
 

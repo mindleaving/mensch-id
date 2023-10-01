@@ -3,38 +3,19 @@ import { defaultGlobalizer, Globalizer, resolveText } from './sharedCommonCompon
 import germanTranslation from './localComponents/resources/translation.de.json';
 import englishTranslation from './localComponents/resources/translation.en.json';
 import { Layout } from './localComponents/components/Layout';
-import { Route, Routes, useNavigate } from 'react-router-dom';
-import { HomePage } from './localComponents/pages/HomePage';
-import { NotFoundPage } from './localComponents/pages/NotFoundPage';
-import { TermsOfServicePage } from './localComponents/pages/TermsOfServicePage';
-import { PrivacyPage } from './localComponents/pages/PrivacyPage';
-import { ProfilePage } from './localComponents/pages/ProfilePage';
-import { LoginPage } from './localComponents/pages/LoginPage';
+import { useNavigate } from 'react-router-dom';
 import { Models } from './localComponents/types/models';
 import { sendPostRequest } from './sharedCommonComponents/helpers/StoringHelpers';
-import { useEffect, useState } from 'react';
-import { LoginRedirectPage } from './localComponents/pages/LoginRedirectPage';
-import { LinkAccountPage } from './localComponents/pages/LinkAccountPage';
-import { LinkAccountRedirectPage } from './localComponents/pages/LinkAccountRedirectPage';
-import { ContactPage } from './localComponents/pages/ContactPage';
-import { SendChallengePage } from './localComponents/pages/SendChallengePage';
-import { MyChallengesPage } from './localComponents/pages/MyChallengesPage';
+import { useEffect, useMemo, useState } from 'react';
 import { SessionStoreKeys } from './localComponents/types/frontendTypes.d';
-import { ResetPasswordPage } from './localComponents/pages/ResetPasswordPage';
-import { RequestPasswordResetPage } from './localComponents/pages/RequestPasswordResetPage';
-import { VerifyEmailPage } from './localComponents/pages/VerifyEmailPage';
 import UserContext from './localComponents/contexts/UserContext';
 import { ViewModels } from './localComponents/types/viewModels';
-import { AssignerPage } from './localComponents/pages/AssignerPage';
-import { NewProfilePage } from './localComponents/pages/NewProfilePage';
 import { AccountType } from './localComponents/types/enums.d';
-import { AboutPage } from './localComponents/pages/AboutPage';
-import { PilotProjectHeidelbergPage } from './localComponents/pages/PilotProjectHeidelbergPage';
-import { AccountManagementPage } from './localComponents/pages/AccountManagementPage';
-import { PrintCertificatePage } from './localComponents/pages/PrintCertificatePage';
-import AssignerAccountManagementPage from './localComponents/pages/AssignerAccountManagementPage';
-import AssignerShopPage from './localComponents/pages/AssignerShopPage';
-import RequestAssignerAccountPage from './localComponents/pages/RequestAssignerAccountPage';
+import { RoutesBuilder } from './sharedCommonComponents/navigation/RoutesBuilder';
+import { NormalUserRoutes } from './localComponents/navigation/NormalUserRoutes';
+import { AssignerRoutes } from './localComponents/navigation/AssignerRoutes';
+import { NoUserRoutes } from './localComponents/navigation/NoUserRoutes';
+import { PageContainer } from './localComponents/components/PageContainer';
 
 defaultGlobalizer.instance = new Globalizer(
     navigator.languages.map(x => x.substring(0, 2)), 
@@ -96,6 +77,27 @@ function App() {
         }
     }
 
+    const routes = useMemo(() => {
+        switch(accountType) {
+            case AccountType.External:
+            case AccountType.Local:
+            case AccountType.LocalAnonymous:
+                return NormalUserRoutes({
+                    onLoggedIn: onLoggedIn,
+                    setUserViewModel: setUserViewModel
+                });
+            case AccountType.Assigner:
+                return AssignerRoutes({
+                    onLoggedIn: onLoggedIn,
+                    setUserViewModel: setUserViewModel
+                });
+            default:
+                return NoUserRoutes({
+                    onLoggedIn: onLoggedIn
+                });
+        }
+    }, [ accountType ]);
+
     useEffect(() => {
         if(!userViewModel) {
             return;
@@ -110,6 +112,7 @@ function App() {
             null,
             () => {
                 setUserViewModel(undefined);
+                setAccountType(undefined);
                 apiClient.instance!.clearAccessToken();
                 sessionStorage.removeItem(SessionStoreKeys.AccessToken);
                 sessionStorage.removeItem(SessionStoreKeys.UserViewModel);
@@ -122,33 +125,12 @@ function App() {
     return (
     <UserContext.Provider value={userViewModel}>
         <Layout isLoggedIn={isLoggedIn} accountType={accountType} onLogOut={logOut}> 
-            <Routes>
-                {!isLoggedIn ? <Route path="/login" element={<LoginPage onLoggedIn={onLoggedIn} />} /> : null}
-                <Route path="/login/redirect" element={<LoginRedirectPage onLoggedIn={onLoggedIn} />} />
-                {isLoggedIn ? <Route path="/linkaccount" element={<LinkAccountPage onLoggedIn={onLoggedIn} />} /> : null}
-                {isLoggedIn ? <Route path="/linkaccount/finish" element={<LinkAccountRedirectPage />} /> : null}
-                {isLoggedIn && accountType !== AccountType.Assigner ? <Route path="/me" element={<ProfilePage setUserViewModel={setUserViewModel} />} /> : null}
-                {isLoggedIn && accountType !== AccountType.Assigner ? <Route path="/new-profile" element={<NewProfilePage />} /> : null}
-                {isLoggedIn && accountType !== AccountType.Assigner ? <Route path="/challenges" element={<MyChallengesPage />} /> : null}
-                {isLoggedIn && accountType !== AccountType.Assigner ? <Route path="/accounts" element={<AccountManagementPage />} /> : null}
-                {isLoggedIn && accountType === AccountType.Assigner ? <Route path="/account" element={<AssignerAccountManagementPage />} /> : null}
-                {isLoggedIn && accountType === AccountType.Assigner ? <Route path="/assigner" element={<AssignerPage setUserViewModel={setUserViewModel} />} /> : null}
-                {isLoggedIn && accountType === AccountType.Assigner ? <Route path="/print/certificate/:personId" element={<PrintCertificatePage />} /> : null}
-                {isLoggedIn && accountType === AccountType.Assigner ? <Route path="/shop" element={<AssignerShopPage />} /> : null}
-                
-                <Route path="/challenge" element={<SendChallengePage />} />
-                <Route path='/verify-email' element={<VerifyEmailPage />} />
-                <Route path='/reset-password' element={<ResetPasswordPage onLoggedIn={onLoggedIn} />} />
-                <Route path='/request-password-reset' element={<RequestPasswordResetPage />} />
-                <Route path='/request-assigner-account' element={<RequestAssignerAccountPage />} />
-                <Route path="/privacy" element={<PrivacyPage />} />
-                <Route path="/terms-of-service" element={<TermsOfServicePage />} />
-                <Route path="/about" element={<AboutPage />} />
-                {/* <Route path="/pilot-project-hd" element={<PilotProjectHeidelbergPage />} /> */}
-                <Route path="/contact" element={<ContactPage />} />
-                <Route path="/" element={<HomePage isLoggedIn={isLoggedIn} />} />
-                <Route path="*" element={isLoggedIn ? <NotFoundPage /> : <LoginPage onLoggedIn={onLoggedIn} />} />
-            </Routes>
+            <RoutesBuilder
+                routeDefinitions={routes}
+                containerBuilder={children => <PageContainer>
+                    {children}
+                </PageContainer>}
+            />
         </Layout>
     </UserContext.Provider>
     );

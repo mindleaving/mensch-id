@@ -22,14 +22,14 @@ export const UniformGrid = (props: UniformGridProps) => {
             : <Col xs={columnWidth} key={currentRowColumns.length} >{element}</Col>;
         currentRowColumns.push(column);
         if(currentRowColumns.length === props.columnCount) {
-            rows.push(<Row key={rows.length} className='mt-2'>
+            rows.push(<Row key={rows.length} className='mb-2 g-2'>
                 {currentRowColumns}
             </Row>);
             currentRowColumns = [];
         }
     }
     if(currentRowColumns.length > 0) {
-        rows.push(<Row key={rows.length} className='mt-2'>
+        rows.push(<Row key={rows.length} className='mb-2 g-2'>
             {currentRowColumns}
         </Row>);
     }

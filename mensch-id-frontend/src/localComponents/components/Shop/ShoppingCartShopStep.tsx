@@ -2,6 +2,7 @@ import { resolveText } from "../../../sharedCommonComponents/helpers/Globalizer"
 import { Update } from "../../../sharedCommonComponents/types/frontendTypes";
 import { Models } from "../../types/models";
 import { PreviousNextButtonRow } from "./PreviousNextButtonRow";
+import { ShoppingCartTable } from "./ShoppingCartTable";
 
 interface ShoppingCartShopStepProps {
     order: Models.Shop.Order;
@@ -18,7 +19,10 @@ export const ShoppingCartShopStep = (props: ShoppingCartShopStepProps) => {
     <>
         <h1>{resolveText("Shop")}</h1>
         <h3>{resolveText("Shop_ShoppingCart")}</h3>
-
+        <ShoppingCartTable
+            order={order}
+            onChange={onChange}
+        />
         <PreviousNextButtonRow
             onPrevious={onPrevious}
             onNext={onNext}
