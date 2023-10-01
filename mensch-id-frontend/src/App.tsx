@@ -16,6 +16,7 @@ import { NormalUserRoutes } from './localComponents/navigation/NormalUserRoutes'
 import { AssignerRoutes } from './localComponents/navigation/AssignerRoutes';
 import { NoUserRoutes } from './localComponents/navigation/NoUserRoutes';
 import { PageContainer } from './localComponents/components/PageContainer';
+import { AdminRoutes } from './localComponents/navigation/AdminRoutes';
 
 defaultGlobalizer.instance = new Globalizer(
     navigator.languages.map(x => x.substring(0, 2)), 
@@ -70,10 +71,16 @@ function App() {
         }
         setIsLoggedIn(true);
         setAccountType(authenticationResult.accountType!);
-        if(authenticationResult.accountType === AccountType.Assigner) {
-            navigate("/assigner");
-        } else {
-            navigate("/me");
+        switch(authenticationResult.accountType) {
+            case AccountType.Admin:
+                navigate('/');
+                break;
+            case AccountType.Assigner:
+                navigate('/assigner');
+                break;
+            default:
+                navigate('/me');
+                break;
         }
     }
 
@@ -88,9 +95,10 @@ function App() {
                 });
             case AccountType.Assigner:
                 return AssignerRoutes({
-                    onLoggedIn: onLoggedIn,
                     setUserViewModel: setUserViewModel
                 });
+            case AccountType.Admin:
+                return AdminRoutes({});
             default:
                 return NoUserRoutes({
                     onLoggedIn: onLoggedIn

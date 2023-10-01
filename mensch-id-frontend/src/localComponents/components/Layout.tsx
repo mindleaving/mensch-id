@@ -8,6 +8,7 @@ import { RegularUserMenu } from './Menus/RegularUserMenu';
 import { ToastContainer } from 'react-toastify';
 import { CommonMenu } from './Menus/CommonMenu';
 import { LoadingAlert } from '../../sharedCommonComponents/components/LoadingAlert';
+import { AdminMenu } from './Menus/AdminMenu';
 
 interface LayoutProps {
     isLoggedIn: boolean;
@@ -17,11 +18,15 @@ interface LayoutProps {
 
 export const Layout = (props: PropsWithChildren<LayoutProps>) => {
 
+    const { isLoggedIn, accountType, onLogOut } = props;
     const navigate = useNavigate();
 
     let userMenu = null;
-    if(props.isLoggedIn) {
-        switch(props.accountType!) {
+    if(isLoggedIn) {
+        switch(accountType!) {
+            case AccountType.Admin:
+                userMenu = (<AdminMenu />);
+                break;
             case AccountType.Assigner:
                 userMenu = (<AssignerMenu />);
                 break;
@@ -48,13 +53,13 @@ export const Layout = (props: PropsWithChildren<LayoutProps>) => {
                     <Navbar.Toggle />
                     <Navbar.Collapse>
                         {userMenu}
-                        <CommonMenu />
+                        <CommonMenu accountType={accountType} />
                         <Nav className='me-auto' />
-                        {props.isLoggedIn
+                        {isLoggedIn
                         ? <Navbar.Text>
                             <Button 
                                 variant='danger' 
-                                onClick={props.onLogOut}
+                                onClick={onLogOut}
                             >
                                 {resolveText("LogOut")}
                             </Button>

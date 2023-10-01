@@ -150,6 +150,10 @@ export namespace Models {
             orderDirection: Enums.OrderDirection;
         }
     
+        interface OrderRequestParameters extends Models.RequestParameters.GenericItemsRequestParameters {
+            status?: Enums.OrderStatus | null;
+        }
+    
         interface ProductRequestParameters extends Models.RequestParameters.GenericItemsRequestParameters {
             category: string;
         }

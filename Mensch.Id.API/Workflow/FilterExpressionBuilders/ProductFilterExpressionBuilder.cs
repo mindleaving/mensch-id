@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using Commons.Extensions;
 using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Models.RequestParameters;
 using Mensch.Id.API.Models.Shop;

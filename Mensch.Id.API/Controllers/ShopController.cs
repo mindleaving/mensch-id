@@ -2,16 +2,19 @@
 using System.Linq.Expressions;
 using System.Net;
 using System.Threading.Tasks;
+using Commons.Extensions;
+using Mensch.Id.API.AccessControl.Policies;
 using Mensch.Id.API.Helpers;
-using Mensch.Id.API.Models;
 using Mensch.Id.API.Models.AccessControl;
 using Mensch.Id.API.Models.RequestParameters;
 using Mensch.Id.API.Models.Shop;
 using Mensch.Id.API.Storage;
+using Mensch.Id.API.Workflow.Email;
 using Mensch.Id.API.Workflow.FilterExpressionBuilders;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using SearchExpressionBuilder = Commons.Extensions.SearchExpressionBuilder;
 
 namespace Mensch.Id.API.Controllers
 {
@@ -23,21 +26,27 @@ namespace Mensch.Id.API.Controllers
         private readonly IStore<Order> orderStore;
         private readonly IReadonlyStore<Product> productStore;
         private readonly IFilterExpressionBuilder<Product, ProductRequestParameters> productFilterExpressionBuilder;
+        private readonly IFilterExpressionBuilder<Order, OrderRequestParameters> orderFilterExpressionBuilder;
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly IReadonlyStore<Account> accountStore;
+        private readonly EmailSender emailSender;
 
         public ShopController(
             IStore<Order> orderStore,
             IReadonlyStore<Product> productStore,
             IFilterExpressionBuilder<Product,ProductRequestParameters> productFilterExpressionBuilder,
+            IFilterExpressionBuilder<Order, OrderRequestParameters> orderFilterExpressionBuilder,
             IHttpContextAccessor httpContextAccessor,
-            IReadonlyStore<Account> accountStore)
+            IReadonlyStore<Account> accountStore,
+            EmailSender emailSender)
         {
             this.orderStore = orderStore;
             this.productStore = productStore;
             this.productFilterExpressionBuilder = productFilterExpressionBuilder;
+            this.orderFilterExpressionBuilder = orderFilterExpressionBuilder;
             this.httpContextAccessor = httpContextAccessor;
             this.accountStore = accountStore;
+            this.emailSender = emailSender;
         }
 
         [HttpGet("products")]
@@ -46,7 +55,7 @@ namespace Mensch.Id.API.Controllers
         {
             var filterExpressions = productFilterExpressionBuilder.Build(queryParameters);
             var combinedFilter = filterExpressions.Count > 0 ? SearchExpressionBuilder.And(filterExpressions.ToArray()) : x => true;
-            var orderByExpression = BuildOrderByExpression(queryParameters.OrderBy);
+            var orderByExpression = BuildOrderByExpressionForProduct(queryParameters.OrderBy);
             var items = productStore.SearchAsync(
                 combinedFilter,
                 queryParameters.Count,
@@ -84,7 +93,48 @@ namespace Mensch.Id.API.Controllers
             return Ok();
         }
 
-        private Expression<Func<Product, object>> BuildOrderByExpression(
+        [Authorize(Policy = AccountTypeRequirement.AdminPolicyName)]
+        [HttpGet("orders")]
+        public async Task<IActionResult> GetOrders(
+            [FromQuery] OrderRequestParameters queryParameters)
+        {
+            var filterExpressions = orderFilterExpressionBuilder.Build(queryParameters);
+            var filter = filterExpressions.Count > 0
+                ? SearchExpressionBuilder.And(filterExpressions.ToArray())
+                : x => true;
+            var orders = orderStore.SearchAsync(
+                filter,
+                queryParameters.Count,
+                queryParameters.Skip,
+                BuildOrderByExpressionForOrder(queryParameters.OrderBy),
+                queryParameters.OrderDirection);
+            return Ok(orders);
+        }
+
+        [Authorize(Policy = AccountTypeRequirement.AdminPolicyName)]
+        [HttpPost("orders/{id}/fulfill")]
+        public async Task<IActionResult> FulfillOrder(
+            [FromRoute] string id)
+        {
+            var order = await orderStore.GetByIdAsync(id);
+            if (order == null)
+                return NotFound();
+            order.Status = OrderStatus.Fulfilled;
+            order.FulfilledTimestamp = DateTime.UtcNow;
+            await orderStore.StoreAsync(order);
+            return Ok(order);
+        }
+
+        [Authorize(Policy = AccountTypeRequirement.AdminPolicyName)]
+        [HttpDelete("orders/{id}")]
+        public async Task<IActionResult> DeleteOrder(
+            [FromRoute] string id)
+        {
+            await orderStore.DeleteAsync(id);
+            return Ok();
+        }
+
+        private Expression<Func<Product, object>> BuildOrderByExpressionForProduct(
             string orderBy)
         {
             return orderBy?.ToLower() switch
@@ -93,6 +143,17 @@ namespace Mensch.Id.API.Controllers
                 "name" => x => x.Name,
                 "price" => x => x.Price.Value,
                 _ => x => x.Category
+            };
+        }
+
+        private Expression<Func<Order, object>> BuildOrderByExpressionForOrder(
+            string orderBy)
+        {
+            return orderBy?.ToLower() switch
+            {
+                "status" => x => x.Status,
+                "time" => x => x.CreationTimestamp,
+                _ => x => x.CreationTimestamp
             };
         }
     }

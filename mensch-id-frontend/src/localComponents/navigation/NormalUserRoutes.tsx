@@ -8,10 +8,6 @@ import { MyChallengesPage } from "../pages/MyChallengesPage";
 import { NewProfilePage } from "../pages/NewProfilePage";
 import { NotFoundPage } from "../pages/NotFoundPage";
 import { ProfilePage } from "../pages/ProfilePage";
-import RequestAssignerAccountPage from "../pages/RequestAssignerAccountPage";
-import { RequestPasswordResetPage } from "../pages/RequestPasswordResetPage";
-import { ResetPasswordPage } from "../pages/ResetPasswordPage";
-import { VerifyEmailPage } from "../pages/VerifyEmailPage";
 import { Models } from "../types/models";
 import { ViewModels } from "../types/viewModels";
 import { CommonRoutes } from "./CommonRoutes";
@@ -31,11 +27,6 @@ export const NormalUserRoutes = (props: NormalUserRoutesProps) => {
         { path: '/new-profile', element: <NewProfilePage /> },
         { path: '/challenges', element: <MyChallengesPage /> },
         { path: '/accounts', element: <AccountManagementPage /> },
-
-        { path: '/verify-email', element: <VerifyEmailPage /> },
-        { path: '/reset-password', element: <ResetPasswordPage onLoggedIn={onLoggedIn} /> },
-        { path: '/request-password-reset', element: <RequestPasswordResetPage /> },
-        { path: '/request-assigner-account', element: <RequestAssignerAccountPage /> },
         ...CommonRoutes(),
         { path: '/', element: <HomePage isLoggedIn={true} /> },
         { path: '*', element: <NotFoundPage /> }

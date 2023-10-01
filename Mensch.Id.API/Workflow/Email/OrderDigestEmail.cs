@@ -2,6 +2,6 @@
 {
     public class OrderDigestEmail
     {
-        public string OpenOrdersCount { get; set; }
+        public int OpenOrdersCount { get; set; }
     }
 }

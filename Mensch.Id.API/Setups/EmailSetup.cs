@@ -13,6 +13,8 @@ namespace Mensch.Id.API.Setups
             services.Configure<EmailSettings>(configuration.GetSection(EmailSettings.SettingsName));
             services.AddSingleton<EmailComposer>();
             services.AddSingleton<IEmailSender, EmailSender>();
+
+            services.AddHostedService<OrderDigestEmailSender>();
         }
     }
 }

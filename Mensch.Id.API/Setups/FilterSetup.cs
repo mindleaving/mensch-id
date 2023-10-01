@@ -14,6 +14,7 @@ namespace Mensch.Id.API.Setups
             IConfiguration configuration)
         {
             services.AddScoped<IFilterExpressionBuilder<AssignerControlledProfile,AssignedProfilesRequestParameters>, AssignedProfileFillterExpressionBuilder>();
+            services.AddScoped<IFilterExpressionBuilder<Order,OrderRequestParameters>, OrderFilterExpressionBuilder>();
             services.AddScoped<IFilterExpressionBuilder<Product,ProductRequestParameters>, ProductFilterExpressionBuilder>();
         }
     }
