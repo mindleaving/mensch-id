@@ -1,6 +1,6 @@
 cd Mensch.Id.API
-dotnet publish -c Release
-Compress-Archive -Path bin/Release/net7.0/publish -DestinationPath ../Mensch.Id.API.zip -Force
+dotnet publish -c Release -r linux-x64 --no-self-contained
+Compress-Archive -Path bin/Release/net7.0/linux-x64/publish -DestinationPath ../Mensch.Id.API.zip -Force
 cd ../mensch-id-frontend
 npm run build
 Compress-Archive -Path build -DestinationPath ../Mensch.Id.Frontend.zip -Force
