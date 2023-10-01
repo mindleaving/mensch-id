@@ -134,6 +134,8 @@ namespace Mensch.Id.API.Controllers
             var account = await store.GetLocalByEmailAsync(body.Email);
             if (account == null)
                 return NotFound();
+            if (account is AdminAccount)
+                return StatusCode((int)HttpStatusCode.Forbidden);
             account.PasswordResetToken = PasswordReset.GenerateToken(account.EmailVerificationAndPasswordResetSalt, out var unencryptedToken);
             await store.StoreAsync(account);
             var passwordResetEmail = new PasswordResetEmail
@@ -160,6 +162,8 @@ namespace Mensch.Id.API.Controllers
                 return NotFound();
             if (account is not LocalAccount localAccount)
                 return NotFound();
+            if (account is AdminAccount)
+                return StatusCode((int)HttpStatusCode.Forbidden);
             if (!PasswordReset.Verify(body.ResetToken, localAccount))
                 return StatusCode((int)HttpStatusCode.Forbidden, "Invalid reset token");
             if(body.Password.Length < MinimumPasswordLength)
