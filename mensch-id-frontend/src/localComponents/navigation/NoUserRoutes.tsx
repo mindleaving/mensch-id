@@ -1,13 +1,13 @@
 import { RouteDefinition } from "../../sharedCommonComponents/types/frontendTypes";
-import { HomePage } from "../pages/HomePage";
-import { LoginPage } from "../pages/LoginPage";
-import { LoginRedirectPage } from "../pages/LoginRedirectPage";
-import RequestAssignerAccountPage from "../pages/RequestAssignerAccountPage";
-import { RequestPasswordResetPage } from "../pages/RequestPasswordResetPage";
-import { ResetPasswordPage } from "../pages/ResetPasswordPage";
-import { VerifyEmailPage } from "../pages/VerifyEmailPage";
-import { Models } from "../types/models";
 import { CommonRoutes } from "./CommonRoutes";
+import { Models } from "../types/models";
+import RequestAssignerAccountPage from "../pages/Assigner/RequestAssignerAccountPage";
+import HomePage from "../pages/HomePage";
+import LoginPage from "../pages/UserManagement/LoginPage";
+import LoginRedirectPage from "../pages/UserManagement/LoginRedirectPage";
+import RequestPasswordResetPage from "../pages/UserManagement/RequestPasswordResetPage";
+import ResetPasswordPage from "../pages/UserManagement/ResetPasswordPage";
+import VerifyEmailPage from "../pages/UserManagement/VerifyEmailPage";
 
 interface NoUserRoutesProps {
     onLoggedIn: (authenticationResult: Models.AuthenticationResult) => void;

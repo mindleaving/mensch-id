@@ -129,3 +129,4 @@ export const ProfilePage = (props: ProfilePageProps) => {
         </>
     );
 }
+export default ProfilePage;

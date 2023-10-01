@@ -3,6 +3,9 @@
 public enum OrderStatus
 {
     Placed,
-    Fulfilled,
+    Accepted,
+    Shipped,
+    Received,
+    Returned,
     Cancelled
 }

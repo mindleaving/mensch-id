@@ -18,3 +18,4 @@ export const NotFoundPage = (props: NotFoundPageProps) => {
     );
 
 }
+export default NotFoundPage;

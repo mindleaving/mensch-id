@@ -1,12 +1,12 @@
-import { Button, Table } from "react-bootstrap";
-import { resolveText } from "../../sharedCommonComponents/helpers/Globalizer";
-import { useEffect, useState } from "react";
-import { Models } from "../types/models";
-import { buildLoadObjectFunc } from "../../sharedCommonComponents/helpers/LoadingHelpers";
-import { LoadingTableRow } from "../../sharedCommonComponents/components/LoadingTableRow";
-import { NoEntriesTableRow } from "../../sharedCommonComponents/components/NoEntriesTableRow";
-import { sendPostRequest } from "../../sharedCommonComponents/helpers/StoringHelpers";
-import { showSuccessAlert } from "../../sharedCommonComponents/helpers/AlertHelpers";
+import { useState, useEffect } from "react";
+import { Table, Button } from "react-bootstrap";
+import { LoadingTableRow } from "../../../sharedCommonComponents/components/LoadingTableRow";
+import { NoEntriesTableRow } from "../../../sharedCommonComponents/components/NoEntriesTableRow";
+import { showSuccessAlert } from "../../../sharedCommonComponents/helpers/AlertHelpers";
+import { resolveText } from "../../../sharedCommonComponents/helpers/Globalizer";
+import { buildLoadObjectFunc } from "../../../sharedCommonComponents/helpers/LoadingHelpers";
+import { sendPostRequest } from "../../../sharedCommonComponents/helpers/StoringHelpers";
+import { Models } from "../../types/models";
 
 interface AssignerAccountRequestsPageProps {}
 
@@ -78,8 +78,8 @@ export const AssignerAccountRequestsPage = (props: AssignerAccountRequestsPagePr
                         </td>
                         <td>
                             {request.contactPersonName}
-                            <div>
-                                {request.note}
+                            <div className="text-secondary">
+                                <small>{request.note}</small>
                             </div>
                         </td>
                         <td>

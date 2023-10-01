@@ -1,9 +1,9 @@
 import { RouteDefinition } from "../../sharedCommonComponents/types/frontendTypes"
-import { AboutPage } from "../pages/AboutPage";
-import { ContactPage } from "../pages/ContactPage";
-import { PrivacyPage } from "../pages/PrivacyPage";
-import { SendChallengePage } from "../pages/SendChallengePage";
-import { TermsOfServicePage } from "../pages/TermsOfServicePage";
+import AboutPage from "../pages/AboutPage";
+import ContactPage from "../pages/ContactPage";
+import PrivacyPage from "../pages/PrivacyPage";
+import SendChallengePage from "../pages/SendChallengePage";
+import TermsOfServicePage from "../pages/TermsOfServicePage";
 
 export const CommonRoutes = () => {
     const routes: RouteDefinition[] = [

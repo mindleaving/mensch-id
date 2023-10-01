@@ -1,9 +1,9 @@
 import { RouteDefinition } from "../../sharedCommonComponents/types/frontendTypes";
-import AssignerAccountRequestsPage from "../pages/AssignerAccountRequestsPage";
-import { HomePage } from "../pages/HomePage";
-import { NotFoundPage } from "../pages/NotFoundPage";
-import ShopOrdersPage from "../pages/ShopOrdersPage";
 import { CommonRoutes } from "./CommonRoutes";
+import AssignerAccountRequestsPage from "../pages/Admin/AssignerAccountRequestsPage";
+import HomePage from "../pages/HomePage";
+import NotFoundPage from "../pages/NotFoundPage";
+import ShopOrdersPage from "../pages/Shop/ShopOrdersPage";
 
 interface AdminRoutesProps {}
 

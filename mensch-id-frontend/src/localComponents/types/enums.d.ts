@@ -209,7 +209,10 @@ export enum Currency {
 }
 export enum OrderStatus {
     Placed = "Placed",
-    Fulfilled = "Fulfilled",
+    Accepted = "Accepted",
+    Shipped = "Shipped",
+    Received = "Received",
+    Returned = "Returned",
     Cancelled = "Cancelled"
 }
 export enum PaymentMethod {

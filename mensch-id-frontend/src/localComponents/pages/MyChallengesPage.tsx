@@ -66,3 +66,4 @@ export const MyChallengesPage = (props: MyChallengesPageProps) => {
     );
 
 }
+export default MyChallengesPage;

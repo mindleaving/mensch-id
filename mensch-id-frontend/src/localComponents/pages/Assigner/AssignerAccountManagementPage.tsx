@@ -1,10 +1,10 @@
 import { useContext } from "react";
-import { resolveText } from "../../sharedCommonComponents/helpers/Globalizer";
-import UserContext from "../contexts/UserContext";
-import { ContactInformationForm } from "../components/Assigner/ContactInformationForm";
-import { ChangePasswordForm } from "../components/ChangePasswordForm";
-import { ViewModels } from "../types/viewModels";
-import { AssignerNameForm } from "../components/Assigner/AssignerNameForm";
+import { resolveText } from "../../../sharedCommonComponents/helpers/Globalizer";
+import UserContext from "../../contexts/UserContext";
+import { ContactInformationForm } from "../../components/Assigner/ContactInformationForm";
+import { ChangePasswordForm } from "../../components/ChangePasswordForm";
+import { ViewModels } from "../../types/viewModels";
+import { AssignerNameForm } from "../../components/Assigner/AssignerNameForm";
 
 interface AssignerAccountManagementPageProps {}
 

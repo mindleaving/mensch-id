@@ -110,7 +110,6 @@ export namespace Models {
         }
     
         interface Order extends Models.IId {
-            creationTimestamp: Date;
             orderedByAccountId: string;
             paymentMethod: Enums.PaymentMethod;
             invoiceAddress: Models.Contact;
@@ -118,8 +117,13 @@ export namespace Models {
             shippingMethod: Enums.ShippingMethod;
             shippingAddress: Models.Contact;
             items: Models.Shop.OrderItem[];
+            statusChanges: Models.Shop.OrderStatusChange[];
             status: Enums.OrderStatus;
-            fulfilledTimestamp?: Date | null;
+        }
+    
+        interface OrderStatusChange {
+            newStatus: Enums.OrderStatus;
+            timestamp: Date;
         }
     
         interface OrderItem {
@@ -151,7 +155,7 @@ export namespace Models {
         }
     
         interface OrderRequestParameters extends Models.RequestParameters.GenericItemsRequestParameters {
-            status?: Enums.OrderStatus | null;
+            status: Enums.OrderStatus[];
         }
     
         interface ProductRequestParameters extends Models.RequestParameters.GenericItemsRequestParameters {

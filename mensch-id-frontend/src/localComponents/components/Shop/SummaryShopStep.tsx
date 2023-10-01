@@ -13,15 +13,15 @@ import { useNavigate } from "react-router-dom";
 interface SummaryShopStepProps {
     order: Models.Shop.Order;
     onPrevious: () => void;
+    onOrderSubmitted: () => void;
 }
 
 export const SummaryShopStep = (props: SummaryShopStepProps) => {
 
-    const { order, onPrevious } = props;
+    const { order, onPrevious, onOrderSubmitted } = props;
 
     const [ hasAcceptedTermsAndConditions, setHasAcceptedTermsAndConditions ] = useState<boolean>(false);
     const [ isSubmitting, setIsSubmitting ] = useState<boolean>(false);
-    const navigate = useNavigate();
 
     const submit = async (e?: FormEvent) => {
         e?.preventDefault();
@@ -40,7 +40,7 @@ export const SummaryShopStep = (props: SummaryShopStepProps) => {
                 showSuccessAlert(resolveText("Order_SuccessfullyPlaced"));
                 // TODO: Reset order
                 setHasAcceptedTermsAndConditions(false);
-                navigate('/shop');
+                onOrderSubmitted();
             },
             undefined,
             () => setIsSubmitting(false)

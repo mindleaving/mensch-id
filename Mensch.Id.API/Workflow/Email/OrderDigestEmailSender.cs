@@ -45,7 +45,9 @@ namespace Mensch.Id.API.Workflow.Email
             using var scope = services.CreateScope();
             var orderStore = scope.ServiceProvider.GetRequiredService<IReadonlyStore<Order>>();
 
-            var orders = await orderStore.SearchAsync(x => x.Status == OrderStatus.Placed, orderBy: x => x.CreationTimestamp).ToListAsync();
+            var orders = await orderStore
+                .SearchAsync(x => x.Status == OrderStatus.Placed, orderBy: x => x.StatusChanges[0].Timestamp)
+                .ToListAsync();
             if(orders.Count == 0)
                 return;
 

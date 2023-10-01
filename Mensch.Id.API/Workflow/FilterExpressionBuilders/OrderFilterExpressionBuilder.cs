@@ -13,9 +13,9 @@ namespace Mensch.Id.API.Workflow.FilterExpressionBuilders
             OrderRequestParameters queryParameters)
         {
             var filterExpressions = new List<Expression<Func<Order, bool>>>();
-            if (queryParameters.Status.HasValue)
+            if (queryParameters.Status != null && queryParameters.Status.Count > 0)
             {
-                filterExpressions.Add(x => x.Status == queryParameters.Status.Value);
+                filterExpressions.Add(x => queryParameters.Status.Contains(x.Status));
             }
             return filterExpressions;
         }

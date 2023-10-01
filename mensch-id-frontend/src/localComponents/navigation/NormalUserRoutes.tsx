@@ -1,16 +1,16 @@
 import { RouteDefinition } from "../../sharedCommonComponents/types/frontendTypes";
-import { AccountManagementPage } from "../pages/AccountManagementPage";
-import { HomePage } from "../pages/HomePage";
-import { LinkAccountPage } from "../pages/LinkAccountPage";
-import { LinkAccountRedirectPage } from "../pages/LinkAccountRedirectPage";
-import { LoginRedirectPage } from "../pages/LoginRedirectPage";
-import { MyChallengesPage } from "../pages/MyChallengesPage";
-import { NewProfilePage } from "../pages/NewProfilePage";
-import { NotFoundPage } from "../pages/NotFoundPage";
-import { ProfilePage } from "../pages/ProfilePage";
+import { CommonRoutes } from "./CommonRoutes";
 import { Models } from "../types/models";
 import { ViewModels } from "../types/viewModels";
-import { CommonRoutes } from "./CommonRoutes";
+import HomePage from "../pages/HomePage";
+import MyChallengesPage from "../pages/MyChallengesPage";
+import NewProfilePage from "../pages/NewProfilePage";
+import NotFoundPage from "../pages/NotFoundPage";
+import ProfilePage from "../pages/ProfilePage";
+import AccountManagementPage from "../pages/UserManagement/AccountManagementPage";
+import LinkAccountPage from "../pages/UserManagement/LinkAccountPage";
+import LinkAccountRedirectPage from "../pages/UserManagement/LinkAccountRedirectPage";
+import LoginRedirectPage from "../pages/UserManagement/LoginRedirectPage";
 
 interface NormalUserRoutesProps {
     onLoggedIn: (authenticationResult: Models.AuthenticationResult) => void;

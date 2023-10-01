@@ -9,12 +9,10 @@ using Mensch.Id.API.Models.AccessControl;
 using Mensch.Id.API.Models.RequestParameters;
 using Mensch.Id.API.Models.Shop;
 using Mensch.Id.API.Storage;
-using Mensch.Id.API.Workflow.Email;
 using Mensch.Id.API.Workflow.FilterExpressionBuilders;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using SearchExpressionBuilder = Commons.Extensions.SearchExpressionBuilder;
 
 namespace Mensch.Id.API.Controllers
 {
@@ -29,7 +27,6 @@ namespace Mensch.Id.API.Controllers
         private readonly IFilterExpressionBuilder<Order, OrderRequestParameters> orderFilterExpressionBuilder;
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly IReadonlyStore<Account> accountStore;
-        private readonly EmailSender emailSender;
 
         public ShopController(
             IStore<Order> orderStore,
@@ -37,8 +34,7 @@ namespace Mensch.Id.API.Controllers
             IFilterExpressionBuilder<Product,ProductRequestParameters> productFilterExpressionBuilder,
             IFilterExpressionBuilder<Order, OrderRequestParameters> orderFilterExpressionBuilder,
             IHttpContextAccessor httpContextAccessor,
-            IReadonlyStore<Account> accountStore,
-            EmailSender emailSender)
+            IReadonlyStore<Account> accountStore)
         {
             this.orderStore = orderStore;
             this.productStore = productStore;
@@ -46,7 +42,6 @@ namespace Mensch.Id.API.Controllers
             this.orderFilterExpressionBuilder = orderFilterExpressionBuilder;
             this.httpContextAccessor = httpContextAccessor;
             this.accountStore = accountStore;
-            this.emailSender = emailSender;
         }
 
         [HttpGet("products")]
@@ -66,10 +61,20 @@ namespace Mensch.Id.API.Controllers
         }
 
         [HttpGet("my-orders")]
-        public async Task<IActionResult> GetMyOrders()
+        public async Task<IActionResult> GetMyOrders(
+            [FromQuery] OrderRequestParameters queryParameters)
         {
+            var filterExpressions = orderFilterExpressionBuilder.Build(queryParameters);
             var accountId = ControllerHelpers.GetAccountId(httpContextAccessor);
-            var orders = orderStore.SearchAsync(x => x.OrderedByAccountId == accountId);
+            filterExpressions.Add(x => x.OrderedByAccountId == accountId);
+            var filter = SearchExpressionBuilder.And(filterExpressions.ToArray());
+            var orderByExpression = BuildOrderByExpressionForOrder(queryParameters.OrderBy);
+            var orders = orderStore.SearchAsync(
+                filter,
+                queryParameters.Count,
+                queryParameters.Skip,
+                orderByExpression,
+                queryParameters.OrderDirection);
             return Ok(orders);
         }
 
@@ -84,8 +89,7 @@ namespace Mensch.Id.API.Controllers
             if (account is not AssignerAccount assignerAccount)
                 return StatusCode((int)HttpStatusCode.Forbidden, "Only assigners can order");
             order.OrderedByAccountId = accountId;
-            order.CreationTimestamp = DateTime.UtcNow;
-            order.Status = OrderStatus.Placed;
+            order.SetStatus(OrderStatus.Placed);
             order.InvoiceAddress ??= assignerAccount.Contact;
             order.SendInvoiceSeparately = false;
             order.ShippingAddress ??= assignerAccount.Contact;
@@ -102,13 +106,53 @@ namespace Mensch.Id.API.Controllers
             var filter = filterExpressions.Count > 0
                 ? SearchExpressionBuilder.And(filterExpressions.ToArray())
                 : x => true;
+            var orderByExpressions = BuildOrderByExpressionForOrder(queryParameters.OrderBy);
             var orders = orderStore.SearchAsync(
                 filter,
                 queryParameters.Count,
                 queryParameters.Skip,
-                BuildOrderByExpressionForOrder(queryParameters.OrderBy),
+                orderByExpressions,
                 queryParameters.OrderDirection);
             return Ok(orders);
+        }
+
+        [HttpPost("orders/{id}/cancel")]
+        public async Task<IActionResult> CancelOrder(
+            [FromRoute] string id)
+        {
+            var accountId = ControllerHelpers.GetAccountId(httpContextAccessor);
+            var order = await orderStore.GetByIdAsync(id);
+            if (order == null || order.OrderedByAccountId != accountId)
+                return NotFound();
+            order.SetStatus(OrderStatus.Cancelled);
+            await orderStore.StoreAsync(order);
+            return Ok(order);
+        }
+
+        [HttpPost("orders/{id}/received")]
+        public async Task<IActionResult> MarkOrderAsReceived(
+            [FromRoute] string id)
+        {
+            var accountId = ControllerHelpers.GetAccountId(httpContextAccessor);
+            var order = await orderStore.GetByIdAsync(id);
+            if (order == null || order.OrderedByAccountId != accountId)
+                return NotFound();
+            order.SetStatus(OrderStatus.Received);
+            await orderStore.StoreAsync(order);
+            return Ok(order);
+        }
+
+        [Authorize(Policy = AccountTypeRequirement.AdminPolicyName)]
+        [HttpPost("orders/{id}/accept")]
+        public async Task<IActionResult> AcceptOrder(
+            [FromRoute] string id)
+        {
+            var order = await orderStore.GetByIdAsync(id);
+            if (order == null)
+                return NotFound();
+            order.SetStatus(OrderStatus.Accepted);
+            await orderStore.StoreAsync(order);
+            return Ok(order);
         }
 
         [Authorize(Policy = AccountTypeRequirement.AdminPolicyName)]
@@ -119,8 +163,7 @@ namespace Mensch.Id.API.Controllers
             var order = await orderStore.GetByIdAsync(id);
             if (order == null)
                 return NotFound();
-            order.Status = OrderStatus.Fulfilled;
-            order.FulfilledTimestamp = DateTime.UtcNow;
+            order.SetStatus(OrderStatus.Shipped);
             await orderStore.StoreAsync(order);
             return Ok(order);
         }
@@ -152,8 +195,8 @@ namespace Mensch.Id.API.Controllers
             return orderBy?.ToLower() switch
             {
                 "status" => x => x.Status,
-                "time" => x => x.CreationTimestamp,
-                _ => x => x.CreationTimestamp
+                "time" => x => x.StatusChanges[0].Timestamp,
+                _ => x => x.StatusChanges[0].Timestamp
             };
         }
     }

@@ -104,3 +104,4 @@ export const SendChallengePage = (props: SendChallengePageProps) => {
     );
 
 }
+export default SendChallengePage;

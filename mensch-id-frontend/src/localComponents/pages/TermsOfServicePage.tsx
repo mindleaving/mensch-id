@@ -14,3 +14,4 @@ export const TermsOfServicePage = (props: TermsOfServicePageProps) => {
     );
 
 }
+export default TermsOfServicePage;

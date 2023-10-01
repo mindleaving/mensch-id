@@ -86,3 +86,4 @@ export const HomePage = (props: HomePageProps) => {
     );
 
 }
+export default HomePage;

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using Commons.Extensions;
 
 namespace Mensch.Id.API.Models.Shop
 {
@@ -8,9 +10,6 @@ namespace Mensch.Id.API.Models.Shop
     {
         [Required]
         public string Id { get; set; }
-
-        [Required]
-        public DateTime CreationTimestamp { get; set; }
 
         [Required]
         public string OrderedByAccountId { get; set; }
@@ -31,7 +30,50 @@ namespace Mensch.Id.API.Models.Shop
         [Required]
         public List<OrderItem> Items { get; set; }
 
-        public OrderStatus Status { get; set; }
-        public DateTime? FulfilledTimestamp { get; set; }
+        private List<OrderStatusChange> statusChanges = new();
+        public List<OrderStatusChange> StatusChanges
+        {
+            get => statusChanges;
+            private set => statusChanges = value ?? new();
+        }
+        public OrderStatus Status { get; private set; }
+
+        public void SetStatus(
+            OrderStatus newStatus)
+        {
+            if (StatusChanges.Count == 0)
+            {
+                if (newStatus != OrderStatus.Placed)
+                    throw new Exception("First status of an order must be 'Placed'");
+            } 
+            else
+            {
+                var currentStatus = StatusChanges.Last().NewStatus;
+                if(currentStatus == newStatus)
+                    return;
+                if (currentStatus.InSet(OrderStatus.Cancelled, OrderStatus.Returned))
+                    throw new InvalidOperationException("Order is in a final state and cannot be changed");
+                if (newStatus == OrderStatus.Cancelled && currentStatus != OrderStatus.Placed)
+                    throw new InvalidOperationException("Cannot cancel order that is not in 'Placed' status");
+            }
+
+            Status = newStatus;
+            StatusChanges.Add(new OrderStatusChange(newStatus, DateTime.UtcNow));
+        }
+    }
+
+    public class OrderStatusChange
+    {
+        public OrderStatusChange() { }
+        public OrderStatusChange(
+            OrderStatus newStatus,
+            DateTime timestamp)
+        {
+            NewStatus = newStatus;
+            Timestamp = timestamp;
+        }
+
+        public OrderStatus NewStatus { get; set; }
+        public DateTime Timestamp { get; set; }
     }
 }

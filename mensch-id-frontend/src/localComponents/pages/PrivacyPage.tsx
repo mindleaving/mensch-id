@@ -14,3 +14,4 @@ export const PrivacyPage = () => {
     );
 
 }
+export default PrivacyPage;

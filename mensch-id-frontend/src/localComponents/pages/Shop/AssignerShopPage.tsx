@@ -1,11 +1,11 @@
 import { useState, useContext } from "react";
-import { Models } from "../types/models";
-import { uuid } from "../../sharedCommonComponents/helpers/uuid";
-import { OrderStatus, PaymentMethod, ShippingMethod } from "../types/enums.d";
-import UserContext from "../contexts/UserContext";
-import { ViewModels } from "../types/viewModels";
-import { ProductSelectionShopStep } from "../components/Shop/ProductSelectionShopStep";
-import { CheckoutProcess } from "../components/Shop/CheckoutProcess";
+import { Models } from "../../types/models";
+import { uuid } from "../../../sharedCommonComponents/helpers/uuid";
+import { OrderStatus, PaymentMethod, ShippingMethod } from "../../types/enums.d";
+import UserContext from "../../contexts/UserContext";
+import { ViewModels } from "../../types/viewModels";
+import { ProductSelectionShopStep } from "../../components/Shop/ProductSelectionShopStep";
+import { CheckoutProcess } from "../../components/Shop/CheckoutProcess";
 
 interface AssignerShopPageProps {}
 
@@ -19,7 +19,6 @@ export const AssignerShopPage = (props: AssignerShopPageProps) => {
     const [ step, setStep ] = useState<ShopSteps>(ShopSteps.ProductSelection);
     const [ order, setOrder ] = useState<Models.Shop.Order>({
         id: uuid(),
-        creationTimestamp: new Date().toISOString() as any,
         items: [],
         status: OrderStatus.Placed,
         orderedByAccountId: user.accountId,
@@ -28,7 +27,24 @@ export const AssignerShopPage = (props: AssignerShopPageProps) => {
         shippingAddress: user.contactInformation,
         shippingMethod: ShippingMethod.Standard,
         paymentMethod: PaymentMethod.Invoice,
+        statusChanges: []
     });
+
+    const reset = () => {
+        setOrder({
+            id: uuid(),
+            items: [],
+            status: OrderStatus.Placed,
+            orderedByAccountId: user.accountId,
+            invoiceAddress: user.contactInformation,
+            sendInvoiceSeparately: false,
+            shippingAddress: user.contactInformation,
+            shippingMethod: ShippingMethod.Standard,
+            paymentMethod: PaymentMethod.Invoice,
+            statusChanges: []
+        });
+        setStep(ShopSteps.ProductSelection);
+    }
 
     switch(step) {
         case ShopSteps.ProductSelection:
@@ -43,6 +59,7 @@ export const AssignerShopPage = (props: AssignerShopPageProps) => {
                 order={order}
                 onChange={setOrder}
                 onPrevious={() => setStep(ShopSteps.ProductSelection)}
+                onOrderSubmitted={reset}
             />);
     }
 

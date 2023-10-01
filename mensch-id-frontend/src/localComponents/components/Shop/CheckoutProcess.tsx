@@ -12,6 +12,7 @@ interface CheckoutProcessProps {
     order: Models.Shop.Order;
     onChange: (update: Update<Models.Shop.Order>) => void;
     onPrevious?: () => void;
+    onOrderSubmitted: () => void;
 }
 
 enum CheckoutStep {
@@ -23,7 +24,7 @@ enum CheckoutStep {
 }
 export const CheckoutProcess = (props: CheckoutProcessProps) => {
 
-    const { order, onChange, onPrevious } = props;
+    const { order, onChange, onPrevious, onOrderSubmitted } = props;
 
     const [ step, setStep ] = useState<CheckoutStep>(CheckoutStep.ShoppingCart);
     const navigate = useNavigate();
@@ -62,6 +63,7 @@ export const CheckoutProcess = (props: CheckoutProcessProps) => {
             return (<SummaryShopStep
                 order={order}
                 onPrevious={() => setStep(CheckoutStep.PaymentMethod)}
+                onOrderSubmitted={onOrderSubmitted} 
             />);
     }
 

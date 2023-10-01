@@ -80,3 +80,5 @@ export const PilotProjectHeidelbergPage = (props: PilotProjectHeidelbergPageProp
 
 }
 const ProjektFlyerLink = (props: { className?: string; }) => (<a href="/docs/mensch-id_pilotprojekt-flyer_v1.pdf" className={props.className}>Projekt-Flyer</a>);
+
+export default PilotProjectHeidelbergPage;
