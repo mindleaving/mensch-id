@@ -17,5 +17,12 @@ namespace Mensch.Id.API.Workflow.Email
             // Do nothing
             return Task.CompletedTask;
         }
+
+        public Task SendOrderDigestEmail(
+            OrderDigestEmail email)
+        {
+            // Do nothing
+            return Task.CompletedTask;
+        }
     }
 }

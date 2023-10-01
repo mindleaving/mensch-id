@@ -6,5 +6,6 @@ namespace Mensch.Id.API.Workflow.Email
     {
         Task SendVerificationEmail(VerificationEmail email);
         Task SendPasswordResetEmail(PasswordResetEmail email);
+        Task SendOrderDigestEmail(OrderDigestEmail email);
     }
 }

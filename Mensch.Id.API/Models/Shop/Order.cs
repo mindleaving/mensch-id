@@ -16,19 +16,22 @@ namespace Mensch.Id.API.Models.Shop
         public string OrderedByAccountId { get; set; }
 
         [Required]
-        public Address ShippingAddress { get; set; }
+        public PaymentMethod PaymentMethod { get; set; }
+
+        [Required]
+        public Contact InvoiceAddress { get; set; }
+
+        public bool SendInvoiceSeparately { get; set; }
+
+        [Required]
+        public ShippingMethod ShippingMethod { get; set; }
+        [Required]
+        public Contact ShippingAddress { get; set; }
 
         [Required]
         public List<OrderItem> Items { get; set; }
 
         public OrderStatus Status { get; set; }
         public DateTime? FulfilledTimestamp { get; set; }
-    }
-
-    public enum OrderStatus
-    {
-        Placed,
-        Fulfilled,
-        Cancelled
     }
 }

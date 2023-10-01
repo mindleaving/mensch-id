@@ -75,8 +75,11 @@ namespace Mensch.Id.API.Controllers
             if (account is not AssignerAccount assignerAccount)
                 return StatusCode((int)HttpStatusCode.Forbidden, "Only assigners can order");
             order.OrderedByAccountId = accountId;
+            order.CreationTimestamp = DateTime.UtcNow;
             order.Status = OrderStatus.Placed;
-            order.ShippingAddress = assignerAccount.Contact.Address;
+            order.InvoiceAddress ??= assignerAccount.Contact;
+            order.SendInvoiceSeparately = false;
+            order.ShippingAddress ??= assignerAccount.Contact;
             await orderStore.StoreAsync(order);
             return Ok();
         }

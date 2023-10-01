@@ -51,6 +51,20 @@ namespace Mensch.Id.API.Workflow.Email
             return message;
         }
 
+        public MimeMessage Compose(
+            OrderDigestEmail email)
+        {
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress("mensch.ID", settings.FromAddress));
+            message.To.Add(new MailboxAddress("mensch.ID Shop", "shop@mensch.id"));
+            message.Subject = "Order overview for mensch.ID shop";
+            message.Body = new TextPart(TextFormat.Plain)
+            {
+                Text = $"You have {email.OpenOrdersCount} open orders"
+            };
+            return message;
+        }
+
         private string Translate(
             IReadOnlyDictionary<Language, string> resourceDictionary,
             Language language)

@@ -4,6 +4,9 @@ export enum AuthenticationErrorType {
     AuthenticationMethodNotAvailable = "AuthenticationMethodNotAvailable",
     EmailNotVerified = "EmailNotVerified"
 }
+export enum IdType {
+    MenschID = "MenschID"
+}
 export enum Language {
     ab = "ab",
     aa = "aa",
@@ -197,9 +200,6 @@ export enum LoginProvider {
     Microsoft = "Microsoft",
     LocalJwt = "LocalJwt"
 }
-export enum IdType {
-    MenschID = "MenschID"
-}
 export enum OrderDirection {
     Ascending = "Ascending",
     Descending = "Descending"
@@ -211,6 +211,12 @@ export enum OrderStatus {
     Placed = "Placed",
     Fulfilled = "Fulfilled",
     Cancelled = "Cancelled"
+}
+export enum PaymentMethod {
+    Invoice = "Invoice"
+}
+export enum ShippingMethod {
+    Standard = "Standard"
 }
 export enum AccountType {
     Local = "Local",

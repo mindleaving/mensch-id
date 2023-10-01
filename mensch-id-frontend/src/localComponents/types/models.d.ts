@@ -1,6 +1,13 @@
 import * as Enums from './enums.d';
 
 export namespace Models {
+    interface Address {
+        street: string;
+        postalCode: string;
+        city: string;
+        country: string;
+    }
+
     interface AssignerAccountRequest extends Models.IId {
         contactPersonName: string;
         email: string;
@@ -32,13 +39,6 @@ export namespace Models {
         address: Models.Address;
         phoneNumber: string;
         email: string;
-    }
-
-    interface Address {
-        street: string;
-        postalCode: string;
-        city: string;
-        country: string;
     }
 
     interface IId {
@@ -112,7 +112,11 @@ export namespace Models {
         interface Order extends Models.IId {
             creationTimestamp: Date;
             orderedByAccountId: string;
-            shippingAddress: Models.Address;
+            paymentMethod: Enums.PaymentMethod;
+            invoiceAddress: Models.Contact;
+            sendInvoiceSeparately: boolean;
+            shippingMethod: Enums.ShippingMethod;
+            shippingAddress: Models.Contact;
             items: Models.Shop.OrderItem[];
             status: Enums.OrderStatus;
             fulfilledTimestamp?: Date | null;
@@ -126,7 +130,9 @@ export namespace Models {
         interface Product extends Models.IId {
             name: string;
             price: Models.Shop.Money;
+            imageUrl?: string;
             category: string;
+            downloadLink?: string;
         }
     }
 
