@@ -4,8 +4,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Threading.Tasks;
+using Mensch.Id.API.Models.AccessControl;
 using Mensch.Id.API.Storage;
 using Mensch.Id.API.Workflow;
+using Mensch.Id.API.Workflow.Email;
 
 namespace Mensch.Id.API.Controllers;
 
@@ -16,13 +18,19 @@ public class AdminController : ControllerBase
 {
     private readonly IStore<AssignerAccountRequest> accountRequestStore;
     private readonly IAccountCreator accountCreator;
+    private readonly IEmailSender emailSender;
+    private readonly IStore<Account> accountStore;
 
     public AdminController(
         IStore<AssignerAccountRequest> accountRequestStore,
-        IAccountCreator accountCreator)
+        IAccountCreator accountCreator,
+        IEmailSender emailSender,
+        IStore<Account> accountStore)
     {
         this.accountRequestStore = accountRequestStore;
         this.accountCreator = accountCreator;
+        this.emailSender = emailSender;
+        this.accountStore = accountStore;
     }
 
     [AllowAnonymous]
@@ -51,10 +59,21 @@ public class AdminController : ControllerBase
         if (request == null)
             return NotFound();
         var password = new TemporaryPasswordGenerator { AllowedCharacters = "abcdefghijkmnpqrstuvwxyzACDEFGHJKLMNPQRSTUVWXYZ2345679"}.Generate(8);
-        await accountCreator.CreateAssigner(
+        var account = await accountCreator.CreateAssigner(
             request.ContactPersonName, 
             request.Email,
             password);
+        account.PasswordResetToken = PasswordReset.GenerateToken(account.EmailVerificationAndPasswordResetSalt, out var unencryptedToken);
+        await accountStore.StoreAsync(account);
+        var email = new AssignerAccountRequestApprovedEmail
+        {
+            AccountId = account.Id,
+            Name = request.ContactPersonName,
+            RecipientAddress = request.Email,
+            PreferedLanguage = Language.en,
+            ResetToken = unencryptedToken
+        };
+        await emailSender.SendAssignerAccountApprovedEmail(email);
         return Ok();
     }
 

@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using Org.BouncyCastle.Pqc.Crypto.Lms;
+using System.Threading.Tasks;
 
 namespace Mensch.Id.API.Workflow.Email
 {
@@ -13,6 +14,13 @@ namespace Mensch.Id.API.Workflow.Email
 
         public Task SendPasswordResetEmail(
             PasswordResetEmail email)
+        {
+            // Do nothing
+            return Task.CompletedTask;
+        }
+
+        public Task SendAssignerAccountApprovedEmail(
+            AssignerAccountRequestApprovedEmail email)
         {
             // Do nothing
             return Task.CompletedTask;

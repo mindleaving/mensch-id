@@ -23,7 +23,7 @@ namespace Mensch.Id.API.Workflow
             Language preferedLanguage = Language.en,
             string menschId = null);
 
-        Task<LocalAnonymousAccount> CreateAssigner(
+        Task<LocalAccount> CreateAssigner(
             string name,
             string email,
             string password,

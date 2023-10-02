@@ -22,6 +22,7 @@ export const CommonMenu = (props: CommonMenuProps) => {
             {!accountType || ![ AccountType.Assigner, AccountType.Admin ].includes(accountType) 
                 ? <NavDropdown.Item onClick={() => navigate("/request-assigner-account")}>{resolveText("Menu_BecomeAnAssigner")}</NavDropdown.Item> 
                 : null}
+            <NavDropdown.Item onClick={() => navigate("/events")}>{resolveText("Events")}</NavDropdown.Item>
             <NavDropdown.Item onClick={() => navigate("/contact")}>{resolveText("Impressum")}</NavDropdown.Item>
         </NavDropdown>
     </Nav>

@@ -34,6 +34,13 @@ namespace Mensch.Id.API.Workflow.Email
             await SendMessage(message);
         }
 
+        public async Task SendAssignerAccountApprovedEmail(
+            AssignerAccountRequestApprovedEmail email)
+        {
+            var message = emailComposer.Compose(email);
+            await SendMessage(message);
+        }
+
         public async Task SendOrderDigestEmail(
             OrderDigestEmail email)
         {

@@ -52,6 +52,26 @@ namespace Mensch.Id.API.Workflow.Email
         }
 
         public MimeMessage Compose(
+            AssignerAccountRequestApprovedEmail email)
+        {
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress("mensch.ID", settings.FromAddress));
+            message.To.Add(new MailboxAddress(email.RecipientAddress, email.RecipientAddress));
+            message.Subject = Translate(AssignerAccountRequestApprovedEmailContent.Subject, email.PreferedLanguage);
+            message.Body = new TextPart(TextFormat.Plain)
+            {
+                Text = Translate(AssignerAccountRequestApprovedEmailContent.Message, email.PreferedLanguage)
+                    .Replace(
+                        AssignerAccountRequestApprovedEmailContent.NamePlaceholder,
+                        email.Name)
+                    .Replace(
+                        PasswordResetEmailContent.ResetLinkPlaceholder, 
+                        $"https://mensch.id/reset-password?accountId={email.AccountId}&token={HttpUtility.UrlEncode(email.ResetToken)}")
+            };
+            return message;
+        }
+
+        public MimeMessage Compose(
             OrderDigestEmail email)
         {
             var message = new MimeMessage();

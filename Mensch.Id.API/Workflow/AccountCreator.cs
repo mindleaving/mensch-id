@@ -81,7 +81,7 @@ namespace Mensch.Id.API.Workflow
             return account;
         }
 
-        public async Task<LocalAnonymousAccount> CreateAssigner(
+        public async Task<LocalAccount> CreateAssigner(
             string name,
             string email,
             string password,
