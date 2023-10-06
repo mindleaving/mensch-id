@@ -23,6 +23,7 @@ export namespace Models {
 
     interface AuthenticationResult {
         isAuthenticated: boolean;
+        claims?: System.Security.Claims.Claim[];
         accessToken?: string;
         accountType?: Enums.AccountType | null;
         error?: Enums.AuthenticationErrorType | null;
@@ -176,7 +177,8 @@ export namespace Models {
     
         interface AssignerAccount extends Models.AccessControl.LocalAccount {
             name: string;
-            logoUrl: string;
+            logoId: string;
+            logoImageType: string;
             contact: Models.Contact;
         }
     
@@ -200,6 +202,51 @@ export namespace Models {
         interface LocalAnonymousAccount extends Models.AccessControl.Account {
             passwordHash: string;
             passwordResetToken: string;
+        }
+    }
+}
+export namespace System {
+    interface ValueType {
+        
+    }
+
+    export namespace Security {
+        export namespace Claims {
+            interface Claim {
+                issuer: string;
+                originalIssuer: string;
+                properties: System.Collections.Generic.KeyValuePair<string,string>[];
+                subject: System.Security.Claims.ClaimsIdentity;
+                type: string;
+                value: string;
+                valueType: string;
+            }
+        
+            interface ClaimsIdentity extends System.Security.Principal.IIdentity {
+                actor: System.Security.Claims.ClaimsIdentity;
+                bootstrapContext: any;
+                claims: System.Security.Claims.Claim[];
+                label: string;
+                nameClaimType: string;
+                roleClaimType: string;
+            }
+        }
+    
+        export namespace Principal {
+            interface IIdentity {
+                name: string;
+                authenticationType: string;
+                isAuthenticated: boolean;
+            }
+        }
+    }
+
+    export namespace Collections {
+        export namespace Generic {
+            interface KeyValuePair<TKey,TValue> extends System.ValueType {
+                key: TKey;
+                value: TValue;
+            }
         }
     }
 }

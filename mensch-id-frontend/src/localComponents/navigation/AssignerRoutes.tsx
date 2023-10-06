@@ -16,7 +16,7 @@ export const AssignerRoutes = (props: AssignerRoutesProps) => {
     const { setUserViewModel } = props;
 
     const routes: RouteDefinition[] = [
-        { path: '/account', element: <AssignerAccountManagementPage /> },
+        { path: '/account', element: <AssignerAccountManagementPage setUserViewModel={setUserViewModel} /> },
         { path: '/assigner', element: <AssignerPage setUserViewModel={setUserViewModel} /> },
         { path: '/print/certificate/:personId', element: <PrintCertificatePage /> },
         { path: '/shop', element: <AssignerShopPage /> },

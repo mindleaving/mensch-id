@@ -116,14 +116,14 @@ namespace Mensch.Id.API.AccessControl
             var account = await accountStore.GetExternalByIdAsync(loginProvider, externalId);
             var menschIdClaims = claimsBuilder.BuildForExternalLoginProvider(account);
             var token = securityTokenBuilder.Build(menschIdClaims);
-            return AuthenticationResult.Success(token, account.AccountType);
+            return AuthenticationResult.Success(menschIdClaims, token, account.AccountType);
         }
 
         public AuthenticationResult BuildSecurityTokenForUser(LocalAnonymousAccount account)
         {
             var claims = claimsBuilder.BuildForLocalUser(account);
             var token = securityTokenBuilder.Build(claims);
-            return AuthenticationResult.Success(token, account.AccountType);
+            return AuthenticationResult.Success(claims, token, account.AccountType);
         }
     }
 }

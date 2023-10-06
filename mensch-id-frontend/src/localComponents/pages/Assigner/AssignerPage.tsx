@@ -18,7 +18,7 @@ interface AssignerPageProps {
 export const AssignerPage = (props: AssignerPageProps) => {
 
     const { setUserViewModel } = props;
-    const assignerProfile = useContext(UserContext)! as ViewModels.AssignerAccountViewModel;
+    const user = useContext(UserContext)! as ViewModels.AssignerAccountViewModel;
 
     const [ birthDate, setBirthDate ] = useState<string>('');
     const [ idCandidate, setIdCandidate ] = useState<string>();
@@ -29,7 +29,7 @@ export const AssignerPage = (props: AssignerPageProps) => {
     });
 
     useEffect(() => {
-        if(assignerProfile) {
+        if(user) {
             return;
         }
         const loadAssignerProfile = buildLoadObjectFunc(

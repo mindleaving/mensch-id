@@ -21,6 +21,7 @@ namespace Mensch.Id.API.AccessControl
 
         public const string Audience = "mensch.ID";
         public const string Issuer = "mensch.ID";
+        public const string AccessTokenCookieName = "X-Access-Token";
 
         public string Build(IEnumerable<Claim> claims)
         {

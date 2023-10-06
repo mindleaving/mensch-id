@@ -6,6 +6,7 @@ public class AssignerAccount : LocalAccount
 
     public string Name { get; set; }
     public string LogoId { get; set; }
+    public string LogoImageType { get; set; }
 
     public Contact Contact { get; set; }
 }

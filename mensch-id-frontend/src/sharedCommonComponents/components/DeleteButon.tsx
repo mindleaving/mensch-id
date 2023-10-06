@@ -8,6 +8,8 @@ interface DeleteButtonProps {
     requireConfirm: boolean;
     confirmDialogTitle?: string;
     confirmDialogMessage?: string;
+    type?: "button" | "submit" | "reset";
+    size?: "sm" | "lg";
     className?: string;
 }
 
@@ -37,7 +39,9 @@ export const DeleteButton = (props: DeleteButtonProps) => {
 
     return (
         <AsyncButton
+            type={props.type}
             variant="danger"
+            size={props.size}
             className={props.className ?? 'm-2'}
             activeText={resolveText('Delete')}
             executingText={resolveText('Deleting...')}

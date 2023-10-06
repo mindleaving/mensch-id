@@ -71,7 +71,10 @@ function App() {
         }
         setIsLoggedIn(true);
         setAccountType(authenticationResult.accountType!);
-        switch(authenticationResult.accountType) {
+    }
+
+    useEffect(() => {
+        switch (accountType) {
             case AccountType.Admin:
                 navigate('/');
                 break;
@@ -82,7 +85,7 @@ function App() {
                 navigate('/me');
                 break;
         }
-    }
+    }, [ accountType, navigate ]);
 
     const routes = useMemo(() => {
         switch(accountType) {

@@ -1,11 +1,12 @@
-import { Models } from './models.d';
+import { Models, System } from './models.d';
 import * as Enums from './enums.d';
 
 export namespace ViewModels {
     interface AssignerAccountViewModel extends ViewModels.IUserViewModel {
         accountId: string;
         name: string;
-        logoUrl: string;
+        logoId?: string;
+        logoImageType?: string;
         contactInformation: Models.Contact;
     }
 

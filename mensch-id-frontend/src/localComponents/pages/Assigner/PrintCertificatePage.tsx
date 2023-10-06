@@ -12,6 +12,7 @@ import { MenschId } from '../../components/MenschId';
 import UserContext from '../../contexts/UserContext';
 import { formatOwnershipSecret } from '../../helpers/OwnershipSecretFormatter';
 import { ViewModels } from '../../types/viewModels';
+import { apiClient } from '../../../sharedCommonComponents/communication/ApiClient';
 
 interface PrintCertificatePageProps {}
 
@@ -73,9 +74,15 @@ export const PrintCertificatePage = (props: PrintCertificatePageProps) => {
                 </div>
                 {assignerProfile
                 ? <div id='assigner-logo'>
-                    {assignerProfile.logoUrl ? <img src={assignerProfile.logoUrl} width='100%' alt='assigner-logo' className='mb-2' />
-                        : assignerProfile.name ? <span id='assigner-name'>{assignerProfile.name}</span>
-                            : null}
+                    {assignerProfile.logoId 
+                    ? <img 
+                        src={apiClient.instance!.buildUrl(`/api/assigner/${assignerProfile.accountId}/logo/${assignerProfile.logoId}`)} 
+                        width='100%' 
+                        alt='assigner-logo' 
+                        className='mb-2'
+                    />
+                    : assignerProfile.name ? <span id='assigner-name'>{assignerProfile.name}</span>
+                    : null}
                 </div> : null}
                 <div id='certificate-info'>
                     <p className='mt-5'>

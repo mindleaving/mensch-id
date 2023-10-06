@@ -15,7 +15,7 @@ namespace Mensch.Id.API.Setups
         public void Run(IServiceCollection services, IConfiguration configuration)
         {
             SetupMongoDB(services, configuration);
-            SetupStores(services);
+            SetupStores(services, configuration);
         }
 
         private void SetupMongoDB(IServiceCollection services, IConfiguration configuration)
@@ -37,12 +37,16 @@ namespace Mensch.Id.API.Setups
                 });
         }
 
-        private static void SetupStores(IServiceCollection services)
+        private static void SetupStores(
+            IServiceCollection services,
+            IConfiguration configuration)
         {
             SetupTypeStores<Account>(services);
             services.AddScoped<IAccountStore, AccountStore>();
             SetupTypeStores<AssignerAccountRequest>(services);
             SetupTypeStores<AssignerControlledProfile>(services);
+            services.Configure<FileStoreSettings>(configuration.GetSection(FileStoreSettings.AppSettingsSectionName));
+            services.AddScoped<IFilesStore, FilesStore>();
             services.AddScoped<IIdStore, IdStore>();
             SetupTypeStores<MenschIdChallenge>(services);
             SetupTypeStores<MenschId>(services);

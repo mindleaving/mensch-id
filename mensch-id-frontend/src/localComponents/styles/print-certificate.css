@@ -1,5 +1,5 @@
 #logo {
-    position: fixed;
+    position: absolute;
     top: 10mm;
     left: 10mm;
     padding: 3mm;
@@ -11,13 +11,40 @@
     border-radius: 10%;
 }
 #assigner-logo {
-    position: fixed;
+    position: absolute;
     top: 10mm;
     right: 10mm;
     width: 60mm;
 }
 #assigner-name {
     font-weight: bold;
+}
+#certificate-info {
+    margin-top: 70mm;
+}
+
+
+@media screen {
+    #print-area {
+        position: relative;
+        top: 0;
+        width: 210mm;
+        height: 297mm;
+        padding: 10mm;
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 30px;
+        border: 1px solid black;
+    }
+
+    #about-menschid {
+        position: absolute;
+        width: 190mm;
+        bottom: 10mm;
+    }
+    #certificate-info {
+        width: 190mm;
+    }
 }
 
 @media print {
@@ -32,14 +59,9 @@
         right: 0;
     }
 
-    #certificate-info {
-        margin-top: 70mm;
-    }
-
     #about-menschid {
         position: fixed;
-        bottom: 10mm;
-        
+        bottom: 0mm;
     }
 
     @page {

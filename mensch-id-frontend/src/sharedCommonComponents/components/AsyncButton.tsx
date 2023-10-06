@@ -2,7 +2,7 @@ import { ReactNode } from "react"
 import { Button } from "react-bootstrap";
 
 interface AsyncButtonProps {
-    type?: "button" | "submit" | "reset" | undefined;
+    type?: "button" | "submit" | "reset";
     form?: string;
     onClick?: () => void;
     variant?: string;

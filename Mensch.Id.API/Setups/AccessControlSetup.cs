@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Security;
 using System.Security.Cryptography;
+using System.Threading.Tasks;
 using Mensch.Id.API.AccessControl;
 using Mensch.Id.API.AccessControl.EventHandlers;
 using Mensch.Id.API.AccessControl.Policies;
-using Mensch.Id.API.Models;
 using Mensch.Id.API.Models.AccessControl;
 using Mensch.Id.API.Workflow;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -57,6 +57,18 @@ namespace Mensch.Id.API.Setups
                             ValidTypes = new[] { "JWT" },
                             ValidAudience = JwtSecurityTokenBuilder.Audience,
                             ValidIssuer = JwtSecurityTokenBuilder.Issuer
+                        };
+                        // Events can be null
+                        // ReSharper disable once ConstantNullCoalescingCondition
+                        options.Events ??= new();
+                        options.Events.OnMessageReceived = context => {
+
+                            if (context.Request.Cookies.ContainsKey(JwtSecurityTokenBuilder.AccessTokenCookieName))
+                            {
+                                context.Token = context.Request.Cookies[JwtSecurityTokenBuilder.AccessTokenCookieName];
+                            }
+
+                            return Task.CompletedTask;
                         };
                     })
                 .AddGoogle(
