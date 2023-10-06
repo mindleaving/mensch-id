@@ -10,11 +10,19 @@ namespace Mensch.Id.API.Workflow.Email
     public class EmailComposer
     {
         private readonly EmailSettings settings;
+        private readonly string baseUrl;
 
         public EmailComposer(
             IOptions<EmailSettings> settings)
         {
             this.settings = settings.Value;
+            baseUrl = NormalizeBaseUrl(settings.Value.WebsiteBaseUrl);
+        }
+
+        private string NormalizeBaseUrl(
+            string websiteBaseUrl)
+        {
+            return websiteBaseUrl.EndsWith("/") ? websiteBaseUrl[..^1] : websiteBaseUrl;
         }
 
         public MimeMessage Compose(
@@ -29,7 +37,7 @@ namespace Mensch.Id.API.Workflow.Email
                 Text = Translate(PasswordResetEmailContent.Message, email.PreferedLanguage)
                     .Replace(
                         PasswordResetEmailContent.ResetLinkPlaceholder, 
-                        $"https://mensch.id/reset-password?accountId={email.AccountId}&token={HttpUtility.UrlEncode(email.ResetToken)}")
+                        $"{baseUrl}/reset-password?accountId={email.AccountId}&token={HttpUtility.UrlEncode(email.ResetToken)}")
             };
             return message;
         }
@@ -46,7 +54,7 @@ namespace Mensch.Id.API.Workflow.Email
                 Text = Translate(VerificationEmailContent.Message, email.PreferedLanguage)
                     .Replace(
                         VerificationEmailContent.VerificationLinkPlaceholder, 
-                        $"https://mensch.id/verify-email?accountId={email.AccountId}&token={HttpUtility.UrlEncode(email.VerificationToken)}")
+                        $"{baseUrl}/verify-email?accountId={email.AccountId}&token={HttpUtility.UrlEncode(email.VerificationToken)}")
             };
             return message;
         }
@@ -66,7 +74,7 @@ namespace Mensch.Id.API.Workflow.Email
                         email.Name)
                     .Replace(
                         PasswordResetEmailContent.ResetLinkPlaceholder, 
-                        $"https://mensch.id/reset-password?accountId={email.AccountId}&token={HttpUtility.UrlEncode(email.ResetToken)}")
+                        $"{baseUrl}/reset-password?accountId={email.AccountId}&token={HttpUtility.UrlEncode(email.ResetToken)}")
             };
             return message;
         }

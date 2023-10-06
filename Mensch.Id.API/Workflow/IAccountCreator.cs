@@ -12,7 +12,7 @@ namespace Mensch.Id.API.Workflow
             string menschId = null);
 
         Task<LocalAccount> CreateLocal(
-            string username,
+            string email,
             string password,
             Language preferedLanguage = Language.en,
             string menschId = null);

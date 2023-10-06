@@ -3,7 +3,7 @@ import { Button, FormCheck, FormGroup, Table } from "react-bootstrap";
 import { AsyncButton } from "../../../sharedCommonComponents/components/AsyncButton";
 import { LoadingTableRow } from "../../../sharedCommonComponents/components/LoadingTableRow";
 import { NoEntriesTableRow } from "../../../sharedCommonComponents/components/NoEntriesTableRow";
-import { showSuccessAlert } from "../../../sharedCommonComponents/helpers/AlertHelpers";
+import { openConfirmDeleteAlert, showSuccessAlert } from "../../../sharedCommonComponents/helpers/AlertHelpers";
 import { deleteObject } from "../../../sharedCommonComponents/helpers/DeleteHelpers";
 import { resolveText } from "../../../sharedCommonComponents/helpers/Globalizer";
 import { buildLoadObjectFunc } from "../../../sharedCommonComponents/helpers/LoadingHelpers";
@@ -77,7 +77,20 @@ export const ShopOrdersPage = (props: ShopOrdersPageProps) => {
         );
     }
 
-    const reject = async (id: string) => {
+    const reject = async (id: string, force: boolean = false) => {
+        if(!force) {
+            const order = orders.find(x => x.id === id);
+            if(!order) {
+                return;
+            }
+            openConfirmDeleteAlert(
+                order.invoiceAddress.name,
+                resolveText("Order_ConfirmDelete_Title"),
+                resolveText("Order_ConfirmDelete_Message"),
+                () => reject(id, true)
+            );
+            return;
+        }
         setIsSubmitting(true);
         await deleteObject(
             `api/shop/orders/${id}`, {},
@@ -118,8 +131,8 @@ export const ShopOrdersPage = (props: ShopOrdersPageProps) => {
                 </tr>
             </thead>
             <tbody>
-                {isLoading ? <LoadingTableRow colSpan={4} />
-                : orders.length === 0 ? <NoEntriesTableRow colSpan={4} />
+                {isLoading ? <LoadingTableRow colSpan={6} />
+                : orders.length === 0 ? <NoEntriesTableRow colSpan={6} />
                 : orders.map(order => (
                     <tr key={order.id}>
                         <td>

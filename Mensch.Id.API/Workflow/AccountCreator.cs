@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Threading.Tasks;
 using Mensch.Id.API.AccessControl;
 using Mensch.Id.API.Models;
@@ -10,12 +11,12 @@ namespace Mensch.Id.API.Workflow
 {
     public class AccountCreator : IAccountCreator
     {
-        private readonly IStore<Account> accountStore;
+        private readonly IAccountStore accountStore;
         private readonly IExternalLoginObscurer externalLoginObscurer;
         private readonly IPasswordHasher<LocalAnonymousAccount> passwordHasher;
 
         public AccountCreator(
-            IStore<Account> accountStore,
+            IAccountStore accountStore,
             IExternalLoginObscurer externalLoginObscurer,
             IPasswordHasher<LocalAnonymousAccount> passwordHasher)
         {
@@ -29,6 +30,12 @@ namespace Mensch.Id.API.Workflow
             Language preferedLanguage = Language.en,
             string menschId = null)
         {
+            if (menschId != null)
+            {
+                var existingAccount = await accountStore.FirstOrDefaultAsync(x => x is LocalAnonymousAccount && x.PersonId == menschId);
+                if (existingAccount != null)
+                    throw new DuplicateNameException("An account with the same email already exists");
+            }
             var accountId = Guid.NewGuid().ToString();
             var account = new LocalAnonymousAccount
             {
@@ -42,17 +49,20 @@ namespace Mensch.Id.API.Workflow
         }
 
         public async Task<LocalAccount> CreateLocal(
-            string username,
+            string email,
             string password,
             Language preferedLanguage = Language.en,
             string menschId = null)
         {
+            var existingAccount = await accountStore.GetLocalByEmailAsync(email);
+            if (existingAccount != null)
+                throw new DuplicateNameException("An account with the same email already exists");
             var accountId = Guid.NewGuid().ToString();
             var emailVerificationAndPasswordResetSalt = Convert.ToBase64String(PasswordHasher.CreateSalt());
             var account = new LocalAccount
             {
                 Id = accountId,
-                Email = username,
+                Email = email,
                 IsEmailVerified = false,
                 EmailVerificationAndPasswordResetSalt = emailVerificationAndPasswordResetSalt,
                 PreferedLanguage = preferedLanguage,
@@ -69,6 +79,9 @@ namespace Mensch.Id.API.Workflow
             Language preferedLanguage = Language.en,
             string menschId = null)
         {
+            var existingAccount = await accountStore.GetExternalByIdAsync(loginProvider, externalId);
+            if (existingAccount != null)
+                throw new DuplicateNameException("An account already exists for this external login");
             var account = new ExternalAccount
             {
                 Id = Guid.NewGuid().ToString(),
@@ -87,6 +100,9 @@ namespace Mensch.Id.API.Workflow
             string password,
             Language preferedLanguage = Language.en)
         {
+            var existingAccount = await accountStore.GetLocalByEmailAsync(email);
+            if (existingAccount != null)
+                throw new DuplicateNameException("An account with the same email already exists");
             var accountId = Guid.NewGuid().ToString();
             var emailVerificationAndPasswordResetSalt = Convert.ToBase64String(PasswordHasher.CreateSalt());
             var account = new AssignerAccount

@@ -173,6 +173,8 @@ public class AssignerController : ControllerBase
         [FromRoute] string personId,
         [FromQuery] bool signed = false)
     {
+        if (!ControllerInputSanitizer.ValidateAndSanitzeMenschId(personId, out personId))
+            return BadRequest("Invalid person-ID");
         var profile = await assignerControlledProfileStore.GetByIdAsync(personId);
         if (profile == null)
             return NotFound();

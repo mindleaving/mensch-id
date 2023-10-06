@@ -15,7 +15,7 @@ namespace Mensch.Id.API.Workflow.Email
         public static readonly Dictionary<Language, string> Message = new()
         {
             { Language.en, $"Dear {NamePlaceholder}.\r\n\r\n"
-                           + $"Your assigner account has been approved. You can not assign mensch.IDs for other people. Please remember to provide them with their ownership certificates.\r\n\r\n"
+                           + $"Your assigner account has been approved. You can now assign mensch.IDs for other people. Please remember to provide them with their ownership certificates.\r\n\r\n"
                            + $"To set your password click the link below or copy it into your browser.\r\n{PasswordResetEmailContent.ResetLinkPlaceholder}" }
         };
     }

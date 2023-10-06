@@ -7,4 +7,5 @@ public class EmailSettings
     public string SmtpServerName { get; set; }
     public ushort SmtpServerPort { get; set; }
     public string FromAddress { get; set; }
+    public string WebsiteBaseUrl { get; set; }
 }

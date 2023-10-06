@@ -8,10 +8,14 @@ namespace Mensch.Id.API.Models
     {
         [Required]
         public AccountType AccountType { get; set; }
+
         [TypescriptIsOptional]
+        [EmailAddress]
         public string Email { get; set; }
+
         [Required]
         public string Password { get; set; }
+
         public Language? PreferedLanguage { get; set; }
     }
 }

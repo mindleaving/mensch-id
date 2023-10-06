@@ -110,6 +110,8 @@ namespace Mensch.Id.API.Controllers
             [FromRoute] string accountId,
             [FromQuery] string token)
         {
+            if (!ControllerInputSanitizer.ValidateAndSanitizeMandatoryId(accountId, out accountId))
+                return BadRequest("Invalid account-ID");
             var account = await store.GetByIdAsync(accountId);
             if (account == null)
                 return NotFound();
@@ -157,7 +159,9 @@ namespace Mensch.Id.API.Controllers
         {
             if (accountId != null && accountId != body.AccountId)
                 return BadRequest("Account ID of body doesn't match route");
-            var account = await store.GetByIdAsync(body.AccountId);
+            if (!ControllerInputSanitizer.ValidateAndSanitizeMandatoryId(body.AccountId, out accountId))
+                return BadRequest("Invalid account-ID");
+            var account = await store.GetByIdAsync(accountId);
             if (account == null)
                 return NotFound();
             if (account is not LocalAccount localAccount)
@@ -233,6 +237,9 @@ namespace Mensch.Id.API.Controllers
                 }
                 case AccountType.External:
                     return BadRequest($"Invalid account type '{body.AccountType}'");
+                case AccountType.Assigner:
+                case AccountType.Admin:
+                    return StatusCode((int)HttpStatusCode.Forbidden);
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -241,7 +248,8 @@ namespace Mensch.Id.API.Controllers
 
         [AllowAnonymous]
         [HttpPost("login")]
-        public async Task<IActionResult> LocalLogin([FromBody] LoginInformation loginInformation)
+        public async Task<IActionResult> LocalLogin(
+            [FromBody] LoginInformation loginInformation)
         {
             if (loginInformation == null)
                 return BadRequest("No login information provided");
@@ -391,9 +399,11 @@ namespace Mensch.Id.API.Controllers
         {
             if (body.AccountId != accountId)
                 return BadRequest("Account ID in body doesn't match route");
+            if (!ControllerInputSanitizer.ValidateAndSanitizeMandatoryId(body.AccountId, out accountId))
+                return BadRequest("Invalid account-ID");
             if(body.NewPassword.Length < MinimumPasswordLength)
                 return BadRequest($"Password too short. Must be at least {MinimumPasswordLength} characters long.");
-            var authenticationResult = await authenticationModule.AuthenticateLocalByAccountIdAsync(body.AccountId, body.CurrentPassword);
+            var authenticationResult = await authenticationModule.AuthenticateLocalByAccountIdAsync(accountId, body.CurrentPassword);
             if (!authenticationResult.IsAuthenticated)
             {
                 switch (authenticationResult.Error)
@@ -412,7 +422,7 @@ namespace Mensch.Id.API.Controllers
 
             if (authenticationResult.AccountType == AccountType.External)
                 return BadRequest("Cannot change password for external account");
-            if(await authenticationModule.ChangePasswordAsync(body.AccountId, body.NewPassword))
+            if(await authenticationModule.ChangePasswordAsync(accountId, body.NewPassword))
                 return Ok();
             return StatusCode((int)HttpStatusCode.InternalServerError);
         }
@@ -422,6 +432,8 @@ namespace Mensch.Id.API.Controllers
         public async Task<IActionResult> DeleteAccount(
             [FromRoute] string accountId)
         {
+            if (!ControllerInputSanitizer.ValidateAndSanitizeMandatoryId(accountId, out accountId))
+                return BadRequest("Invalid account-ID");
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
             var personId = ClaimsHelpers.GetPersonId(claims);
             var matchingAccount = await store.GetByIdAsync(accountId);

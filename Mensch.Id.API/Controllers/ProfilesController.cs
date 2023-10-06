@@ -73,8 +73,8 @@ namespace Mensch.Id.API.Controllers
         [HttpPost("claim/{id}")]
         public async Task<IActionResult> ClaimId([FromRoute] string id)
         {
-            if (!MenschIdGenerator.ValidateId(id))
-                return BadRequest($"Invalid mensch.ID {id}");
+            if (!ControllerInputSanitizer.ValidateAndSanitzeMenschId(id, out id))
+                return BadRequest("Invalid mensch.ID");
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
             var account = await accountStore.GetFromClaimsAsync(claims);
             if (account.PersonId != null)
@@ -119,9 +119,11 @@ namespace Mensch.Id.API.Controllers
         }
 
         [HttpPost("take-control")]
-        public async Task<IActionResult> TakeControlOfId([FromBody] TakeControlBody body)
+        public async Task<IActionResult> TakeControlOfId(
+            [FromBody] TakeControlBody body)
         {
-            var personId = body.Id;
+            if (!ControllerInputSanitizer.ValidateAndSanitzeMenschId(body.Id, out var personId))
+                return BadRequest("Invalid mensch.ID");
             var owningAccount = await accountStore.FirstOrDefaultAsync(x => x.PersonId == personId);
             if (owningAccount != null)
                 return StatusCode((int)HttpStatusCode.Forbidden, "ID is controlled by another account already");
@@ -176,6 +178,8 @@ namespace Mensch.Id.API.Controllers
         [HttpPost("{id}/verify")]
         public async Task<IActionResult> VerifyPerson([FromRoute] string id)
         {
+            if (!ControllerInputSanitizer.ValidateAndSanitzeMenschId(id, out id))
+                return BadRequest("Invalid mensch.ID");
             var targetProfile = await personStore.GetByIdAsync(id);
             if (targetProfile == null)
                 return NotFound();

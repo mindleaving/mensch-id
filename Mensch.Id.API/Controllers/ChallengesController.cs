@@ -32,6 +32,8 @@ namespace Mensch.Id.API.Controllers
         [HttpGet("{challengeId}")]
         public async Task<IActionResult> GetChallengeById(string challengeId)
         {
+            if (!ControllerInputSanitizer.ValidateAndSanitizeMandatoryId(challengeId, out challengeId))
+                return BadRequest("Invalid challenge-ID");
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
             var account = await accountStore.GetFromClaimsAsync(claims);
             if (account.PersonId == null)
@@ -70,8 +72,11 @@ namespace Mensch.Id.API.Controllers
 
 
         [HttpDelete("{challengeId}")]
-        public async Task<IActionResult> DeleteChallenge([FromRoute] string challengeId)
+        public async Task<IActionResult> DeleteChallenge(
+            [FromRoute] string challengeId)
         {
+            if (!ControllerInputSanitizer.ValidateAndSanitizeMandatoryId(challengeId, out challengeId))
+                return BadRequest("Invalid challenge-ID");
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
             var account = await accountStore.GetFromClaimsAsync(claims);
             if (account.PersonId == null)

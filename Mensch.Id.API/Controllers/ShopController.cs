@@ -120,6 +120,8 @@ namespace Mensch.Id.API.Controllers
         public async Task<IActionResult> CancelOrder(
             [FromRoute] string id)
         {
+            if (!ControllerInputSanitizer.ValidateAndSanitizeMandatoryId(id, out id))
+                return BadRequest("Invalid order-ID");
             var accountId = ControllerHelpers.GetAccountId(httpContextAccessor);
             var order = await orderStore.GetByIdAsync(id);
             if (order == null || order.OrderedByAccountId != accountId)
@@ -133,6 +135,8 @@ namespace Mensch.Id.API.Controllers
         public async Task<IActionResult> MarkOrderAsReceived(
             [FromRoute] string id)
         {
+            if (!ControllerInputSanitizer.ValidateAndSanitizeMandatoryId(id, out id))
+                return BadRequest("Invalid order-ID");
             var accountId = ControllerHelpers.GetAccountId(httpContextAccessor);
             var order = await orderStore.GetByIdAsync(id);
             if (order == null || order.OrderedByAccountId != accountId)
@@ -147,6 +151,8 @@ namespace Mensch.Id.API.Controllers
         public async Task<IActionResult> AcceptOrder(
             [FromRoute] string id)
         {
+            if (!ControllerInputSanitizer.ValidateAndSanitizeMandatoryId(id, out id))
+                return BadRequest("Invalid order-ID");
             var order = await orderStore.GetByIdAsync(id);
             if (order == null)
                 return NotFound();
@@ -160,6 +166,8 @@ namespace Mensch.Id.API.Controllers
         public async Task<IActionResult> FulfillOrder(
             [FromRoute] string id)
         {
+            if (!ControllerInputSanitizer.ValidateAndSanitizeMandatoryId(id, out id))
+                return BadRequest("Invalid order-ID");
             var order = await orderStore.GetByIdAsync(id);
             if (order == null)
                 return NotFound();
@@ -173,6 +181,8 @@ namespace Mensch.Id.API.Controllers
         public async Task<IActionResult> DeleteOrder(
             [FromRoute] string id)
         {
+            if (!ControllerInputSanitizer.ValidateAndSanitizeMandatoryId(id, out id))
+                return BadRequest("Invalid order-ID");
             await orderStore.DeleteAsync(id);
             return Ok();
         }

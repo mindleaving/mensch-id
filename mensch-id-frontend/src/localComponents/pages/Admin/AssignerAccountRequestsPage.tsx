@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
-import { Table, Button } from "react-bootstrap";
+import { Table } from "react-bootstrap";
 import { LoadingTableRow } from "../../../sharedCommonComponents/components/LoadingTableRow";
 import { NoEntriesTableRow } from "../../../sharedCommonComponents/components/NoEntriesTableRow";
-import { showSuccessAlert } from "../../../sharedCommonComponents/helpers/AlertHelpers";
+import { openConfirmDeleteAlert, showSuccessAlert } from "../../../sharedCommonComponents/helpers/AlertHelpers";
 import { resolveText } from "../../../sharedCommonComponents/helpers/Globalizer";
 import { buildLoadObjectFunc } from "../../../sharedCommonComponents/helpers/LoadingHelpers";
 import { sendPostRequest } from "../../../sharedCommonComponents/helpers/StoringHelpers";
 import { Models } from "../../types/models";
+import { deleteObject } from "../../../sharedCommonComponents/helpers/DeleteHelpers";
+import { AsyncButton } from "../../../sharedCommonComponents/components/AsyncButton";
 
 interface AssignerAccountRequestsPageProps {}
 
@@ -14,6 +16,7 @@ export const AssignerAccountRequestsPage = (props: AssignerAccountRequestsPagePr
 
     const [ isLoading, setIsLoading ] = useState<boolean>(true);
     const [ requests, setRequests ] = useState<Models.AssignerAccountRequest[]>([]);
+    const [ isSubmitting, setIsSubmitting ] = useState<boolean>(false);
 
     useEffect(() => {
         setIsLoading(true);
@@ -27,28 +30,46 @@ export const AssignerAccountRequestsPage = (props: AssignerAccountRequestsPagePr
         loadRequests();
     }, []);
 
-    const reject = async (id: string) => {
-
+    const reject = async (id: string, force: boolean = false) => {
+        if(!force) {
+            const request = requests.find(x => x.id === id);
+            if(!request) {
+                return;
+            }
+            openConfirmDeleteAlert(
+                request.contactPersonName,
+                resolveText("AssignerAccountRequest_ConfirmDelete_Title"),
+                resolveText("AssignerAccountRequest_ConfirmDelete_Message"),
+                () => reject(id, true)
+            );
+            return;
+        }
+        setIsSubmitting(true);
+        await deleteObject(
+            `api/admin/assigner-requests/${id}`, {},
+            resolveText("AssignerAccountRequest_SuccessfullyDeleted"),
+            resolveText("AssignerAccountRequest_CouldNotDelete"),
+            () => {
+                setRequests(state => state.filter(x => x.id !== id));
+            },
+            undefined,
+            () => setIsSubmitting(false)
+        )
     }
 
     const accept = async (id: string) => {
+        setIsSubmitting(true);
         await sendPostRequest(
             `api/admin/assigner-requests/${id}/approve`, {},
             resolveText("AssignerAccountRequest_CouldNotApprove"),
             null,
             () => {
                 showSuccessAlert(resolveText("AssignerAccountRequest_SuccessfullyApproved"))
-                setRequests(state => state.map(request => {
-                    if(request.id === id) {
-                        return {
-                            ...request,
-                            isApproved: true
-                        };
-                    }
-                    return request;
-                }))
-            }
-        )
+                setRequests(state => state.filter(x => x.id !== id));
+            },
+            undefined,
+            () => setIsSubmitting(false)
+        );
     }
 
     return (
@@ -73,7 +94,11 @@ export const AssignerAccountRequestsPage = (props: AssignerAccountRequestsPagePr
                         <td>
                             <i 
                                 className="fa fa-trash red clickable"
-                                onClick={() => reject(request.id)}
+                                onClick={() => {
+                                    if(!isSubmitting) {
+                                        reject(request.id);
+                                    }
+                                }}
                             />
                         </td>
                         <td>
@@ -89,20 +114,22 @@ export const AssignerAccountRequestsPage = (props: AssignerAccountRequestsPagePr
                             {request.expectedAssignmentsPerYear}
                         </td>
                         <td>
-                            <Button
+                            <AsyncButton
                                 onClick={() => accept(request.id)}
                                 variant="success"
-                            >
-                                <i className="fa fa-check" /> {resolveText("Accept")}
-                            </Button>
+                                isExecuting={isSubmitting}
+                                activeText={<><i className="fa fa-check" /> {resolveText("Accept")}</>}
+                                executingText={resolveText("Submitting...")}
+                            />
                         </td>
                         <td>
-                            <Button
+                            <AsyncButton
                                 onClick={() => reject(request.id)}
                                 variant="danger"
-                            >
-                                <i className="fa fa-times" /> {resolveText("Reject")}
-                            </Button>
+                                isExecuting={isSubmitting}
+                                activeText={<><i className="fa fa-times" /> {resolveText("Reject")}</>}
+                                executingText={resolveText("Submitting...")}
+                            />
                         </td>
                     </tr>
                 ))}

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Models;
 using Mensch.Id.API.Storage;
 using Mensch.Id.API.Workflow;
@@ -40,6 +41,8 @@ namespace Mensch.Id.API.Controllers
             [FromRoute] string menschId,
             [FromQuery] int challengeLength = 6)
         {
+            if (!ControllerInputSanitizer.ValidateAndSanitzeMenschId(menschId, out menschId))
+                return BadRequest("Invalid mensch.ID");
             if (challengeLength < 1)
                 return BadRequest("Challenge length must be 1 or greater");
             if (challengeLength > MaxChallengeLength)
