@@ -100,11 +100,11 @@ export const uploadFile = (
     options?: {
         method?: "POST" | "PUT"
         contentType?: string,
-        accessToken?: string,
         onProgressChanged?: (progress: number) => void
     }): Promise<number> => {
 
     const xhr = new XMLHttpRequest();
+    xhr.withCredentials = true;
     return new Promise((resolve,reject) => {
         xhr.upload.addEventListener("progress", e => {
             if(e.lengthComputable && options?.onProgressChanged) {
@@ -120,9 +120,6 @@ export const uploadFile = (
         })
         xhr.open(options?.method ?? "POST", url, true);
         xhr.setRequestHeader("Content-Type", options?.contentType ?? "application/octet-stream");
-        if(options?.accessToken) {
-            xhr.setRequestHeader("Authorization", `Bearer ${options.accessToken}`);
-        }
         xhr.send(file);
     });
 }

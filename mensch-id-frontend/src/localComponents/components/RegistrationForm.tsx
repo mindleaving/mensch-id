@@ -1,19 +1,19 @@
 import React, { FormEvent, useState } from 'react';
 import { Alert, Col, Form, FormCheck, FormControl, FormGroup, FormLabel, Row } from 'react-bootstrap';
 import { AsyncButton } from '../../sharedCommonComponents/components/AsyncButton';
-import { RowFormGroup } from '../../sharedCommonComponents/components/FormControls/RowFormGroup';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { sendPostRequest } from '../../sharedCommonComponents/helpers/StoringHelpers';
 import { Models } from '../types/models';
 import { Center } from '../../sharedCommonComponents/components/Center';
 import { AccountType } from '../types/enums.d';
 import { confirmAlert } from 'react-confirm-alert';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { showErrorAlert } from '../../sharedCommonComponents/helpers/AlertHelpers';
 import PasswordFormControl from '../../sharedCommonComponents/components/FormControls/PasswordFormControl';
+import { TranslatedLinkText } from './TranslatedLinkText';
 
 interface RegistrationFormProps {
-    onLoggedIn: (authenticationResult: Models.AuthenticationResult) => void;
+    onLoggedIn: (isLoggedInResponse: Models.IsLoggedInResponse) => void;
 }
 
 export const RegistrationForm = (props: RegistrationFormProps) => {
@@ -69,8 +69,8 @@ export const RegistrationForm = (props: RegistrationFormProps) => {
             async response => {
                 setHasBeenRegistered(true);
                 if(registrationInformation.accountType === AccountType.LocalAnonymous) {
-                    const authenticationResult = await response.json() as Models.AuthenticationResult;
-                    props.onLoggedIn(authenticationResult);
+                    const isLoggedInResponse = await response.json() as Models.IsLoggedInResponse;
+                    props.onLoggedIn(isLoggedInResponse);
                 } else {
                     navigate("/");
                 }
@@ -89,14 +89,6 @@ export const RegistrationForm = (props: RegistrationFormProps) => {
                 {text}
             </Alert>
         );
-    }
-
-    const insertLink = (str: string, linkTarget: string) => {
-        const placeholderGroup = str.match(/^(.*)\{(.+)\}(.*)$/);
-        if(!placeholderGroup) {
-            return str;
-        }
-        return (<>{placeholderGroup[1]}<Link to={linkTarget} target="_blank">{placeholderGroup[2]}</Link>{placeholderGroup[3]}</>);
     }
 
     return (
@@ -170,7 +162,10 @@ export const RegistrationForm = (props: RegistrationFormProps) => {
             {selectedAccountType === AccountType.Local
             ? <FormGroup>
                 <FormCheck required
-                    label={insertLink(resolveText("Register_AcceptPrivacy"), "/privacy")}
+                    label={<TranslatedLinkText
+                        translatedTextWithPlaceholder={resolveText("Register_AcceptPrivacy")}
+                        linkTarget={"/privacy"}
+                    />}
                     checked={acceptPrivacy}
                     onChange={(e:any) => setAcceptPrivacy(e.target.checked)}
                 />
@@ -178,7 +173,10 @@ export const RegistrationForm = (props: RegistrationFormProps) => {
             : null}
             <FormGroup>
                 <FormCheck required
-                    label={insertLink(resolveText("Register_AcceptTermsOfService"), "/terms-of-service")}
+                    label={<TranslatedLinkText
+                        translatedTextWithPlaceholder={resolveText("Register_AcceptTermsOfService")}
+                        linkTarget={"/terms-of-service"}
+                    />}
                     checked={acceptTermsOfService}
                     onChange={(e:any) => setAcceptTermsOfService(e.target.checked)}
                 />

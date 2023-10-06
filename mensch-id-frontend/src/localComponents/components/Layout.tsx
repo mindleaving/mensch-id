@@ -9,6 +9,7 @@ import { ToastContainer } from 'react-toastify';
 import { CommonMenu } from './Menus/CommonMenu';
 import { LoadingAlert } from '../../sharedCommonComponents/components/LoadingAlert';
 import { AdminMenu } from './Menus/AdminMenu';
+import { sendPostRequest } from '../../sharedCommonComponents/helpers/StoringHelpers';
 
 interface LayoutProps {
     isLoggedIn: boolean;
@@ -36,6 +37,15 @@ export const Layout = (props: PropsWithChildren<LayoutProps>) => {
         }
     }
 
+    const logOut = async () => {
+        await sendPostRequest(
+            `api/accounts/logout`, {},
+            resolveText('CouldNotLogOut'),
+            null,
+            onLogOut
+        );
+    }
+
     return (
         <>
             <ToastContainer 
@@ -59,7 +69,7 @@ export const Layout = (props: PropsWithChildren<LayoutProps>) => {
                         ? <Navbar.Text>
                             <Button 
                                 variant='danger' 
-                                onClick={onLogOut}
+                                onClick={logOut}
                             >
                                 {resolveText("LogOut")}
                             </Button>

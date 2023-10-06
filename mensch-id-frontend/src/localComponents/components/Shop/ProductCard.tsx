@@ -42,7 +42,15 @@ export const ProductCard = (props: ProductCardProps) => {
             <Card.Body>
                 <Center>
                     {product.imageUrl
-                    ? <img src={product.imageUrl} alt={product.name} width='80%' />
+                    ? <div style={{ 
+                        width: '80%', 
+                        height: '280px', 
+                        marginLeft: 'auto', 
+                        marginRight: 'auto', 
+                        overflow: 'clip' 
+                    }}>
+                        <img src={product.imageUrl} alt={product.name} width='100%' />
+                    </div>
                     : <div className="border border-solid p-3">
                         No image
                     </div>}

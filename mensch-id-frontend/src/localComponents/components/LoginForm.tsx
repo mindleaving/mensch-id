@@ -11,7 +11,7 @@ import { RegistrationForm } from './RegistrationForm';
 
 interface LoginFormProps {
     availableExternalProviders: LoginProvider[];
-    onLocalLogin: (authenticationResult: Models.AuthenticationResult) => void;
+    onLocalLogin: (isLoggedInResponse: Models.IsLoggedInResponse) => void;
     onLocalLoggingIn?: (loginInformation: Models.LoginInformation) => Promise<void>;
     onExternalProviderSelected: (loginProvider: LoginProvider) => void;
 }

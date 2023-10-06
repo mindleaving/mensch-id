@@ -8,7 +8,7 @@ import { sendPostRequest } from '../../../sharedCommonComponents/helpers/Storing
 import { Models } from '../../types/models';
 
 interface ResetPasswordPageProps {
-    onLoggedIn: (authenticationResult: Models.AuthenticationResult) => void;
+    onLoggedIn: (isLoggedInResponse: Models.IsLoggedInResponse) => void;
 }
 
 export const ResetPasswordPage = (props: ResetPasswordPageProps) => {
@@ -40,12 +40,10 @@ export const ResetPasswordPage = (props: ResetPasswordPageProps) => {
             resolveText("ResetPassword_CouldNotReset"),
             body,
             async response => {
-                const authenticationResult = await response.json() as Models.AuthenticationResult;
-                if(authenticationResult.isAuthenticated) {
-                    showSuccessAlert(resolveText("ResetPassword_SuccessfullyChanged"));
-                    showInfoAlert(resolveText("Redirecting..."));
-                    props.onLoggedIn(authenticationResult);
-                }
+                const isLoggedInResponse = await response.json() as Models.IsLoggedInResponse;
+                showSuccessAlert(resolveText("ResetPassword_SuccessfullyChanged"));
+                showInfoAlert(resolveText("Redirecting..."));
+                props.onLoggedIn(isLoggedInResponse);
             },
             undefined,
             () => setIsSubmitting(false)

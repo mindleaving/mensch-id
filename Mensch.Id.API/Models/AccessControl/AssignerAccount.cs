@@ -1,6 +1,6 @@
 ﻿namespace Mensch.Id.API.Models.AccessControl;
 
-public class AssignerAccount : LocalAccount
+public class AssignerAccount : ProfessionalAccount
 {
     public override AccountType AccountType => AccountType.Assigner;
 

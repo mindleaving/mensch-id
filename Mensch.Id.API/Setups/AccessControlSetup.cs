@@ -28,7 +28,7 @@ namespace Mensch.Id.API.Setups
 
             services.AddSingleton<IClaimBuilder, ClaimBuilder>();
             var jwtPrivateKey = GetOrGenerateJwtPrivateKey(configuration);
-            services.AddSingleton<ISecurityTokenBuilder>(_ => new JwtSecurityTokenBuilder(jwtPrivateKey, TimeSpan.FromMinutes(60)));
+            services.AddSingleton<ISecurityTokenBuilder>(_ => new JwtSecurityTokenBuilder(jwtPrivateKey));
             services.AddScoped<IAuthenticationModule, AuthenticationModule>();
             services.AddScoped<IAccountCreator, AccountCreator>();
             services.AddSingleton<IPasswordHasher<LocalAnonymousAccount>, PasswordHasher<LocalAnonymousAccount>>();

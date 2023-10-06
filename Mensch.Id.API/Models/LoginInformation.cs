@@ -6,14 +6,14 @@ namespace Mensch.Id.API.Models
     public class LoginInformation
     {
         [JsonConstructor]
-        public LoginInformation(string emailOrMenschId, string password)
+        public LoginInformation(string emailMenschIdOrUsername, string password)
         {
-            EmailOrMenschId = emailOrMenschId;
+            EmailMenschIdOrUsername = emailMenschIdOrUsername;
             Password = password;
         }
 
         [Required]
-        public string EmailOrMenschId { get; set; }
+        public string EmailMenschIdOrUsername { get; set; }
 
         [Required]
         public string Password { get; set; }

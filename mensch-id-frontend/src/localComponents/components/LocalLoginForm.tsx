@@ -14,13 +14,13 @@ import { ViewModels } from '../types/viewModels';
 
 interface LocalLoginFormProps {
     onSubmit?: (loginInformation: Models.LoginInformation) => Promise<void>;
-    onLoggedIn: (authenticationResult: Models.AuthenticationResult) => void;
+    onLoggedIn: (isLoggedInResponse: Models.IsLoggedInResponse) => void;
 }
 
 export const LocalLoginForm = (props: LocalLoginFormProps) => {
 
     const profileData = useContext(UserContext)! as ViewModels.ProfileViewModel;
-    const [ emailOrMenschID, setEmailOrMenschID ] = useState<string>(profileData?.id ?? '');
+    const [ username, setUsername ] = useState<string>(profileData?.id ?? '');
     const [ password, setPassword ] = useState<string>('');
     const [ isSubmitting, setIsSubmitting ] = useState<boolean>(false);
     const navigate = useNavigate();
@@ -29,7 +29,7 @@ export const LocalLoginForm = (props: LocalLoginFormProps) => {
         e?.preventDefault();
         setIsSubmitting(true);
         const loginInformation: Models.LoginInformation = {
-            emailOrMenschId: emailOrMenschID,
+            emailMenschIdOrUsername: username,
             password: password
         };
         if(props.onSubmit) {
@@ -41,17 +41,15 @@ export const LocalLoginForm = (props: LocalLoginFormProps) => {
         } else {
             try {
                 const response = await apiClient.instance!.post('api/accounts/login', loginInformation, {}, { handleError: false });
-                const authenticationResult = await response.json() as Models.AuthenticationResult;
-                if(!authenticationResult) {
+                if(!response.ok) {
+                    const error = await response.text() as AuthenticationErrorType;
+                    if(error === AuthenticationErrorType.EmailNotVerified && username.includes('@')) {
+                        navigate(`/verify-email?email=${encodeURIComponent(username)}`);
+                    }
                     throw new Error("Could not log in");
                 }
-                if(authenticationResult.isAuthenticated) {
-                    props.onLoggedIn(authenticationResult);
-                } else if(authenticationResult.error === AuthenticationErrorType.EmailNotVerified && emailOrMenschID.includes('@')) {
-                    navigate(`/verify-email?email=${encodeURIComponent(emailOrMenschID)}`);
-                } else {
-                    throw new Error("Could not log in");
-                }
+                const isLoggedInResponse = await response.json() as Models.IsLoggedInResponse;
+                props.onLoggedIn(isLoggedInResponse);
             } catch {
                 showErrorAlert(resolveText("Login_CouldNotLogIn"));
             } finally {
@@ -63,11 +61,11 @@ export const LocalLoginForm = (props: LocalLoginFormProps) => {
     return (
         <Form onSubmit={login}>
             <RowFormGroup required
-                label={`웃ID / ${resolveText("Email")}`}
+                label={`웃ID / ${resolveText("Email")} / ${resolveText("Username")}`}
                 id="username"
                 name='username'
-                value={emailOrMenschID}
-                onChange={setEmailOrMenschID}
+                value={username}
+                onChange={setUsername}
             />
             <RowFormGroup required
                 type='password'

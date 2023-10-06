@@ -10,7 +10,7 @@ import ResetPasswordPage from "../pages/UserManagement/ResetPasswordPage";
 import VerifyEmailPage from "../pages/UserManagement/VerifyEmailPage";
 
 interface NoUserRoutesProps {
-    onLoggedIn: (authenticationResult: Models.AuthenticationResult) => void;
+    onLoggedIn: (isLoggedInResponse: Models.IsLoggedInResponse) => void;
 }
 export const NoUserRoutes = (props: NoUserRoutesProps): RouteDefinition[] => {
 

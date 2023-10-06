@@ -47,7 +47,7 @@ namespace Mensch.Id.API.Storage
             return localAccounts.Cast<LocalAnonymousAccount>().ToList();
         }
 
-        public async Task<List<LocalAnonymousAccount>> GetLocalsByEmailOrMenschIdAsync(string emailOrMenschId)
+        public async Task<List<LocalAnonymousAccount>> GetLocalsByEmailMenschIdOrUsernameAsync(string emailOrMenschId)
         {
             if (MenschIdGenerator.ValidateId(emailOrMenschId))
             {
@@ -59,7 +59,23 @@ namespace Mensch.Id.API.Storage
                 if(localAccount != null)
                     return new List<LocalAnonymousAccount> { localAccount };
             }
+
+            var assignerOrAdminAccount = await GetAssignerOrAdminByUsername(emailOrMenschId);
+            if(assignerOrAdminAccount != null)
+                return new List<LocalAnonymousAccount> { assignerOrAdminAccount };
             return new List<LocalAnonymousAccount>();
+        }
+
+        private async Task<LocalAccount> GetAssignerOrAdminByUsername(
+            string username)
+        {
+            var assignerAccount = await collection.OfType<AssignerAccount>().Find(x => x.Username == username).FirstOrDefaultAsync();
+            if (assignerAccount != null)
+                return assignerAccount;
+            var adminAccount = await collection.OfType<AdminAccount>().Find(x => x.Username == username).FirstOrDefaultAsync();
+            if (adminAccount != null)
+                return adminAccount;
+            return null;
         }
 
         public Task<ExternalAccount> GetExternalByIdAsync(

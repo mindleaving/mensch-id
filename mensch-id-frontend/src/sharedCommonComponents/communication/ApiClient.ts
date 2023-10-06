@@ -1,5 +1,4 @@
 import { translateErrorMessage } from '../helpers/ErrorMessageTranslator';
-import { extractJwtBody } from '../helpers/JwtHelpers';
 import { buildUrl } from '../helpers/UrlBuilder';
 import { QueryParameters } from '../types/frontendTypes';
 import { ApiError } from './ApiError';
@@ -13,18 +12,15 @@ export interface ApiClientOptions {
 export class ApiClient {
     serverAddress: string;
     port: number;
-    accessToken: string | undefined;
-    expirationTime: Date | undefined;
     defaultOptions: ApiClientOptions;
 
     constructor(serverAddress: string, port: number) {
         this.serverAddress = serverAddress;
         this.port = port;
-        this.accessToken = undefined;
         this.defaultOptions = { 
             handleError: true, 
             contentType: 'application/json', 
-            includeCredentials: false,
+            includeCredentials: true,
             stringifyBody: true
         };
     }
@@ -61,16 +57,6 @@ export class ApiClient {
         return await this._sendRequest("DELETE", path, params, undefined, options);
     }
 
-    setAccessToken = (accessToken: string) => {
-        this.accessToken = accessToken;
-        this.expirationTime = new Date(extractJwtBody(accessToken).exp * 1000);
-    }
-
-    clearAccessToken = () => {
-        this.accessToken = undefined;
-        this.expirationTime = undefined;
-    }
-
     buildUrl = (path: string, params?: QueryParameters) => {
         return buildUrl(`https://${this.serverAddress}:${this.port}`, path, params);
     }
@@ -88,9 +74,6 @@ export class ApiClient {
         const headers: HeadersInit = {};
         if(effectiveOptions.contentType) {
             headers['Content-Type'] = effectiveOptions.contentType;
-        }
-        if(this.accessToken) {
-            headers['Authorization'] = `Bearer ${this.accessToken}`;
         }
         const response = await fetch(requestUrl, {
             method: method,

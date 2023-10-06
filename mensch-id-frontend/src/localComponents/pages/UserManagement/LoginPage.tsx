@@ -6,7 +6,7 @@ import { LoginForm } from '../../components/LoginForm';
 import { showInfoAlert } from '../../../sharedCommonComponents/helpers/AlertHelpers';
 
 interface LoginPageProps {
-    onLoggedIn: (authenticationResult: Models.AuthenticationResult) => void;
+    onLoggedIn: (isLoggedInResponse: Models.IsLoggedInResponse) => void;
 }
 export const LoginPage = (props: LoginPageProps) => {
 

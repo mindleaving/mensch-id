@@ -455,7 +455,7 @@
   "SendChallenge_Text": "Du kannst verifizieren dass eine Person eine bestimmte 웃ID besitzt. Gebe hierzu die ID unten an und schicke die Challenge ab. Wenn die Person das Geheimwort in ihrem Profil nachschlagen und vorlesen kann besitzt sie die angegebene 웃ID.",
   "ShippingMethod_Standard": "Standard",
   "Shop": "Shop",
-  "Shop_AccpetTermsAndConditions": "Ich akzeptiere die Allgemeine Geschäftsbedingungen (AGB)",
+  "Shop_AccpetTermsAndConditions": "Ich akzeptiere die {Allgemeine Geschäftsbedingungen (AGB)}",
   "Shop_AddToShoppingCart": "Zum Einkaufswagen hinzufügen",
   "Shop_CouldNotOrder": "Konnte Bestellung nicht abgeben",
   "Shop_GoToCheckout": "Zur Kasse",

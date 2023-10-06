@@ -11,7 +11,7 @@ namespace Mensch.Id.API.Storage
         Task<LocalAccount> GetLocalByEmailAsync(string email);
         Task<List<LocalAnonymousAccount>> GetLocalsByMenschId(
             string menschId);
-        Task<List<LocalAnonymousAccount>> GetLocalsByEmailOrMenschIdAsync(
+        Task<List<LocalAnonymousAccount>> GetLocalsByEmailMenschIdOrUsernameAsync(
             string emailOrMenschId);
         Task<ExternalAccount> GetExternalByIdAsync(LoginProvider loginProvider, string externalId);
         Task<Account> GetFromClaimsAsync(List<Claim> claims);

@@ -7,7 +7,7 @@ import { AccountType } from '../../types/enums.d';
 import { Models } from '../../types/models';
 
 interface LoginRedirectPageProps {
-    onLoggedIn: (authenticationResult: Models.AuthenticationResult) => void;
+    onLoggedIn: (isLoggedInResponse: Models.IsLoggedInResponse) => void;
 }
 
 export const LoginRedirectPage = (props: LoginRedirectPageProps) => {
@@ -23,16 +23,14 @@ export const LoginRedirectPage = (props: LoginRedirectPageProps) => {
                     navigate("/login");
                     return;
                 }
-                const isLoggedInResponse = await response.json() as Models.IsLoggedInResponse;
+                let isLoggedInResponse = await response.json() as Models.IsLoggedInResponse;
                 if(isLoggedInResponse.accountType !== AccountType.External) {
                     navigate("/login");
                     return;
                 }
-                const jwtResponse = await apiClient.instance!.get("api/accounts/accesstoken", {});
-                const authenticationResult = await jwtResponse.json() as Models.AuthenticationResult;
-                if(authenticationResult.isAuthenticated) {
-                    props.onLoggedIn(authenticationResult);
-                }
+                const jwtResponse = await apiClient.instance!.get("api/accounts/convert-to-local", {});
+                isLoggedInResponse = await jwtResponse.json() as Models.IsLoggedInResponse;
+                props.onLoggedIn(isLoggedInResponse);
             } catch {
                 showErrorAlert(resolveText("CouldNotLogIn"));
                 navigate("/login");

@@ -13,15 +13,16 @@ import LinkAccountRedirectPage from "../pages/UserManagement/LinkAccountRedirect
 import LoginRedirectPage from "../pages/UserManagement/LoginRedirectPage";
 
 interface NormalUserRoutesProps {
-    onLoggedIn: (authenticationResult: Models.AuthenticationResult) => void;
+    onLoggedIn: (isLoggedInResponse: Models.IsLoggedInResponse) => void;
     setUserViewModel: (profileData: ViewModels.ProfileViewModel) => void;
+    onLogOut: () => void;
 }
 export const NormalUserRoutes = (props: NormalUserRoutesProps) => {
-    const { onLoggedIn, setUserViewModel } = props;
+    const { onLoggedIn, setUserViewModel, onLogOut } = props;
 
     const routes: RouteDefinition[] = [
-        { path: '/linkaccount', element: <LinkAccountPage onLoggedIn={onLoggedIn} /> },
-        { path: '/linkaccount/finish', element: <LinkAccountRedirectPage /> },
+        { path: '/linkaccount', element: <LinkAccountPage /> },
+        { path: '/linkaccount/finish', element: <LinkAccountRedirectPage onLogOut={onLogOut} /> },
         { path: '/login/redirect', element: <LoginRedirectPage onLoggedIn={onLoggedIn} />},
         { path: '/me', element: <ProfilePage setUserViewModel={setUserViewModel} /> },
         { path: '/new-profile', element: <NewProfilePage /> },

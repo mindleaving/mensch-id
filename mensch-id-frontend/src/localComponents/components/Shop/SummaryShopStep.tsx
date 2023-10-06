@@ -8,7 +8,7 @@ import { sendPostRequest } from "../../../sharedCommonComponents/helpers/Storing
 import { AsyncButton } from "../../../sharedCommonComponents/components/AsyncButton";
 import { ContactInformationViewer } from "./ContactInformationViewer";
 import { ShoppingCartTable } from "./ShoppingCartTable";
-import { useNavigate } from "react-router-dom";
+import { TranslatedLinkText } from "../TranslatedLinkText";
 
 interface SummaryShopStepProps {
     order: Models.Shop.Order;
@@ -93,7 +93,10 @@ export const SummaryShopStep = (props: SummaryShopStepProps) => {
             </Card.Body>
         </Card>
         <FormCheck
-            label={resolveText("Shop_AccpetTermsAndConditions")}
+            label={<TranslatedLinkText
+                translatedTextWithPlaceholder={resolveText("Shop_AccpetTermsAndConditions")}
+                linkTarget={"/terms-of-service"}
+            />}
             checked={hasAcceptedTermsAndConditions}
             onChange={e => setHasAcceptedTermsAndConditions(e.target.checked)}
         />

@@ -1,4 +1,4 @@
-import { Models, System } from './models.d';
+import { Models } from './models.d';
 import * as Enums from './enums.d';
 
 export namespace ViewModels {

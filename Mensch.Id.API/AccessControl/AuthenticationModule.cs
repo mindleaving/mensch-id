@@ -42,11 +42,11 @@ namespace Mensch.Id.API.AccessControl
             return result.IsSuccess;
         }
 
-        public async Task<AuthenticationResult> AuthenticateLocalByEmailOrMenschIdAsync(LoginInformation loginInformation)
+        public async Task<AuthenticationResult> AuthenticateLocalByEmailMenschIdOrUsernameAsync(LoginInformation loginInformation)
         {
             if(string.IsNullOrEmpty(loginInformation.Password))
                 return AuthenticationResult.Failed(AuthenticationErrorType.InvalidUserOrPassword);
-            var accounts = await accountStore.GetLocalsByEmailOrMenschIdAsync(loginInformation.EmailOrMenschId);
+            var accounts = await accountStore.GetLocalsByEmailMenschIdOrUsernameAsync(loginInformation.EmailMenschIdOrUsername);
             if(accounts.Count == 0)
                 return AuthenticationResult.Failed(AuthenticationErrorType.InvalidUserOrPassword);
             foreach (var account in accounts)

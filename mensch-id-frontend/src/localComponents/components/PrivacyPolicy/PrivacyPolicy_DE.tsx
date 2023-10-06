@@ -103,6 +103,9 @@ export const PrivacyPolicyDe = () => {
             </p>
             <h3>Cookies</h3>
             <p>
+                mensch.ID nutzt ausschließlich essentielle Cookies um die Anmeldung zu ermöglichen.
+            </p>
+            <p>
                 Cookies sind eine Web-Technologie um kleine Informationsstücke zu speichern.
                 mensch.ID benutzt Cookies wenn ein externer Anmeldedienst genutzt wird.
                 Dieser Cookie enthält Informationen über dich, die der externe Anmeldedienst bei der Anmeldung zurückschickt.

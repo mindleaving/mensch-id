@@ -21,14 +21,6 @@ export namespace Models {
         ownershipSecret: string;
     }
 
-    interface AuthenticationResult {
-        isAuthenticated: boolean;
-        claims?: System.Security.Claims.Claim[];
-        accessToken?: string;
-        accountType?: Enums.AccountType | null;
-        error?: Enums.AuthenticationErrorType | null;
-    }
-
     interface ChangePasswordRequest {
         accountId: string;
         currentPassword: string;
@@ -51,7 +43,7 @@ export namespace Models {
     }
 
     interface LoginInformation {
-        emailOrMenschId: string;
+        emailMenschIdOrUsername: string;
         password: string;
     }
 
@@ -171,11 +163,11 @@ export namespace Models {
             preferedLanguage: Enums.Language;
         }
     
-        interface AdminAccount extends Models.AccessControl.LocalAccount {
+        interface AdminAccount extends Models.AccessControl.ProfessionalAccount {
             
         }
     
-        interface AssignerAccount extends Models.AccessControl.LocalAccount {
+        interface AssignerAccount extends Models.AccessControl.ProfessionalAccount {
             name: string;
             logoId: string;
             logoImageType: string;
@@ -203,50 +195,9 @@ export namespace Models {
             passwordHash: string;
             passwordResetToken: string;
         }
-    }
-}
-export namespace System {
-    interface ValueType {
-        
-    }
-
-    export namespace Security {
-        export namespace Claims {
-            interface Claim {
-                issuer: string;
-                originalIssuer: string;
-                properties: System.Collections.Generic.KeyValuePair<string,string>[];
-                subject: System.Security.Claims.ClaimsIdentity;
-                type: string;
-                value: string;
-                valueType: string;
-            }
-        
-            interface ClaimsIdentity extends System.Security.Principal.IIdentity {
-                actor: System.Security.Claims.ClaimsIdentity;
-                bootstrapContext: any;
-                claims: System.Security.Claims.Claim[];
-                label: string;
-                nameClaimType: string;
-                roleClaimType: string;
-            }
-        }
     
-        export namespace Principal {
-            interface IIdentity {
-                name: string;
-                authenticationType: string;
-                isAuthenticated: boolean;
-            }
-        }
-    }
-
-    export namespace Collections {
-        export namespace Generic {
-            interface KeyValuePair<TKey,TValue> extends System.ValueType {
-                key: TKey;
-                value: TValue;
-            }
+        interface ProfessionalAccount extends Models.AccessControl.LocalAccount {
+            username: string;
         }
     }
 }

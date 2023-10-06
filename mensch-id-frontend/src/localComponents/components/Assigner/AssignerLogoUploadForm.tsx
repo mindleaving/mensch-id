@@ -40,7 +40,6 @@ export const AssignerLogoUploadForm = (props: AssignerLogoUploadFormProps) => {
                 { 
                     method: 'PUT',
                     contentType: file.type,
-                    accessToken: apiClient.instance!.accessToken!,
                     onProgressChanged: setUploadProgress
                 }
             );
@@ -61,13 +60,16 @@ export const AssignerLogoUploadForm = (props: AssignerLogoUploadFormProps) => {
     }
 
     const removeLogo = async () => {
+        setIsDeleting(true);
         await deleteObject(
             'api/assigner/me/logo', {},
             resolveText("Assigner_Logo_SuccessfullyRemoved"),
             resolveText("Assigner_Logo_CouldNotRemove"),
             () => {
                 reloadProfile();
-            }
+            },
+            undefined,
+            () => setIsDeleting(false)
         );
     }
 

@@ -9,16 +9,14 @@ namespace Mensch.Id.API.AccessControl
     public class JwtSecurityTokenBuilder : ISecurityTokenBuilder
     {
         private readonly SymmetricSecurityKey privateKey;
-        private readonly TimeSpan expirationTime;
 
         public JwtSecurityTokenBuilder(
-            SymmetricSecurityKey privateKey, 
-            TimeSpan expirationTime)
+            SymmetricSecurityKey privateKey)
         {
             this.privateKey = privateKey;
-            this.expirationTime = expirationTime;
         }
 
+        public static readonly TimeSpan ExpirationTime = TimeSpan.FromHours(8);
         public const string Audience = "mensch.ID";
         public const string Issuer = "mensch.ID";
         public const string AccessTokenCookieName = "X-Access-Token";
@@ -31,7 +29,7 @@ namespace Mensch.Id.API.AccessControl
                 Audience = Audience,
                 Issuer = Issuer,
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.Add(expirationTime),
+                Expires = DateTime.UtcNow.Add(ExpirationTime),
                 SigningCredentials = new SigningCredentials(privateKey, SecurityAlgorithms.HmacSha256Signature)
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);

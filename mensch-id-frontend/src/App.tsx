@@ -25,10 +25,6 @@ defaultGlobalizer.instance = new Globalizer(
 apiClient.instance = window.location.hostname.toLowerCase() === "localhost"
     ? new ApiClient(window.location.hostname, 44321)
     : new ApiClient(window.location.hostname, 443);
-apiClient.instance!.defaultOptions.includeCredentials = true;
-if(!!sessionStorage.getItem(SessionStoreKeys.AccessToken)) {
-    apiClient.instance!.setAccessToken(sessionStorage.getItem(SessionStoreKeys.AccessToken)!);
-}
 
 function App() {
     const navigate = useNavigate();
@@ -41,13 +37,24 @@ function App() {
     const [ accountType, setAccountType ] = useState<AccountType>();
 
     useEffect(() => {
+        if(!userViewModel) {
+            return;
+        }
+        sessionStorage.setItem(SessionStoreKeys.UserViewModel, JSON.stringify(userViewModel));
+    }, [ userViewModel ]);
+
+    useEffect(() => {
         const checkLoginState = async () => {
             try {
                 const response = await apiClient.instance!.get('api/accounts/is-logged-in', {}, { handleError: false });
                 if(response.status === 200) {
+                    const isAlreadyLoggedIn = isLoggedIn;
                     const loggedInInfo = await response.json() as Models.IsLoggedInResponse;
                     setIsLoggedIn(true);
                     setAccountType(loggedInInfo.accountType);
+                    if(!isAlreadyLoggedIn && window.location.pathname === '/') {
+                        navigateToAccountHomePage(loggedInInfo.accountType);
+                    }
                 } else if(response.status === 401) {
                     setIsLoggedIn(false);
                 } else {
@@ -60,20 +67,13 @@ function App() {
         checkLoginState();
     }, []);
 
-    const onLoggedIn = (authenticationResult: Models.AuthenticationResult) => {
-        if(!authenticationResult.isAuthenticated) {
-            navigate("/login");
-            return;
-        }
-        if(authenticationResult.accessToken) {
-            apiClient.instance!.setAccessToken(authenticationResult.accessToken);
-            sessionStorage.setItem(SessionStoreKeys.AccessToken, authenticationResult.accessToken);
-        }
+    const onLoggedIn = (isLoggedInResponse: Models.IsLoggedInResponse) => {
         setIsLoggedIn(true);
-        setAccountType(authenticationResult.accountType!);
+        setAccountType(isLoggedInResponse.accountType!);
+        navigateToAccountHomePage(isLoggedInResponse.accountType!);
     }
 
-    useEffect(() => {
+    const navigateToAccountHomePage = (accountType: AccountType) => {
         switch (accountType) {
             case AccountType.Admin:
                 navigate('/');
@@ -85,7 +85,15 @@ function App() {
                 navigate('/me');
                 break;
         }
-    }, [ accountType, navigate ]);
+    };
+
+    const onLogOut = () => {
+        setUserViewModel(undefined);
+        setAccountType(undefined);
+        sessionStorage.removeItem(SessionStoreKeys.UserViewModel);
+        setIsLoggedIn(false);
+        navigate("/");
+    }
 
     const routes = useMemo(() => {
         switch(accountType) {
@@ -94,7 +102,8 @@ function App() {
             case AccountType.LocalAnonymous:
                 return NormalUserRoutes({
                     onLoggedIn: onLoggedIn,
-                    setUserViewModel: setUserViewModel
+                    setUserViewModel: setUserViewModel,
+                    onLogOut: onLogOut
                 });
             case AccountType.Assigner:
                 return AssignerRoutes({
@@ -109,33 +118,9 @@ function App() {
         }
     }, [ accountType ]);
 
-    useEffect(() => {
-        if(!userViewModel) {
-            return;
-        }
-        sessionStorage.setItem(SessionStoreKeys.UserViewModel, JSON.stringify(userViewModel));
-    }, [ userViewModel ]);
-    
-    const logOut = async () => {
-        await sendPostRequest(
-            `api/accounts/logout`, {},
-            resolveText('CouldNotLogOut'),
-            null,
-            () => {
-                setUserViewModel(undefined);
-                setAccountType(undefined);
-                apiClient.instance!.clearAccessToken();
-                sessionStorage.removeItem(SessionStoreKeys.AccessToken);
-                sessionStorage.removeItem(SessionStoreKeys.UserViewModel);
-                setIsLoggedIn(false);
-                navigate("/");
-            }
-        );
-    }
-
     return (
     <UserContext.Provider value={userViewModel}>
-        <Layout isLoggedIn={isLoggedIn} accountType={accountType} onLogOut={logOut}> 
+        <Layout isLoggedIn={isLoggedIn} accountType={accountType} onLogOut={onLogOut}> 
             <RoutesBuilder
                 routeDefinitions={routes}
                 containerBuilder={children => <PageContainer>

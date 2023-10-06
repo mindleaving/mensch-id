@@ -2,15 +2,10 @@
 
 ## Bugs
 - Can register multiple anonymous accounts linked to same mensch.ID, but only one password works. Desired behavior: Prohibit multiple anonymous accounts for same mensch.ID.
-- External login redirects to /login
 - Cannot reset password of new assigner account
 
 ## Features
-- Delete logins (and account when last login is deleted. Show confirmation dialogue)
-- Assinger: Upload logo
 - Write terms of service
-- Link terms of service in shop ("I accept..."-checkbox)
-- Rename login-form username label to include non-email and non-mensch.id for assigners
 
 
 ## Tasks
