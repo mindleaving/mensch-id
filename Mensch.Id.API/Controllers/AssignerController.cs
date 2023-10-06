@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq.Expressions;
 using System.Net;
 using System.Threading.Tasks;
@@ -32,6 +33,8 @@ public class AssignerController : ControllerBase
     private readonly IStore<AssignerControlledProfile> assignerControlledProfileStore;
     private readonly SignedProfileBuilder signedProfileBuilder;
     private readonly IFilterExpressionBuilder<AssignerControlledProfile,AssignedProfilesRequestParameters> filterExpressionBuilder;
+    private readonly IFilesStore fileStore;
+    private readonly OneTimeFileMapStore oneTimeFileMapStore;
 
     public AssignerController(
         IStore<Account> accountStore,
@@ -41,7 +44,9 @@ public class AssignerController : ControllerBase
         IStore<Person> profileStore,
         IStore<AssignerControlledProfile> assignerControlledProfileStore,
         SignedProfileBuilder signedProfileBuilder,
-        IFilterExpressionBuilder<AssignerControlledProfile,AssignedProfilesRequestParameters> filterExpressionBuilder)
+        IFilterExpressionBuilder<AssignerControlledProfile,AssignedProfilesRequestParameters> filterExpressionBuilder,
+        IFilesStore fileStore,
+        OneTimeFileMapStore oneTimeFileMapStore)
     {
         this.accountStore = accountStore;
         this.newProfileViewModelBuilder = newProfileViewModelBuilder;
@@ -51,6 +56,8 @@ public class AssignerController : ControllerBase
         this.assignerControlledProfileStore = assignerControlledProfileStore;
         this.signedProfileBuilder = signedProfileBuilder;
         this.filterExpressionBuilder = filterExpressionBuilder;
+        this.fileStore = fileStore;
+        this.oneTimeFileMapStore = oneTimeFileMapStore;
     }
 
     [HttpGet("me")]
@@ -89,20 +96,59 @@ public class AssignerController : ControllerBase
         return Ok(new AssignerAccountViewModel(assignerAccount));
     }
 
+    [HttpGet("me/logo")]
+    public async Task<IActionResult> GetOneTimeLogoId()
+    {
+        var accountId = ControllerHelpers.GetAccountId(httpContextAccessor);
+        var logoFileId = GetLogoFileId(accountId);
+        var oneTimeId = await oneTimeFileMapStore.CreateNew(logoFileId);
+        return Ok(oneTimeId);
+    }
 
-    [HttpPut("me/logo-url")]
-    public async Task<IActionResult> SetLogoUrl(
-        [FromBody] string logoUrl)
+
+    [AllowAnonymous]
+    [HttpGet("logo/{oneTimeFileId}")]
+    public async Task<IActionResult> GetLogo(
+        [FromRoute] string oneTimeFileId)
+    {
+        var logoFileId = await oneTimeFileMapStore.GetFileId(oneTimeFileId);
+        var stream = fileStore.GetById(logoFileId);
+        return File(stream, contentType: "image/png");
+    }
+
+
+    [HttpPut("me/logo")]
+    public async Task<IActionResult> UploadLogo()
     {
         var accountId = ControllerHelpers.GetAccountId(httpContextAccessor);
         var acount = await accountStore.GetByIdAsync(accountId);
         if (acount is not AssignerAccount assignerAccount)
             return NotFound();
-        assignerAccount.LogoUrl = logoUrl;
-        await accountStore.StoreAsync(assignerAccount);
-        return Ok(new AssignerAccountViewModel(assignerAccount));
+        var logoFileId = Guid.NewGuid().ToString();
+        await fileStore.StoreAsync(logoFileId, Request.Body);
+        assignerAccount.LogoId = logoFileId;
+        return Ok();
     }
 
+    [HttpDelete("me/logo")]
+    public async Task<IActionResult> ClearLogo()
+    {
+        var accountId = ControllerHelpers.GetAccountId(httpContextAccessor);
+        var acount = await accountStore.GetByIdAsync(accountId);
+        if (acount is not AssignerAccount assignerAccount)
+            return NotFound();
+        try
+        {
+            fileStore.Delete(assignerAccount.LogoId);
+        }
+        catch (FileNotFoundException)
+        {
+            // Ignore
+        }
+        assignerAccount.LogoId = null;
+        await accountStore.StoreAsync(assignerAccount);
+        return Ok();
+    }
 
     [HttpGet("candidate")]
     public async Task<IActionResult> GetIdCandidate(

@@ -5,6 +5,7 @@ import { ContactInformationForm } from "../../components/Assigner/ContactInforma
 import { ChangePasswordForm } from "../../components/ChangePasswordForm";
 import { ViewModels } from "../../types/viewModels";
 import { AssignerNameForm } from "../../components/Assigner/AssignerNameForm";
+import { AssignerLogoUploadForm } from "../../components/Assigner/AssignerLogoUploadForm";
 
 interface AssignerAccountManagementPageProps {}
 
@@ -23,6 +24,8 @@ export const AssignerAccountManagementPage = (props: AssignerAccountManagementPa
 
         <h3>{resolveText("ContactInformation")}</h3>
         <ContactInformationForm />
+
+        <AssignerLogoUploadForm />
 
         <hr className="my-3" />
         

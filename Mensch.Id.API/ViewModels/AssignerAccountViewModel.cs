@@ -10,14 +10,14 @@ namespace Mensch.Id.API.ViewModels
         {
             AccountId = account.Id;
             Name = account.Name;
-            LogoUrl = account.LogoUrl;
+            LogoId = account.LogoId;
             ContactInformation = account.Contact;
         }
 
         public UserType UserType => UserType.Assigner;
         public string AccountId { get; }
         public string Name { get; }
-        public string LogoUrl { get; }
+        public string LogoId { get; }
         public Contact ContactInformation { get; }
     }
 }
