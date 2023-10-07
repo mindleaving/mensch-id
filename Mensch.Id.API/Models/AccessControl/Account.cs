@@ -13,7 +13,11 @@ namespace Mensch.Id.API.Models.AccessControl
     {
         public string Id { get; set; }
         public abstract AccountType AccountType { get; }
-        public string PersonId { get; set; }
         public Language PreferedLanguage { get; set; } = Language.en;
+    }
+
+    public abstract class PersonAccount : Account
+    {
+        public string PersonId { get; set; }
     }
 }

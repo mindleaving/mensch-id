@@ -9,6 +9,7 @@ namespace Mensch.Id.API.AccessControl
     {
         List<Claim> BuildForLocalUser(LocalAnonymousAccount account);
         List<Claim> BuildForExternalLoginProvider(ExternalAccount account);
+        List<Claim> BuildForProfessionalUser(ProfessionalAccount account);
     }
 
     public class ClaimBuilder : IClaimBuilder
@@ -16,11 +17,7 @@ namespace Mensch.Id.API.AccessControl
         public List<Claim> BuildForLocalUser(
             LocalAnonymousAccount account)
         {
-            var claims = new List<Claim>
-            {
-                new (ClaimTypes.NameIdentifier, account.Id),
-                new (MenschIdClaimTypes.AccountTypeClaimName, account.AccountType.ToString())
-            };
+            var claims = GetCommonClaims(account);
             if (account.PersonId != null)
                 claims.Add(new Claim(MenschIdClaimTypes.PersonIdClaimName, account.PersonId));
             return claims;
@@ -29,11 +26,7 @@ namespace Mensch.Id.API.AccessControl
         public List<Claim> BuildForExternalLoginProvider(
             ExternalAccount account)
         {
-            var claims = new List<Claim>
-            {
-                new (ClaimTypes.NameIdentifier, account.Id),
-                new (MenschIdClaimTypes.AccountTypeClaimName, account.AccountType.ToString())
-            };
+            var claims = GetCommonClaims(account);
             if(account.PersonId != null)
                 claims.Add(new Claim(MenschIdClaimTypes.PersonIdClaimName, account.PersonId));
             //foreach (var externalClaim in externalClaims)
@@ -47,6 +40,24 @@ namespace Mensch.Id.API.AccessControl
             //    //    externalClaim.OriginalIssuer);
             //    //claims.Add(transformedExternalClaim);
             //}
+            return claims;
+        }
+
+        public List<Claim> BuildForProfessionalUser(
+            ProfessionalAccount account)
+        {
+            var claims = GetCommonClaims(account);
+            return claims;
+        }
+
+        private static List<Claim> GetCommonClaims(
+            Account account)
+        {
+            var claims = new List<Claim>
+            {
+                new(ClaimTypes.NameIdentifier, account.Id),
+                new(MenschIdClaimTypes.AccountTypeClaimName, account.AccountType.ToString())
+            };
             return claims;
         }
     }

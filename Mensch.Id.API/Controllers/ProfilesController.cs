@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Commons.Extensions;
@@ -58,9 +59,11 @@ namespace Mensch.Id.API.Controllers
             if (personId == null)
             {
                 var account = await accountStore.GetFromClaimsAsync(claims);
-                if (account.PersonId == null)
+                if (account is not PersonAccount personAccount)
                     return NotFound();
-                personId = account.PersonId;
+                if (personAccount.PersonId == null)
+                    return NotFound();
+                personId = personAccount.PersonId;
             }
             var profileData = await personStore.GetByIdAsync(personId);
             if (profileData == null)
@@ -76,7 +79,7 @@ namespace Mensch.Id.API.Controllers
             if (!ControllerInputSanitizer.ValidateAndSanitzeMenschId(id, out id))
                 return BadRequest("Invalid mensch.ID");
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
-            var account = await accountStore.GetFromClaimsAsync(claims);
+            var account = (PersonAccount)await accountStore.GetFromClaimsAsync(claims);
             if (account.PersonId != null)
             {
                 if (account.PersonId != id)
@@ -124,8 +127,8 @@ namespace Mensch.Id.API.Controllers
         {
             if (!ControllerInputSanitizer.ValidateAndSanitzeMenschId(body.Id, out var personId))
                 return BadRequest("Invalid mensch.ID");
-            var owningAccount = await accountStore.FirstOrDefaultAsync(x => x.PersonId == personId);
-            if (owningAccount != null)
+            var owningAccounts = await accountStore.GetAllForMenschIdAsync(personId);
+            if (owningAccounts.Any())
                 return StatusCode((int)HttpStatusCode.Forbidden, "ID is controlled by another account already");
             var assignerControlledProfile = await assignerControlledProfileStore.GetByIdAsync(personId);
             if (assignerControlledProfile == null)
@@ -134,11 +137,11 @@ namespace Mensch.Id.API.Controllers
                 return StatusCode((int)HttpStatusCode.Unauthorized, "Invalid ownership secret");
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
             var account = await accountStore.GetFromClaimsAsync(claims);
-            if(!account.AccountType.InSet(AccountType.External, AccountType.Local, AccountType.LocalAnonymous))
+            if(account is not PersonAccount personAccount)
                 return StatusCode((int)HttpStatusCode.Unauthorized, "Assigners and admins cannot take permanent control of profiles");
-            if (account.PersonId != null)
+            if (personAccount.PersonId != null)
             {
-                if (account.PersonId == personId)
+                if (personAccount.PersonId == personId)
                     return Ok();
                 return StatusCode((int)HttpStatusCode.Forbidden, "Your account is already associated with a profile");
             }
@@ -146,11 +149,11 @@ namespace Mensch.Id.API.Controllers
             var profile = await personStore.GetByIdAsync(personId);
             if (profile == null)
             {
-                profile = new Person(personId, DateTime.UtcNow, account.Id);
+                profile = new Person(personId, DateTime.UtcNow, personAccount.Id);
                 await personStore.StoreAsync(profile);
             }
-            account.PersonId = personId;
-            await accountStore.StoreAsync(account);
+            personAccount.PersonId = personId;
+            await accountStore.StoreAsync(personAccount);
             await assignerControlledProfileStore.DeleteAsync(personId);
             return Ok(profile);
         }
@@ -163,7 +166,7 @@ namespace Mensch.Id.API.Controllers
             if (birthDate == default)
                 return BadRequest("No birthdate specified, but it's required for generating ID candidates");
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
-            var account = await accountStore.GetFromClaimsAsync(claims);
+            var account = (PersonAccount)await accountStore.GetFromClaimsAsync(claims);
             if (account.PersonId != null)
             {
                 var profileData = await personStore.GetByIdAsync(account.PersonId);
@@ -185,23 +188,34 @@ namespace Mensch.Id.API.Controllers
                 return NotFound();
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
             var myAccount = await accountStore.GetFromClaimsAsync(claims);
-            if (myAccount.PersonId == null)
+            if (!await CanVerifyOthers(myAccount))
                 return StatusCode((int)HttpStatusCode.Forbidden, "You must have a profile and be verified yourself to verify other profiles");
-            if (myAccount.PersonId == id)
+            if (myAccount is PersonAccount personAccount && personAccount.PersonId == id)
                 return StatusCode((int)HttpStatusCode.Forbidden, "You cannot verify yourself :D");
-            var myVerifications = await verificationStore.SearchAsync(x => x.PersonId == myAccount.PersonId).ToListAsync();
-            if (myVerifications.Count == 0)
-                return StatusCode((int)HttpStatusCode.Forbidden, "You must be verified yourself to verify other profiles");
             var verification = new Verification
             {
                 Id = Guid.NewGuid().ToString(),
                 PersonId = id,
-                VerifierId = myAccount.PersonId,
+                VerifierId = myAccount.Id,
                 Timestamp = DateTime.UtcNow
             };
             await verificationStore.StoreAsync(verification);
             return Ok(verification);
         }
 
+        private async Task<bool> CanVerifyOthers(
+            Account myAccount)
+        {
+            if (myAccount is ProfessionalAccount)
+                return true;
+            if (myAccount is PersonAccount personAccount)
+            {
+                if (personAccount.PersonId == null)
+                    return false;
+                var myVerifications = await verificationStore.SearchAsync(x => x.PersonId == personAccount.PersonId).ToListAsync();
+                return myVerifications.Count > 0;
+            }
+            return false;
+        }
     }
 }

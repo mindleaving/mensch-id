@@ -72,11 +72,11 @@ namespace Mensch.Id.API.Controllers
             if (personId == null)
             {
                 var currentAccount = await store.GetFromClaimsAsync(claims);
-                if (currentAccount?.PersonId == null)
+                if(currentAccount is not PersonAccount personAccount || personAccount.PersonId == null)
                     return Ok(new List<Account>());
-                personId = currentAccount.PersonId;
+                personId = personAccount.PersonId;
             }
-            var myAccounts = await store.GeAllForMenschIdAsync(personId);
+            var myAccounts = await store.GetAllForMenschIdAsync(personId);
             return Ok(myAccounts);
         }
 
@@ -199,7 +199,7 @@ namespace Mensch.Id.API.Controllers
                 if (personId == null)
                 {
                     var currentAccount = await store.GetFromClaimsAsync(claims);
-                    personId = currentAccount?.PersonId;
+                    personId = (currentAccount as PersonAccount)?.PersonId;
                 }
             }
             switch (body.AccountType)
@@ -336,9 +336,9 @@ namespace Mensch.Id.API.Controllers
                 if (jwtAccountId == null)
                     return BadRequest("Your JWT bearer token doesn't contain an account ID");
                 var originalAccount = await store.GetByIdAsync(jwtAccountId);
-                if(originalAccount?.PersonId == null)
+                if(originalAccount is not PersonAccount personAccount || personAccount.PersonId == null)
                     return BadRequest("Your JWT bearer token doesn't contain a person ID. If you just created your profile please log out and back in again");
-                personId = originalAccount.PersonId;
+                personId = personAccount.PersonId;
             }
 
             var loginProviderClaims = claims.Except(jwtClaims).ToList();
@@ -363,17 +363,20 @@ namespace Mensch.Id.API.Controllers
                 var externalId = ClaimsHelpers.GetExternalId(loginProviderClaims);
                 account = await accountCreator.CreateExternal(externalLoginProvider, externalId);
             }
-            if (account.PersonId == personId)
+
+            if (account is not ExternalAccount externalAccount)
+                return StatusCode((int)HttpStatusCode.InternalServerError, "Found unexpected account type");
+            if (externalAccount.PersonId == personId)
                 return Ok();
-            if (account.PersonId != null)
+            if (externalAccount.PersonId != null)
             {
                 await LogOutImpl();
                 return StatusCode((int)HttpStatusCode.Forbidden, 
                     "That account is already linked to another profile. "
                     + "You have been logged out to avoid confusion about which account you are logged into.");
             }
-            account.PersonId = personId;
-            await store.StoreAsync(account);
+            externalAccount.PersonId = personId;
+            await store.StoreAsync(externalAccount);
             return Ok();
         }
 
@@ -388,20 +391,22 @@ namespace Mensch.Id.API.Controllers
             if (!authenticationResult.IsAuthenticated)
                 return StatusCode((int)HttpStatusCode.Unauthorized, authenticationResult.Error);
 
-            var accountsToBeLinked = await store.GetLocalsByEmailMenschIdOrUsernameAsync(loginInformation.EmailMenschIdOrUsername);
+            var accountsToBeLinked = (await store.GetLocalsByEmailMenschIdOrUsernameAsync(loginInformation.EmailMenschIdOrUsername))
+                .OfType<PersonAccount>()
+                .ToList();
             if(accountsToBeLinked.Any(account => account.PersonId != null))
                 return StatusCode((int)HttpStatusCode.Forbidden, "One or more matching accounts are already linked to another profile");
 
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
             var currentAccount = await store.GetFromClaimsAsync(claims);
-            if (currentAccount == null)
+            if (currentAccount is not PersonAccount currentPersonAccount)
                 return StatusCode((int)HttpStatusCode.InternalServerError, "Couldn't find current account information");
-            if (currentAccount.PersonId == null)
+            if (currentPersonAccount.PersonId == null)
                 return StatusCode((int)HttpStatusCode.ServiceUnavailable, "Your current account doesn't have a profile yet");
 
             foreach (var accountToBeLinked in accountsToBeLinked)
             {
-                accountToBeLinked.PersonId = currentAccount.PersonId;
+                accountToBeLinked.PersonId = currentPersonAccount.PersonId;
                 await store.StoreAsync(accountToBeLinked);
             }
             return Ok();
@@ -472,10 +477,15 @@ namespace Mensch.Id.API.Controllers
             var matchingAccount = await store.GetByIdAsync(accountId);
             if (matchingAccount == null)
                 return Ok();
-            if (matchingAccount.PersonId == null)
+            if (matchingAccount is not PersonAccount personAccount || personAccount.PersonId == null)
                 return BadRequest("Only accounts associated with a mensch.ID can be deleted");
-            if (matchingAccount.PersonId != personId)
-                return StatusCode((int)HttpStatusCode.Forbidden, "Your current login indicates a different mensch.ID than the account you are trying to delete. If this is your account, please login using credentials corresponding to the mensch.ID associated with that account");
+            if (personAccount.PersonId != personId)
+            {
+                return StatusCode(
+                    (int)HttpStatusCode.Forbidden, 
+                    "Your current login indicates a different mensch.ID than the account you are trying to delete. "
+                    + "If this is your account, please login using credentials corresponding to the mensch.ID associated with that account");
+            }
             await store.DeleteAsync(accountId);
             return Ok();
         }

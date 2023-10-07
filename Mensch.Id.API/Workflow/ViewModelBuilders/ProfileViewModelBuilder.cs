@@ -10,11 +10,11 @@ namespace Mensch.Id.API.Workflow.ViewModelBuilders
 {
     public class ProfileViewModelBuilder
     {
-        private readonly IReadonlyStore<Account> accountStore;
+        private readonly IAccountStore accountStore;
         private readonly IReadonlyStore<Verification> verificationStore;
 
         public ProfileViewModelBuilder(
-            IReadonlyStore<Account> accountStore,
+            IAccountStore accountStore,
             IReadonlyStore<Verification> verificationStore)
         {
             this.accountStore = accountStore;
@@ -24,7 +24,7 @@ namespace Mensch.Id.API.Workflow.ViewModelBuilders
         public async Task<ProfileViewModel> Build(
             Person model)
         {
-            var accounts = await accountStore.SearchAsync(x => x.PersonId == model.Id).ToListAsync();
+            var accounts = await accountStore.GetAllForMenschIdAsync(model.Id);
             var loginProviders = accounts.OfType<ExternalAccount>()
                 .Select(x => x.LoginProvider)
                 .ToList();

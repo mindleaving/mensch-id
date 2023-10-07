@@ -11,13 +11,13 @@ namespace Mensch.Id.API.Tools
 {
     public class AdminAccountCreator : DatabaseAccess
     {
-        private readonly IPasswordHasher<LocalAnonymousAccount> passwordHasher = new PasswordHasher<LocalAnonymousAccount>();
+        private readonly IPasswordHasher<IAccountWithPassword> passwordHasher = new PasswordHasher<IAccountWithPassword>();
 
         [Test]
         public async Task Create()
         {
             // ### START INPUT ###
-            const string Email = "admin@mensch.id";
+            const string Username = "admin@mensch.id";
             const Language PreferedLanguage = Language.en;
             // ### END INPUT ####
 
@@ -26,13 +26,12 @@ namespace Mensch.Id.API.Tools
             Console.WriteLine($"Password: {password}");
 
             var accountCollection = GetCollection<Account>();
-            if (await IsEmailInUse(accountCollection, Email))
-                throw new Exception("Account with the same email already exists");
+            if (await IsUsernameInUse(accountCollection, Username))
+                throw new Exception("Account with the same username already exists");
             var account = new AdminAccount
             {
                 Id = Guid.NewGuid().ToString(),
-                Email = Email,
-                IsEmailVerified = true,
+                Username = Username,
                 PreferedLanguage = PreferedLanguage
             };
             account.PasswordHash = passwordHasher.HashPassword(account, password);
@@ -40,12 +39,12 @@ namespace Mensch.Id.API.Tools
             await accountCollection.InsertOneAsync(account);
         }
 
-        private static async Task<bool> IsEmailInUse(
+        private static async Task<bool> IsUsernameInUse(
             IMongoCollection<Account> accountCollection,
-            string email)
+            string username)
         {
             var filterBuilder = Builders<Account>.Filter;
-            var filter = filterBuilder.Eq(nameof(LocalAccount.Email), email);
+            var filter = filterBuilder.Eq(nameof(ProfessionalAccount.Username), username);
             return await accountCollection.Find(filter).AnyAsync();
         }
     }

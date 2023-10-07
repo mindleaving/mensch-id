@@ -1,11 +1,10 @@
 import { apiClient, ApiClient } from './sharedCommonComponents/communication/ApiClient';
-import { defaultGlobalizer, Globalizer, resolveText } from './sharedCommonComponents/helpers/Globalizer';
+import { defaultGlobalizer, Globalizer } from './sharedCommonComponents/helpers/Globalizer';
 import germanTranslation from './localComponents/resources/translation.de.json';
 import englishTranslation from './localComponents/resources/translation.en.json';
 import { Layout } from './localComponents/components/Layout';
 import { useNavigate } from 'react-router-dom';
 import { Models } from './localComponents/types/models';
-import { sendPostRequest } from './sharedCommonComponents/helpers/StoringHelpers';
 import { useEffect, useMemo, useState } from 'react';
 import { SessionStoreKeys } from './localComponents/types/frontendTypes.d';
 import UserContext from './localComponents/contexts/UserContext';
@@ -76,7 +75,7 @@ function App() {
     const navigateToAccountHomePage = (accountType: AccountType) => {
         switch (accountType) {
             case AccountType.Admin:
-                navigate('/');
+                navigate('/assigner-account-requests');
                 break;
             case AccountType.Assigner:
                 navigate('/assigner');

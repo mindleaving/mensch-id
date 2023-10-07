@@ -14,13 +14,13 @@ namespace Mensch.Id.API.AccessControl
     {
         private readonly IAccountStore accountStore;
         private readonly ISecurityTokenBuilder securityTokenBuilder;
-        private readonly IPasswordHasher<LocalAnonymousAccount> passwordHasher;
-        private IClaimBuilder claimsBuilder;
+        private readonly IPasswordHasher<IAccountWithPassword> passwordHasher;
+        private readonly IClaimBuilder claimsBuilder;
 
         public AuthenticationModule(
             IAccountStore accountStore,
             ISecurityTokenBuilder securityTokenBuilder,
-            IPasswordHasher<LocalAnonymousAccount> passwordHasher,
+            IPasswordHasher<IAccountWithPassword> passwordHasher,
             IClaimBuilder claimsBuilder)
         {
             this.accountStore = accountStore;
@@ -34,10 +34,10 @@ namespace Mensch.Id.API.AccessControl
             string password,
             bool changePasswordOnNextLogin = false)
         {
-            var matchingAccount = await accountStore.GetByIdAsync(accountId) as LocalAnonymousAccount;
-            if (matchingAccount == null)
+            var matchingAccount = await accountStore.GetByIdAsync(accountId);
+            if (matchingAccount is not IAccountWithPassword accountWithPassword) 
                 return false;
-            var passwordHash = passwordHasher.HashPassword(matchingAccount, password);
+            var passwordHash = passwordHasher.HashPassword(accountWithPassword, password);
             var result = await accountStore.ChangePasswordAsync(matchingAccount.Id, passwordHash);
             return result.IsSuccess;
         }
@@ -51,22 +51,35 @@ namespace Mensch.Id.API.AccessControl
                 return AuthenticationResult.Failed(AuthenticationErrorType.InvalidUserOrPassword);
             foreach (var account in accounts)
             {
-                var verificationResult = passwordHasher.VerifyHashedPassword(account, account.PasswordHash, loginInformation.Password);
+                if(account is not IAccountWithPassword accountWithPassword)
+                    continue;
+
+                var verificationResult = passwordHasher.VerifyHashedPassword(accountWithPassword, accountWithPassword.PasswordHash, loginInformation.Password);
                 if (verificationResult == PasswordVerificationResult.Failed)
                     continue;
                 if (verificationResult != PasswordVerificationResult.Success && verificationResult != PasswordVerificationResult.SuccessRehashNeeded)
                     throw new ArgumentOutOfRangeException(nameof(verificationResult), $"Invalid verification result '{verificationResult}'");
                 if (verificationResult == PasswordVerificationResult.SuccessRehashNeeded)
                 {
-                    account.PasswordHash = passwordHasher.HashPassword(account, loginInformation.Password);
-                    await accountStore.StoreAsync(account);
+                    accountWithPassword.PasswordHash = passwordHasher.HashPassword(accountWithPassword, loginInformation.Password);
+                    await accountStore.StoreAsync((Account)accountWithPassword);
                 }
-                if (account is LocalAccount localAccount)
+                switch (account)
                 {
-                    if(!localAccount.IsEmailVerified)
-                        return AuthenticationResult.Failed(AuthenticationErrorType.EmailNotVerified);
+                    case LocalAnonymousAccount localAnonymousAccount:
+                    {
+                        if (localAnonymousAccount is LocalAccount localAccount)
+                        {
+                            if(!localAccount.IsEmailVerified)
+                                return AuthenticationResult.Failed(AuthenticationErrorType.EmailNotVerified);
+                        }
+                        return BuildSecurityTokenForUser(localAnonymousAccount);
+                    }
+                    case ProfessionalAccount professionalAccount:
+                        return BuildSecurityTokenForUser(professionalAccount);
+                    default:
+                        throw new NotSupportedException($"Cannot build security token for {account.GetType().Name}");
                 }
-                return BuildSecurityTokenForUser(account);
             }
             return AuthenticationResult.Failed(AuthenticationErrorType.InvalidUserOrPassword);
         }
@@ -77,16 +90,17 @@ namespace Mensch.Id.API.AccessControl
         {
             if(string.IsNullOrEmpty(password))
                 return AuthenticationResult.Failed(AuthenticationErrorType.InvalidUserOrPassword);
-            var account = await accountStore.GetByIdAsync(accountId) as LocalAnonymousAccount;
-            if(account == null)
+            var account = await accountStore.GetByIdAsync(accountId);
+            if (account is not IAccountWithPassword accountWithPassword)
                 return AuthenticationResult.Failed(AuthenticationErrorType.InvalidUserOrPassword);
-            var verificationResult = passwordHasher.VerifyHashedPassword(account, account.PasswordHash, password);
+
+            var verificationResult = passwordHasher.VerifyHashedPassword(accountWithPassword, accountWithPassword.PasswordHash, password);
             switch (verificationResult)
             {
                 case PasswordVerificationResult.Failed:
                     return AuthenticationResult.Failed(AuthenticationErrorType.InvalidUserOrPassword);
                 case PasswordVerificationResult.SuccessRehashNeeded:
-                    account.PasswordHash = passwordHasher.HashPassword(account, password);
+                    accountWithPassword.PasswordHash = passwordHasher.HashPassword(accountWithPassword, password);
                     await accountStore.StoreAsync(account);
                     break;
                 case PasswordVerificationResult.Success:
@@ -101,7 +115,9 @@ namespace Mensch.Id.API.AccessControl
                 if(!localAccount.IsEmailVerified)
                     return AuthenticationResult.Failed(AuthenticationErrorType.EmailNotVerified);
             }
-            return BuildSecurityTokenForUser(account);
+            return account is LocalAnonymousAccount localAnonymousAccount ? BuildSecurityTokenForUser(localAnonymousAccount)
+                    : account is ProfessionalAccount professionalAccount ? BuildSecurityTokenForUser(professionalAccount)
+                    : throw new NotSupportedException($"Cannot build security token for {account.GetType().Name}");
         }
 
         public async Task<AuthenticationResult> AuthenticateExternalAsync(List<Claim> externalClaims)
@@ -122,6 +138,13 @@ namespace Mensch.Id.API.AccessControl
         public AuthenticationResult BuildSecurityTokenForUser(LocalAnonymousAccount account)
         {
             var claims = claimsBuilder.BuildForLocalUser(account);
+            var token = securityTokenBuilder.Build(claims);
+            return AuthenticationResult.Success(claims, token, account.AccountType);
+        }
+
+        public AuthenticationResult BuildSecurityTokenForUser(ProfessionalAccount account)
+        {
+            var claims = claimsBuilder.BuildForProfessionalUser(account);
             var token = securityTokenBuilder.Build(claims);
             return AuthenticationResult.Success(claims, token, account.AccountType);
         }

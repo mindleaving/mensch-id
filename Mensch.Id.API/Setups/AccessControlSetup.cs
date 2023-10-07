@@ -31,7 +31,7 @@ namespace Mensch.Id.API.Setups
             services.AddSingleton<ISecurityTokenBuilder>(_ => new JwtSecurityTokenBuilder(jwtPrivateKey));
             services.AddScoped<IAuthenticationModule, AuthenticationModule>();
             services.AddScoped<IAccountCreator, AccountCreator>();
-            services.AddSingleton<IPasswordHasher<LocalAnonymousAccount>, PasswordHasher<LocalAnonymousAccount>>();
+            services.AddSingleton<IPasswordHasher<IAccountWithPassword>, PasswordHasher<IAccountWithPassword>>();
             services.AddScoped<GoogleAuthenticationEvents>();
             services.AddScoped<TwitterAuthenticationEvents>();
             services.AddScoped<FacebookAuthenticationEvents>();

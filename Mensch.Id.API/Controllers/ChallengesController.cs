@@ -1,13 +1,17 @@
 ﻿using System.Net;
 using System.Threading.Tasks;
+using Mensch.Id.API.AccessControl.Policies;
 using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Models;
+using Mensch.Id.API.Models.AccessControl;
 using Mensch.Id.API.Storage;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Mensch.Id.API.Controllers
 {
+    [Authorize(Policy = RegularUserPolicy.PolicyName)]
     [ApiController]
     [Route("api/[controller]")]
     public class ChallengesController : ControllerBase
@@ -35,7 +39,7 @@ namespace Mensch.Id.API.Controllers
             if (!ControllerInputSanitizer.ValidateAndSanitizeMandatoryId(challengeId, out challengeId))
                 return BadRequest("Invalid challenge-ID");
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
-            var account = await accountStore.GetFromClaimsAsync(claims);
+            var account = (PersonAccount)await accountStore.GetFromClaimsAsync(claims);
             if (account.PersonId == null)
                 return StatusCode((int)HttpStatusCode.ServiceUnavailable, "You cannot see challenges yet because you haven't finished you profile yet");
             var matchingChallenge = await challengeStore.GetByIdAsync(challengeId);
@@ -56,7 +60,7 @@ namespace Mensch.Id.API.Controllers
             [FromQuery] int? skip = 0)
         {
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
-            var account = await accountStore.GetFromClaimsAsync(claims);
+            var account = (PersonAccount)await accountStore.GetFromClaimsAsync(claims);
             if (account.PersonId == null)
                 return StatusCode((int)HttpStatusCode.ServiceUnavailable, "You cannot see challenges yet because you haven't finished you profile yet");
             var upperSearchText = searchText.ToUpper();
@@ -78,7 +82,7 @@ namespace Mensch.Id.API.Controllers
             if (!ControllerInputSanitizer.ValidateAndSanitizeMandatoryId(challengeId, out challengeId))
                 return BadRequest("Invalid challenge-ID");
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
-            var account = await accountStore.GetFromClaimsAsync(claims);
+            var account = (PersonAccount)await accountStore.GetFromClaimsAsync(claims);
             if (account.PersonId == null)
                 return StatusCode((int)HttpStatusCode.ServiceUnavailable, "You cannot delete challenges yet because you haven't finished you profile yet");
             var matchingChallenge = await challengeStore.GetByIdAsync(challengeId);

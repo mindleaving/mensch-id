@@ -159,8 +159,11 @@ export namespace Models {
     export namespace AccessControl {
         interface Account extends Models.IId {
             accountType: Enums.AccountType;
-            personId: string;
             preferedLanguage: Enums.Language;
+        }
+    
+        interface PersonAccount extends Models.AccessControl.Account {
+            personId: string;
         }
     
         interface AdminAccount extends Models.AccessControl.ProfessionalAccount {
@@ -174,9 +177,13 @@ export namespace Models {
             contact: Models.Contact;
         }
     
-        interface ExternalAccount extends Models.AccessControl.Account {
+        interface ExternalAccount extends Models.AccessControl.PersonAccount {
             loginProvider: Enums.LoginProvider;
             externalId: string;
+        }
+    
+        interface IAccountWithPassword {
+            passwordHash: string;
         }
     
         interface IExternalLogin {
@@ -191,12 +198,11 @@ export namespace Models {
             isEmailVerified: boolean;
         }
     
-        interface LocalAnonymousAccount extends Models.AccessControl.Account {
-            passwordHash: string;
+        interface LocalAnonymousAccount extends Models.AccessControl.PersonAccount, Models.AccessControl.IAccountWithPassword {
             passwordResetToken: string;
         }
     
-        interface ProfessionalAccount extends Models.AccessControl.LocalAccount {
+        interface ProfessionalAccount extends Models.AccessControl.Account, Models.AccessControl.IAccountWithPassword {
             username: string;
         }
     }

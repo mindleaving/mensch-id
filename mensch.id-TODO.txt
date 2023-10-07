@@ -2,10 +2,10 @@
 
 ## Bugs
 - Can register multiple anonymous accounts linked to same mensch.ID, but only one password works. Desired behavior: Prohibit multiple anonymous accounts for same mensch.ID.
-- Cannot reset password of new assigner account
 
 ## Features
 - Write terms of service
+- Implement mechanism for assigners to set their initial password. 
 
 
 ## Tasks

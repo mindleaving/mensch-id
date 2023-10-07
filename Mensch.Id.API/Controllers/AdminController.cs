@@ -67,7 +67,7 @@ public class AdminController : ControllerBase
         if (request == null)
             return NotFound();
         var password = new TemporaryPasswordGenerator { AllowedCharacters = "abcdefghijkmnpqrstuvwxyzACDEFGHJKLMNPQRSTUVWXYZ2345679"}.Generate(8);
-        LocalAccount account;
+        AssignerAccount account;
         try
         {
             account = await accountCreator.CreateAssigner(
@@ -79,27 +79,31 @@ public class AdminController : ControllerBase
         {
             return StatusCode((int)HttpStatusCode.Conflict, e.Message);
         }
-        account.PasswordResetToken = PasswordReset.GenerateToken(account.EmailVerificationAndPasswordResetSalt, out var unencryptedToken);
-        await accountStore.StoreAsync(account);
-        try
-        {
-            var email = new AssignerAccountRequestApprovedEmail
-            {
-                AccountId = account.Id,
-                Name = request.ContactPersonName,
-                RecipientAddress = request.Email,
-                PreferedLanguage = Language.en,
-                ResetToken = unencryptedToken
-            };
-            await emailSender.SendAssignerAccountApprovedEmail(email);
-            await accountRequestStore.DeleteAsync(id);
-            return Ok();
-        }
-        catch
-        {
-            await accountStore.DeleteAsync(account.Id);
-            return StatusCode((int)HttpStatusCode.InternalServerError, "Could not send email to applicant");
-        }
+
+        return Ok();
+
+        // TODO: Implement mechanism for assigners to set their initial password. 
+        //account.PasswordResetToken = PasswordReset.GenerateToken(account.EmailVerificationAndPasswordResetSalt, out var unencryptedToken);
+        //await accountStore.StoreAsync(account);
+        //try
+        //{
+        //    var email = new AssignerAccountRequestApprovedEmail
+        //    {
+        //        AccountId = account.Id,
+        //        Name = request.ContactPersonName,
+        //        RecipientAddress = request.Email,
+        //        PreferedLanguage = Language.en,
+        //        ResetToken = unencryptedToken
+        //    };
+        //    await emailSender.SendAssignerAccountApprovedEmail(email);
+        //    await accountRequestStore.DeleteAsync(id);
+        //    return Ok();
+        //}
+        //catch
+        //{
+        //    await accountStore.DeleteAsync(account.Id);
+        //    return StatusCode((int)HttpStatusCode.InternalServerError, "Could not send email to applicant");
+        //}
     }
 
     [HttpDelete("assigner-requests/{id}")]
