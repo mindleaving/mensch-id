@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using Commons.Extensions;
-using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Models;
 using Mensch.Id.API.Models.RequestParameters;
 
@@ -22,13 +21,26 @@ public class AssignedProfileFillterExpressionBuilder : IFilterExpressionBuilder<
             filterExpressions.Add(searchTextFilter);
         }
 
-        if (queryParameters.TimeRangeStart.HasValue)
+        // Creation time
+        if (queryParameters.CreationTimeRangeStart.HasValue)
         {
-            filterExpressions.Add(x => x.CreationDate >= queryParameters.TimeRangeStart.Value);
+            filterExpressions.Add(x => x.CreationDate >= queryParameters.CreationTimeRangeStart.Value);
         }
-        if (queryParameters.TimeRangeEnd.HasValue)
+        if (queryParameters.CreationTimeRangeEnd.HasValue)
         {
-            filterExpressions.Add(x => x.CreationDate < queryParameters.TimeRangeEnd.Value);
+            filterExpressions.Add(x => x.CreationDate < queryParameters.CreationTimeRangeEnd.Value);
+        }
+
+        // Birth date
+        if (queryParameters.BirthDateTimeRangeStart.HasValue)
+        {
+            var birthDateTimeRangeStart = queryParameters.BirthDateTimeRangeStart.Value.ToString("yyyyMMdd");
+            filterExpressions.Add(x => x.Id.CompareTo(birthDateTimeRangeStart) >= 0);
+        }
+        if (queryParameters.BirthDateTimeRangeEnd.HasValue)
+        {
+            var birthDateTimeRangeEnd = queryParameters.BirthDateTimeRangeEnd.Value.AddDays(1).ToString("yyyyMMdd");
+            filterExpressions.Add(x => x.Id.CompareTo(birthDateTimeRangeEnd) < 0);
         }
 
         return filterExpressions;

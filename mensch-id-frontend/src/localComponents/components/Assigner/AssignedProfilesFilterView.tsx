@@ -5,6 +5,7 @@ import { RowFormGroup } from "../../../sharedCommonComponents/components/FormCon
 import { resolveText } from "../../../sharedCommonComponents/helpers/Globalizer";
 import { Update } from "../../../sharedCommonComponents/types/frontendTypes";
 import { Models } from "../../types/models";
+import { endOfDay } from "date-fns";
 
 interface AssignedProfilesFilterViewProps {
     filter: Models.RequestParameters.AssignedProfilesRequestParameters;
@@ -28,25 +29,51 @@ export const AssignedProfilesFilterView = (props: AssignedProfilesFilterViewProp
                 searchText: searchText
             }))}
         />
-        <FormGroup as={Row}>
-            <FormLabel column>{resolveText("TimeRange")}</FormLabel>
+        <FormGroup as={Row} className="my-1">
+            <FormLabel column>{resolveText("AssignerControlledProfile_CreationDate")}</FormLabel>
             <Col>
                 <DateRangeFormControl
-                    value={filter?.timeRangeStart && filter?.timeRangeEnd 
-                        ? [ filter.timeRangeStart, filter.timeRangeEnd ]
+                    value={filter?.creationTimeRangeStart && filter?.creationTimeRangeEnd 
+                        ? [ filter.creationTimeRangeStart, filter.creationTimeRangeEnd ]
                         : undefined}
                     onChange={(startDate, endDate) => {
                         if(startDate && endDate) {
                             onChange(state => ({
                                 ...state,
-                                timeRangeStart: startDate,
-                                timeRangeEnd: endDate
+                                creationTimeRangeStart: startDate,
+                                creationTimeRangeEnd: endOfDay(new Date(endDate)).toISOString() as any
                             }));
                         } else {
                             onChange(state => ({
                                 ...state,
-                                timeRangeStart: undefined,
-                                timeRangeEnd: undefined
+                                creationTimeRangeStart: undefined,
+                                creationTimeRangeEnd: undefined
+                            }));
+                        }
+                    }}
+                    triggerOnChangeForUndefinedRange
+                />
+            </Col>
+        </FormGroup>
+        <FormGroup as={Row} className="my-1">
+            <FormLabel column>{resolveText("BirthDate")}</FormLabel>
+            <Col>
+                <DateRangeFormControl
+                    value={filter?.birthDateTimeRangeStart && filter?.birthDateTimeRangeEnd 
+                        ? [ filter.birthDateTimeRangeStart, filter.birthDateTimeRangeEnd ]
+                        : undefined}
+                    onChange={(startDate, endDate) => {
+                        if(startDate && endDate) {
+                            onChange(state => ({
+                                ...state,
+                                birthDateTimeRangeStart: startDate,
+                                birthDateTimeRangeEnd: endOfDay(new Date(endDate)).toISOString() as any
+                            }));
+                        } else {
+                            onChange(state => ({
+                                ...state,
+                                birthDateTimeRangeStart: undefined,
+                                birthDateTimeRangeEnd: undefined
                             }));
                         }
                     }}

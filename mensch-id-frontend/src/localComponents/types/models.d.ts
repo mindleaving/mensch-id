@@ -135,8 +135,10 @@ export namespace Models {
 
     export namespace RequestParameters {
         interface AssignedProfilesRequestParameters extends Models.RequestParameters.GenericItemsRequestParameters {
-            timeRangeStart?: Date | null;
-            timeRangeEnd?: Date | null;
+            creationTimeRangeStart?: Date | null;
+            creationTimeRangeEnd?: Date | null;
+            birthDateTimeRangeStart?: Date | null;
+            birthDateTimeRangeEnd?: Date | null;
         }
     
         interface GenericItemsRequestParameters {

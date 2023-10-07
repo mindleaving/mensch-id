@@ -4,7 +4,10 @@ namespace Mensch.Id.API.Models.RequestParameters
 {
     public class AssignedProfilesRequestParameters : GenericItemsRequestParameters
     {
-        public DateTime? TimeRangeStart { get; set; }
-        public DateTime? TimeRangeEnd { get; set; }
+        public DateTime? CreationTimeRangeStart { get; set; }
+        public DateTime? CreationTimeRangeEnd { get; set; }
+
+        public DateTime? BirthDateTimeRangeStart { get; set; }
+        public DateTime? BirthDateTimeRangeEnd { get; set; }
     }
 }
