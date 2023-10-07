@@ -21,7 +21,7 @@ export const ContactFormSection = (props: ContactFormSectionProps) => {
         <RowFormGroup 
             required={required}
             label={resolveText("Contact_Name")}
-            value={value.name}
+            value={value?.name ?? ''}
             onChange={name => onChange(state => ({
                 ...state,
                 name: name
@@ -30,7 +30,7 @@ export const ContactFormSection = (props: ContactFormSectionProps) => {
         <RowFormGroup
             required={requireEmail}
             label={resolveText("Contact_Email")}
-            value={value.email}
+            value={value?.email ?? ''}
             onChange={email => onChange(state => ({
                 ...state,
                 email: email
@@ -39,7 +39,7 @@ export const ContactFormSection = (props: ContactFormSectionProps) => {
         <RowFormGroup
             required={requirePhoneNumber}
             label={resolveText("Contact_PhoneNumber")}
-            value={value.phoneNumber}
+            value={value?.phoneNumber ?? ''}
             onChange={phoneNumber => onChange(state => ({
                 ...state,
                 phoneNumber: phoneNumber

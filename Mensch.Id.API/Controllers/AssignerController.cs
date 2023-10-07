@@ -119,11 +119,14 @@ public class AssignerController : ControllerBase
         var acount = await accountStore.GetByIdAsync(accountId);
         if (acount is not AssignerAccount assignerAccount)
             return NotFound();
+        var oldLogoId = assignerAccount.LogoId;
         var logoFileId = Guid.NewGuid().ToString();
         await fileStore.StoreAsync(logoFileId, Request.Body);
         assignerAccount.LogoId = logoFileId;
         assignerAccount.LogoImageType = Request.ContentType;
         await accountStore.StoreAsync(assignerAccount);
+        if(oldLogoId != null)
+            fileStore.Delete(oldLogoId);
         return Ok();
     }
 

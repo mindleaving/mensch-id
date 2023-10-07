@@ -102,7 +102,7 @@ export const PrintCertificatePage = (props: PrintCertificatePageProps) => {
                     {assignerProfile.logoId 
                     ? <img 
                         src={apiClient.instance!.buildUrl(`/api/assigner/${assignerProfile.accountId}/logo/${assignerProfile.logoId}`)} 
-                        width='100%' 
+                        width='100%'
                         alt='assigner-logo' 
                         className='mb-2'
                     />
@@ -134,11 +134,11 @@ export const PrintCertificatePage = (props: PrintCertificatePageProps) => {
                     <hr />
                     <div id="issuer">
                         <small>
-                            {resolveText("IssuedBy", language)}: {contactInformation.name} (
+                            {resolveText("IssuedBy", language)}: {assignerProfile.name} (
                                 {address.street}, {address.postalCode} {address.city}, {address.country}
                             ), 
-                            <span className='text-nowrap'><i className='fa fa-phone mx-2' /> {contactInformation.phoneNumber},</span>
-                            <span className='text-nowrap'><i className='fa fa-envelope mx-2' /> {contactInformation.email}</span>
+                            {contactInformation.phoneNumber ? <span className='text-nowrap'><i className='fa fa-phone mx-2' /> {contactInformation.phoneNumber},</span> : null}
+                            {contactInformation.email ? <span className='text-nowrap'><i className='fa fa-envelope mx-2' /> {contactInformation.email}</span> : null}
                         </small>
                     </div>
                     <div id='signature'>

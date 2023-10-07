@@ -90,7 +90,11 @@ export const AssignerLogoUploadForm = (props: AssignerLogoUploadFormProps) => {
             <Col xs={2}>
                 {user.logoId
                 ? <>
-                    <img src={apiClient.instance!.buildUrl(`/api/assigner/${user.accountId}/logo/${user.logoId}`)} alt="Logo"/>
+                    <img 
+                        src={apiClient.instance!.buildUrl(`/api/assigner/${user.accountId}/logo/${user.logoId}`)} 
+                        alt="Logo"
+                        width='100%'
+                    />
                     <Center className="mt-2">
                         <DeleteButton
                             type="button"
@@ -116,6 +120,7 @@ export const AssignerLogoUploadForm = (props: AssignerLogoUploadFormProps) => {
                         'image/png': ['.png'],
                         'image/jpg': ['.jpg', '.jpeg' ],
                         'image/gif': ['.gif' ],
+                        'image/svg+xml': ['.svg' ],
                     }}
                     maxFiles={1}
                     disabled={isUploading}
@@ -124,7 +129,8 @@ export const AssignerLogoUploadForm = (props: AssignerLogoUploadFormProps) => {
                         if(lowerFileName.endsWith(".png") 
                             || lowerFileName.endsWith(".jpg")
                             || lowerFileName.endsWith(".jpeg")
-                            || lowerFileName.endsWith(".gif")) {
+                            || lowerFileName.endsWith(".gif")
+                            || lowerFileName.endsWith(".svg")) {
                             return null;
                         }
                         return {

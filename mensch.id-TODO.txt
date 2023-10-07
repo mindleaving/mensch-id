@@ -2,13 +2,14 @@
 
 ## Bugs
 - Can register multiple anonymous accounts linked to same mensch.ID, but only one password works. Desired behavior: Prohibit multiple anonymous accounts for same mensch.ID.
+- Shop crashes on contact information step because of trim of null-value (probably no phone number or email)
+- When already logged in: On startup page is in english and then switches to the prefered language.
+- Filter of assigned mensch.IDs: Time range refers to creation date, but intention could be to get the mensch.IDs in a specific time range. Solution: Add another filter and rename to "Creation time range" and "Birth date". Make sure that selection of single date includes the whole day (0:00:00 to 23:59:59)
 
 ## Features
 - Write terms of service
-- Implement mechanism for assigners to set their initial password. 
-- Language-selector for print certificate page
+- Implement mechanism for assigners to set their initial password.
 
 
 ## Tasks
-- Create birth clinics users
 - Complete test of mensch.ID site

@@ -8,10 +8,13 @@ import { StoreButton } from "../../../sharedCommonComponents/components/StoreBut
 import { sendPutRequest } from "../../../sharedCommonComponents/helpers/StoringHelpers";
 import { Center } from "../../../sharedCommonComponents/components/Center";
 
-interface AssignerNameFormProps {}
+interface AssignerNameFormProps {
+    setUserViewModel: (userViewModel: ViewModels.AssignerAccountViewModel) => void;
+}
 
 export const AssignerNameForm = (props: AssignerNameFormProps) => {
 
+    const { setUserViewModel } = props;
     const user = useContext(UserContext)! as ViewModels.AssignerAccountViewModel;
 
     const [ name, setName ] = useState<string>(user.name ?? '');
@@ -25,8 +28,10 @@ export const AssignerNameForm = (props: AssignerNameFormProps) => {
             `api/assigner/me/name`, {},
             resolveText("AssignerAccount_CouldNotStoreName"),
             `"${name}"`,
-            _ => {
-                setIsStored(true)
+            async response => {
+                setIsStored(true);
+                const userViewModel = await response.json() as ViewModels.AssignerAccountViewModel;
+                setUserViewModel(userViewModel);
             },
             undefined,
             () => setIsSubmitting(false)

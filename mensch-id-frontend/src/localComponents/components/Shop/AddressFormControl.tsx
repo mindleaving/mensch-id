@@ -18,7 +18,7 @@ export const AddressFormControl = (props: AddressFormControlProps) => {
         <RowFormGroup 
             required={required}
             label={resolveText("Address_Street")}
-            value={value.street}
+            value={value?.street ?? ''}
             onChange={street => onChange(state => ({
                 ...state,
                 street: street
@@ -27,7 +27,7 @@ export const AddressFormControl = (props: AddressFormControlProps) => {
         <RowFormGroup
             required={required}
             label={resolveText("Address_PostalCode")}
-            value={value.postalCode}
+            value={value?.postalCode ?? ''}
             onChange={postalCode => onChange(state => ({
                 ...state,
                 postalCode: postalCode
@@ -36,7 +36,7 @@ export const AddressFormControl = (props: AddressFormControlProps) => {
         <RowFormGroup
             required={required}
             label={resolveText("Address_City")}
-            value={value.city}
+            value={value?.city ?? ''}
             onChange={city => onChange(state => ({
                 ...state,
                 city: city
@@ -45,7 +45,7 @@ export const AddressFormControl = (props: AddressFormControlProps) => {
         <RowFormGroup
             required={required}
             label={resolveText("Address_Country")}
-            value={value.country}
+            value={value?.country ?? ''}
             onChange={country => onChange(state => ({
                 ...state,
                 country: country

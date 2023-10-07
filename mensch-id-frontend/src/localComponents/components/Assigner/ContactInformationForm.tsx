@@ -10,10 +10,12 @@ import { Center } from "../../../sharedCommonComponents/components/Center";
 import { ContactFormSection } from "../Shop/ContactFormSection";
 
 interface ContactInformationFormProps {
+    setUserViewModel: (userViewModel: ViewModels.AssignerAccountViewModel) => void;
 }
 
 export const ContactInformationForm = (props: ContactInformationFormProps) => {
 
+    const { setUserViewModel } = props;
     const user = useContext(UserContext)! as ViewModels.AssignerAccountViewModel;
 
     const [ contactInformation, setContactInformation ] = useState<Models.Contact>(user.contactInformation ?? {
@@ -37,8 +39,10 @@ export const ContactInformationForm = (props: ContactInformationFormProps) => {
             `api/assigner/me/contact`, {},
             resolveText("Contact_CouldNotStore"),
             contactInformation,
-            _ => {
-                setIsStored(true)
+            async response => {
+                setIsStored(true);
+                const userViewModel = await response.json() as ViewModels.AssignerAccountViewModel;
+                setUserViewModel(userViewModel);
             },
             undefined,
             () => setIsSubmitting(false)

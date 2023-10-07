@@ -34,12 +34,16 @@ export const AssignerAccountManagementPage = (props: AssignerAccountManagementPa
         <h1>{resolveText("AccountManagement")}</h1>
 
         <h3>{resolveText("AssignerAccount_Name")}</h3>
-        <AssignerNameForm />
+        <AssignerNameForm 
+            setUserViewModel={setUserViewModel}
+        />
         
         <hr className="my-3" />
 
         <h3>{resolveText("ContactInformation")}</h3>
-        <ContactInformationForm />
+        <ContactInformationForm
+            setUserViewModel={setUserViewModel}
+        />
 
         <hr className="my-3" />
 
