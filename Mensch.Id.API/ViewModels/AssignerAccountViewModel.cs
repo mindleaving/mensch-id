@@ -14,6 +14,7 @@ namespace Mensch.Id.API.ViewModels
             LogoId = account.LogoId;
             LogoImageType = account.LogoImageType;
             ContactInformation = account.Contact;
+            PreferedLanguage = account.PreferedLanguage;
         }
 
         public UserType UserType => UserType.Assigner;
@@ -24,5 +25,6 @@ namespace Mensch.Id.API.ViewModels
         [TypescriptIsOptional]
         public string LogoImageType { get; }
         public Contact ContactInformation { get; }
+        public Language PreferedLanguage { get; set; }
     }
 }

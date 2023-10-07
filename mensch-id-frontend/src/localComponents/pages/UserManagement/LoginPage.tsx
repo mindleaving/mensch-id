@@ -1,6 +1,6 @@
 import { apiClient } from '../../../sharedCommonComponents/communication/ApiClient';
 import { resolveText } from '../../../sharedCommonComponents/helpers/Globalizer';
-import { LoginProvider } from '../../types/enums.d';
+import { LoginProvider } from '../../types/enums';
 import { Models } from '../../types/models';
 import { LoginForm } from '../../components/LoginForm';
 import { showInfoAlert } from '../../../sharedCommonComponents/helpers/AlertHelpers';

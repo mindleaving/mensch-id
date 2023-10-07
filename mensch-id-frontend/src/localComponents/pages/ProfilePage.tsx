@@ -5,7 +5,7 @@ import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { apiClient } from '../../sharedCommonComponents/communication/ApiClient';
 import { ApiError } from '../../sharedCommonComponents/communication/ApiError';
 import { CopyButton } from '../../sharedCommonComponents/components/CopyButton';
-import { LoginProvider } from '../types/enums.d';
+import { LoginProvider } from '../types/enums';
 import { useContext } from 'react';
 import UserContext from '../contexts/UserContext';
 import { useNavigate } from 'react-router-dom';

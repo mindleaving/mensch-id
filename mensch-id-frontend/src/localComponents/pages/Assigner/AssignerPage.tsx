@@ -7,7 +7,7 @@ import { AssignedProfilesTable } from '../../components/Assigner/AssignedProfile
 import { IdCandidateAlert } from '../../components/Assigner/IdCandidateAlert';
 import { NewIdCandidateForm } from '../../components/Assigner/NewIdCandidateForm';
 import UserContext from '../../contexts/UserContext';
-import { OrderDirection } from '../../types/enums.d';
+import { OrderDirection } from '../../types/enums';
 import { Models } from '../../types/models';
 import { ViewModels } from '../../types/viewModels';
 

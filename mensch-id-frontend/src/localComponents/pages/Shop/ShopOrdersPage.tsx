@@ -8,11 +8,11 @@ import { deleteObject } from "../../../sharedCommonComponents/helpers/DeleteHelp
 import { resolveText } from "../../../sharedCommonComponents/helpers/Globalizer";
 import { buildLoadObjectFunc } from "../../../sharedCommonComponents/helpers/LoadingHelpers";
 import { sendPostRequest } from "../../../sharedCommonComponents/helpers/StoringHelpers";
-import { OrderStatus } from "../../types/enums.d";
+import { OrderStatus } from "../../types/enums";
 import { Models } from "../../types/models";
 import { OrderViewerModal } from "../../modals/OrderViewerModal";
 import { QueryParameters } from "../../../sharedCommonComponents/types/frontendTypes";
-import { OrderDirection } from "../../../sharedCommonComponents/types/enums.d";
+import { OrderDirection } from "../../../sharedCommonComponents/types/enums";
 
 interface ShopOrdersPageProps {}
 

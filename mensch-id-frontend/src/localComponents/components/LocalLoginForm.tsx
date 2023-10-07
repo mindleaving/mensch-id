@@ -3,7 +3,7 @@ import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import UserContext from '../contexts/UserContext';
 import { Models } from '../types/models';
 import { apiClient } from '../../sharedCommonComponents/communication/ApiClient';
-import { AuthenticationErrorType } from '../types/enums.d';
+import { AuthenticationErrorType } from '../types/enums';
 import { useNavigate } from 'react-router-dom';
 import { Button, Col, Form, Row } from 'react-bootstrap';
 import { AsyncButton } from '../../sharedCommonComponents/components/AsyncButton';

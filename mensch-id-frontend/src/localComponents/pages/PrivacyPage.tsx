@@ -1,7 +1,7 @@
 import { defaultGlobalizer, resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { PrivacyPolicyDe } from '../components/PrivacyPolicy/PrivacyPolicy_DE';
 import { PrivacyPolicyEn } from '../components/PrivacyPolicy/PrivacyPolicy_EN';
-import { Language } from '../types/enums.d';
+import { Language } from '../types/enums';
 
 export const PrivacyPage = () => {
 

@@ -5,7 +5,7 @@ import { formatMoney } from "../../helpers/Formatter";
 import { Models } from "../../types/models";
 import { Update } from "../../../sharedCommonComponents/types/frontendTypes";
 import { useMemo } from "react";
-import { Currency } from "../../types/enums.d";
+import { Currency } from "../../types/enums";
 import { getShipmentCost } from "../../helpers/ShopHelpers";
 
 interface ShoppingCartTableProps {

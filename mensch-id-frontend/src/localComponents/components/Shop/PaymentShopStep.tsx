@@ -1,7 +1,7 @@
 import { Alert, Col, FormCheck, Row } from "react-bootstrap";
 import { resolveText } from "../../../sharedCommonComponents/helpers/Globalizer";
 import { Update } from "../../../sharedCommonComponents/types/frontendTypes";
-import { PaymentMethod } from "../../types/enums.d";
+import { PaymentMethod } from "../../types/enums";
 import { Models } from "../../types/models";
 import { PreviousNextButtonRow } from "./PreviousNextButtonRow";
 

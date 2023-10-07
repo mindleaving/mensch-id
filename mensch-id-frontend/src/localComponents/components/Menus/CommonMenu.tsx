@@ -1,7 +1,7 @@
 import { Nav, NavDropdown } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { resolveText } from "../../../sharedCommonComponents/helpers/Globalizer";
-import { AccountType } from "../../types/enums.d";
+import { AccountType } from "../../types/enums";
 
 interface CommonMenuProps {
     accountType?: AccountType;

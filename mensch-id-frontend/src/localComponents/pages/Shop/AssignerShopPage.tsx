@@ -1,7 +1,7 @@
 import { useState, useContext } from "react";
 import { Models } from "../../types/models";
 import { uuid } from "../../../sharedCommonComponents/helpers/uuid";
-import { OrderStatus, PaymentMethod, ShippingMethod } from "../../types/enums.d";
+import { OrderStatus, PaymentMethod, ShippingMethod } from "../../types/enums";
 import UserContext from "../../contexts/UserContext";
 import { ViewModels } from "../../types/viewModels";
 import { ProductSelectionShopStep } from "../../components/Shop/ProductSelectionShopStep";

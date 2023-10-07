@@ -2,7 +2,7 @@ import { PropsWithChildren, Suspense } from 'react';
 import { Button, Container, Nav, Navbar, NavItem } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
-import { AccountType } from '../types/enums.d';
+import { AccountType } from '../types/enums';
 import { AssignerMenu } from './Menus/AssignerMenu';
 import { RegularUserMenu } from './Menus/RegularUserMenu';
 import { ToastContainer } from 'react-toastify';

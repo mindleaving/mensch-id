@@ -1,4 +1,4 @@
-import * as Enums from './enums.d';
+import * as Enums from './enums';
 
 export namespace Models {
     interface Address {

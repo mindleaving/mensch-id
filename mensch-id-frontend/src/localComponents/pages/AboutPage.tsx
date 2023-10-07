@@ -2,7 +2,7 @@ import { VerbatimText } from '../../sharedCommonComponents/components/VerbatimTe
 import { defaultGlobalizer, resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { FAQ_DE } from '../components/FAQ/FAQ_DE';
 import { FAQ_EN } from '../components/FAQ/FAQ_EN';
-import { Language } from '../types/enums.d';
+import { Language } from '../types/enums';
 
 export const AboutPage = () => {
 

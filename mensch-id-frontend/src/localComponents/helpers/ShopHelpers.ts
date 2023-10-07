@@ -1,4 +1,4 @@
-import { Currency, ShippingMethod } from "../types/enums.d";
+import { Currency, ShippingMethod } from "../types/enums";
 import { Models } from "../types/models";
 
 export const getShipmentCost = (shippingMethod: ShippingMethod): Models.Shop.Money => {

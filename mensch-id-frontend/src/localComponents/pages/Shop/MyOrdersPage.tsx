@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { resolveText } from "../../../sharedCommonComponents/helpers/Globalizer";
 import { buildLoadObjectFunc } from "../../../sharedCommonComponents/helpers/LoadingHelpers";
 import { OrdersList } from "../../components/Shop/OrdersList";
-import { OrderDirection } from "../../types/enums.d";
+import { OrderDirection } from "../../types/enums";
 import { Models } from "../../types/models";
 
 interface MyOrdersPageProps {}

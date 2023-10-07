@@ -11,7 +11,7 @@ import { useState, useMemo, useEffect } from "react";
 import { groupBy } from "../../../sharedCommonComponents/helpers/CollectionHelpers";
 import { buildLoadObjectFunc } from "../../../sharedCommonComponents/helpers/LoadingHelpers";
 import { Center } from "../../../sharedCommonComponents/components/Center";
-import { OrderStatus } from "../../types/enums.d";
+import { OrderStatus } from "../../types/enums";
 import { useNavigate } from "react-router-dom";
 
 interface ProductSelectionShopStepProps {

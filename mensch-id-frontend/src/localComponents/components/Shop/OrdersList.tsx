@@ -6,7 +6,7 @@ import { resolveText } from "../../../sharedCommonComponents/helpers/Globalizer"
 import { OrderViewerModal } from "../../modals/OrderViewerModal";
 import { formatDateTime } from "../../helpers/Formatter";
 import { useState } from "react";
-import { OrderStatus } from "../../types/enums.d";
+import { OrderStatus } from "../../types/enums";
 import { sendPostRequest } from "../../../sharedCommonComponents/helpers/StoringHelpers";
 import { AsyncButton } from "../../../sharedCommonComponents/components/AsyncButton";
 

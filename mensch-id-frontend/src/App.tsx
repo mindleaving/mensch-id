@@ -1,5 +1,5 @@
 import { apiClient, ApiClient } from './sharedCommonComponents/communication/ApiClient';
-import { defaultGlobalizer, Globalizer } from './sharedCommonComponents/helpers/Globalizer';
+import { defaultGlobalizer, Globalizer, setLanguage } from './sharedCommonComponents/helpers/Globalizer';
 import germanTranslation from './localComponents/resources/translation.de.json';
 import englishTranslation from './localComponents/resources/translation.en.json';
 import { Layout } from './localComponents/components/Layout';
@@ -9,7 +9,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { SessionStoreKeys } from './localComponents/types/frontendTypes.d';
 import UserContext from './localComponents/contexts/UserContext';
 import { ViewModels } from './localComponents/types/viewModels';
-import { AccountType } from './localComponents/types/enums.d';
+import { AccountType, UserType } from './localComponents/types/enums';
 import { RoutesBuilder } from './sharedCommonComponents/navigation/RoutesBuilder';
 import { NormalUserRoutes } from './localComponents/navigation/NormalUserRoutes';
 import { AssignerRoutes } from './localComponents/navigation/AssignerRoutes';
@@ -40,6 +40,9 @@ function App() {
             return;
         }
         sessionStorage.setItem(SessionStoreKeys.UserViewModel, JSON.stringify(userViewModel));
+        if(userViewModel.userType === UserType.Assigner) {
+            setLanguage((userViewModel as ViewModels.AssignerAccountViewModel).preferedLanguage);
+        }
     }, [ userViewModel ]);
 
     useEffect(() => {

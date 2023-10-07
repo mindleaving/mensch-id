@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../../../sharedCommonComponents/communication/ApiClient';
 import { showErrorAlert } from '../../../sharedCommonComponents/helpers/AlertHelpers';
 import { resolveText } from '../../../sharedCommonComponents/helpers/Globalizer';
-import { AccountType } from '../../types/enums.d';
+import { AccountType } from '../../types/enums';
 import { Models } from '../../types/models';
 
 interface LoginRedirectPageProps {
@@ -12,7 +12,6 @@ interface LoginRedirectPageProps {
 
 export const LoginRedirectPage = (props: LoginRedirectPageProps) => {
 
-    const { loginProvider } = useParams();
     const navigate = useNavigate();
 
     useEffect(() => {

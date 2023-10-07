@@ -6,7 +6,7 @@ import { deleteObject } from '../../../sharedCommonComponents/helpers/DeleteHelp
 import { resolveText } from '../../../sharedCommonComponents/helpers/Globalizer';
 import { loadObject } from '../../../sharedCommonComponents/helpers/LoadingHelpers';
 import { ChangePasswordForm } from '../../components/ChangePasswordForm';
-import { AccountType } from '../../types/enums.d';
+import { AccountType } from '../../types/enums';
 import { Models } from '../../types/models';
 
 interface AccountManagementPageProps {}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Row, Col, Button } from 'react-bootstrap';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
-import { LoginProvider } from '../types/enums.d';
+import { LoginProvider } from '../types/enums';
 
 interface ExternalLoginsProps {
     availableExternalProviders: LoginProvider[];

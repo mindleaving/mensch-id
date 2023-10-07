@@ -6,6 +6,7 @@
 ## Features
 - Write terms of service
 - Implement mechanism for assigners to set their initial password. 
+- Language-selector for print certificate page
 
 
 ## Tasks

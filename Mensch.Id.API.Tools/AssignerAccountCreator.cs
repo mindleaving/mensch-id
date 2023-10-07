@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using Commons.IO;
 using Mensch.Id.API.Models;
 using Mensch.Id.API.Models.AccessControl;
 using Mensch.Id.API.Workflow;
@@ -49,5 +51,46 @@ namespace Mensch.Id.API.Tools
             var filter = filterBuilder.Eq(nameof(ProfessionalAccount.Username), username);
             return await accountCollection.Find(filter).AnyAsync();
         }
+
+        [Test]
+        [TestCase(@"F:\datasets\menschID-assigners.csv")]
+        public async Task ImportFromCsv(string filePath)
+        {
+            var table = CsvReader.ReadTable(filePath, x => x);
+            var accounts = new List<Account>();
+            foreach (var row in table.Rows)
+            {
+                var hospital = row["Hospital"];
+                var street = row["Street"];
+                var postalCode = row["PostalCode"];
+                var city = row["City"];
+                var country = row["Country"];
+                var username = row["Username"];
+                var password = row["Password"];
+
+                var account = new AssignerAccount
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Name = hospital,
+                    Username = username,
+                    PreferedLanguage = Language.de,
+                    Contact = new Contact
+                    {
+                        Address = new Address
+                        {
+                            Street = street,
+                            PostalCode = postalCode,
+                            City = city,
+                            Country = country
+                        }
+                    }
+                };
+                account.PasswordHash = passwordHasher.HashPassword(account, password);
+                accounts.Add(account);
+            }
+            var accountCollection = GetCollection<Account>();
+            await accountCollection.InsertManyAsync(accounts);
+        }
+
     }
 }

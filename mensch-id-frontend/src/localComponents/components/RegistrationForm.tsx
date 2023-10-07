@@ -5,7 +5,7 @@ import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { sendPostRequest } from '../../sharedCommonComponents/helpers/StoringHelpers';
 import { Models } from '../types/models';
 import { Center } from '../../sharedCommonComponents/components/Center';
-import { AccountType } from '../types/enums.d';
+import { AccountType } from '../types/enums';
 import { confirmAlert } from 'react-confirm-alert';
 import { useNavigate } from 'react-router-dom';
 import { showErrorAlert } from '../../sharedCommonComponents/helpers/AlertHelpers';

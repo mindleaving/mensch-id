@@ -5,7 +5,7 @@ import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import { resolveText } from '../helpers/Globalizer';
-import { OrderDirection } from '../types/enums.d';
+import { OrderDirection } from '../types/enums';
 
 interface PagedTableProps {
     onPageChanged: (pageIndex: number, entriesPerPage: number, orderBy?: string, orderDirection?: OrderDirection) => Promise<void>;

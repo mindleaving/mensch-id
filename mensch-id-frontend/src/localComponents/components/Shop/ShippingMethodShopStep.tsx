@@ -3,7 +3,7 @@ import { resolveText } from "../../../sharedCommonComponents/helpers/Globalizer"
 import { Update } from "../../../sharedCommonComponents/types/frontendTypes";
 import { Models } from "../../types/models";
 import { PreviousNextButtonRow } from "./PreviousNextButtonRow";
-import { ShippingMethod } from "../../types/enums.d";
+import { ShippingMethod } from "../../types/enums";
 
 interface ShippingMethodShopStepProps {
     order: Models.Shop.Order;

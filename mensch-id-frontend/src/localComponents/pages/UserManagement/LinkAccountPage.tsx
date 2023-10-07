@@ -6,7 +6,7 @@ import { resolveText } from '../../../sharedCommonComponents/helpers/Globalizer'
 import { buildLoadObjectFunc } from '../../../sharedCommonComponents/helpers/LoadingHelpers';
 import { sendPostRequest } from '../../../sharedCommonComponents/helpers/StoringHelpers';
 import { LoginForm } from '../../components/LoginForm';
-import { LoginProvider } from '../../types/enums.d';
+import { LoginProvider } from '../../types/enums';
 import { Models } from '../../types/models';
 import { ViewModels } from '../../types/viewModels';
 

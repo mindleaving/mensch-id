@@ -1,5 +1,5 @@
 import { apiClient } from "../communication/ApiClient";
-import { OrderDirection } from "../types/enums.d";
+import { OrderDirection } from "../types/enums";
 import { showErrorAlert } from "./AlertHelpers";
 
 export default class PagedTableLoader<T> {

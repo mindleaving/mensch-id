@@ -1,5 +1,5 @@
 import { Models } from './models.d';
-import * as Enums from './enums.d';
+import * as Enums from './enums';
 
 export namespace ViewModels {
     interface AssignerAccountViewModel extends ViewModels.IUserViewModel {
@@ -8,6 +8,7 @@ export namespace ViewModels {
         logoId?: string;
         logoImageType?: string;
         contactInformation: Models.Contact;
+        preferedLanguage: Enums.Language;
     }
 
     interface IUserViewModel {
