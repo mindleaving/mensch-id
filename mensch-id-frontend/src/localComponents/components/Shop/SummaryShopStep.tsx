@@ -95,7 +95,7 @@ export const SummaryShopStep = (props: SummaryShopStepProps) => {
         <FormCheck
             label={<TranslatedLinkText
                 translatedTextWithPlaceholder={resolveText("Shop_AccpetTermsAndConditions")}
-                linkTarget={"/terms-of-service"}
+                linkTarget="/terms-of-service"
             />}
             checked={hasAcceptedTermsAndConditions}
             onChange={e => setHasAcceptedTermsAndConditions(e.target.checked)}

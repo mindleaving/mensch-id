@@ -153,6 +153,7 @@ export const AssignerLogoUploadForm = (props: AssignerLogoUploadFormProps) => {
                     isExecuting={isUploading}
                     activeText={resolveText("Upload")}
                     executingText={resolveText("Uploading...")}
+                    disabled={!file}
                 />
             </Col>
         </FormGroup>

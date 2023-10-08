@@ -47,7 +47,7 @@ export const ContactFormSection = (props: ContactFormSectionProps) => {
         />
         <AddressFormControl 
             required={required}
-            value={value.address}
+            value={value?.address}
             onChange={update => onChange(state => ({
                 ...state,
                 address: update(state.address)

@@ -6,6 +6,7 @@ import { resolveText } from "../../../sharedCommonComponents/helpers/Globalizer"
 import { sendPostRequest } from "../../../sharedCommonComponents/helpers/StoringHelpers";
 import { uuid } from "../../../sharedCommonComponents/helpers/uuid";
 import { Models } from "../../types/models";
+import { TranslatedLinkText } from "../../components/TranslatedLinkText";
 
 interface RequestAssignerAccountPageProps {}
 
@@ -91,7 +92,10 @@ export const RequestAssignerAccountPage = (props: RequestAssignerAccountPageProp
             </FormGroup>
             <FormGroup className="my-2">
                 <FormCheck required
-                    label={resolveText("Shop_AccpetTermsAndConditions")}
+                    label={<TranslatedLinkText
+                        translatedTextWithPlaceholder={resolveText("Shop_AccpetTermsAndConditions")}
+                        linkTarget="/terms-of-service"
+                    />}
                     checked={hasAcceptedTermsAndConditions}
                     onChange={e => setHasAcceptedTermsAndConditions(e.target.checked)}
                 />

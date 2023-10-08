@@ -19,11 +19,11 @@ export const ContactInformationShopStep = (props: ContactInformationShopStepProp
     const [ useInvoiceAddressForShipping, setuUseInvoiceAddressForShipping ] = useState<boolean>(true);
     const isInvoiceAddressComplete = useMemo(() => {
         const address = order.invoiceAddress;
-        return address.name?.trim().length > 0
-            && address.address.street?.trim().length > 0
-            && address.address.postalCode?.trim().length > 0
-            && address.address.city?.trim().length > 0
-            && address.address.country?.trim().length > 0
+        return address?.name?.trim().length > 0
+            && address?.address.street?.trim().length > 0
+            && address?.address.postalCode?.trim().length > 0
+            && address?.address.city?.trim().length > 0
+            && address?.address.country?.trim().length > 0
     }, [ order ]);
 
     return (

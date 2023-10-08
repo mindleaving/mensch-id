@@ -63,7 +63,7 @@ export const Layout = (props: PropsWithChildren<LayoutProps>) => {
                     <Navbar.Toggle />
                     <Navbar.Collapse>
                         {userMenu}
-                        <CommonMenu accountType={accountType} />
+                        <CommonMenu />
                         <Nav className='me-auto' />
                         {isLoggedIn
                         ? <Navbar.Text>

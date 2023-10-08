@@ -122,7 +122,11 @@ function App() {
 
     return (
     <UserContext.Provider value={userViewModel}>
-        <Layout isLoggedIn={isLoggedIn} accountType={accountType} onLogOut={onLogOut}> 
+        <Layout 
+            isLoggedIn={isLoggedIn} 
+            accountType={accountType} 
+            onLogOut={onLogOut}
+        > 
             <RoutesBuilder
                 routeDefinitions={routes}
                 containerBuilder={children => <PageContainer>
