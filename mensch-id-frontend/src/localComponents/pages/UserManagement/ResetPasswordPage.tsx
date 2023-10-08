@@ -1,11 +1,12 @@
 import { FormEvent, useState } from 'react';
 import { Alert, Form, FormControl, FormGroup, FormLabel } from 'react-bootstrap';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AsyncButton } from '../../../sharedCommonComponents/components/AsyncButton';
 import { showErrorAlert, showSuccessAlert, showInfoAlert } from '../../../sharedCommonComponents/helpers/AlertHelpers';
 import { resolveText } from '../../../sharedCommonComponents/helpers/Globalizer';
 import { sendPostRequest } from '../../../sharedCommonComponents/helpers/StoringHelpers';
 import { Models } from '../../types/models';
+import { AuthenticationErrorType } from '../../types/enums';
 
 interface ResetPasswordPageProps {
     onLoggedIn: (isLoggedInResponse: Models.IsLoggedInResponse) => void;
@@ -19,6 +20,7 @@ export const ResetPasswordPage = (props: ResetPasswordPageProps) => {
     const [ password, setPassword ] = useState<string>('');
     const [ passwordRepeat, setPasswordRepeat ] = useState<string>('');
     const [ isSubmitting, setIsSubmitting ] = useState<boolean>(false);
+    const navigate = useNavigate();
 
     const resetPassword = async (e?: FormEvent) => {
         e?.preventDefault();
@@ -45,7 +47,24 @@ export const ResetPasswordPage = (props: ResetPasswordPageProps) => {
                 showInfoAlert(resolveText("Redirecting..."));
                 props.onLoggedIn(isLoggedInResponse);
             },
-            undefined,
+            async response => {
+                if(response?.status === 401) {
+                    showSuccessAlert(resolveText("ResetPassword_SuccessfullyChanged"));
+                    try {
+                        const error = await response?.json() as AuthenticationErrorType;
+                        if(error === AuthenticationErrorType.EmailNotVerified) {
+                            navigate(`/verify-email?accountId=${encodeURIComponent(accountId)}`);
+                        } else {
+                            navigate('/login');
+                        }
+                    } catch {
+                        navigate('/login');
+                    }
+                    return;
+                }
+                showErrorAlert(resolveText("ResetPassword_CouldNotReset"));
+                navigate('/login');
+            },
             () => setIsSubmitting(false)
         );
     }
@@ -87,6 +106,7 @@ export const ResetPasswordPage = (props: ResetPasswordPageProps) => {
                 </FormGroup>
                 <AsyncButton
                     type='submit'
+                    className='m-3'
                     activeText={resolveText("Submit")}
                     executingText={resolveText("Submitting...")}
                     isExecuting={isSubmitting}

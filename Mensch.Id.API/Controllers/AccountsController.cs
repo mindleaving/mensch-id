@@ -166,8 +166,6 @@ namespace Mensch.Id.API.Controllers
                 return NotFound();
             if (account is not LocalAccount localAccount)
                 return NotFound();
-            if (account is AdminAccount)
-                return StatusCode((int)HttpStatusCode.Forbidden);
             if (!PasswordReset.Verify(body.ResetToken, localAccount))
                 return StatusCode((int)HttpStatusCode.Forbidden, "Invalid reset token");
             if(body.Password.Length < MinimumPasswordLength)
@@ -175,6 +173,9 @@ namespace Mensch.Id.API.Controllers
             if (!await authenticationModule.ChangePasswordAsync(localAccount.Id, body.Password))
                 return StatusCode((int)HttpStatusCode.InternalServerError, "An unknown error occured");
             var authenticationResult = await authenticationModule.AuthenticateLocalByEmailMenschIdOrUsernameAsync(new LoginInformation(localAccount.Email, body.Password));
+            if (!authenticationResult.IsAuthenticated)
+                return StatusCode((int)HttpStatusCode.Unauthorized, authenticationResult.Error);
+
             SetAccessTokenCookie(authenticationResult);
             return Ok(new IsLoggedInResponse(authenticationResult.AccountType!.Value));
         }
@@ -312,7 +313,7 @@ namespace Mensch.Id.API.Controllers
                 case LoginProvider.Microsoft:
                     var authenticationResult = await authenticationModule.AuthenticateExternalAsync(claims);
                     if (!authenticationResult.IsAuthenticated)
-                        return StatusCode((int)HttpStatusCode.Unauthorized);
+                        return StatusCode((int)HttpStatusCode.Unauthorized, authenticationResult.Error);
                     SetAccessTokenCookie(authenticationResult);
                     return Ok(new IsLoggedInResponse(authenticationResult.AccountType!.Value));
                 case LoginProvider.LocalJwt:
@@ -499,13 +500,18 @@ namespace Mensch.Id.API.Controllers
         private void SetAccessTokenCookie(
             AuthenticationResult authenticationResult)
         {
-            Response.Cookies.Append(JwtSecurityTokenBuilder.AccessTokenCookieName, authenticationResult.AccessToken, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTimeOffset.UtcNow.Add(JwtSecurityTokenBuilder.ExpirationTime)
-            });
+            if (!authenticationResult.IsAuthenticated)
+                throw new InvalidOperationException("Cannot set access  token cookie, because authentication failed");
+            Response.Cookies.Append(
+                JwtSecurityTokenBuilder.AccessTokenCookieName, 
+                authenticationResult.AccessToken, 
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTimeOffset.UtcNow.Add(JwtSecurityTokenBuilder.ExpirationTime)
+                });
         }
     }
 }

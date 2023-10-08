@@ -42,16 +42,16 @@ export const LocalLoginForm = (props: LocalLoginFormProps) => {
             try {
                 const response = await apiClient.instance!.post('api/accounts/login', loginInformation, {}, { handleError: false });
                 if(!response.ok) {
-                    const error = await response.text() as AuthenticationErrorType;
+                    const error = await response.json() as AuthenticationErrorType;
                     if(error === AuthenticationErrorType.EmailNotVerified && username.includes('@')) {
                         navigate(`/verify-email?email=${encodeURIComponent(username)}`);
                     }
-                    throw new Error("Could not log in");
+                    throw new Error(resolveText(`AuthenticationErrorType_${error}`));
                 }
                 const isLoggedInResponse = await response.json() as Models.IsLoggedInResponse;
                 props.onLoggedIn(isLoggedInResponse);
-            } catch {
-                showErrorAlert(resolveText("Login_CouldNotLogIn"));
+            } catch(e: any) {
+                showErrorAlert(resolveText("Login_CouldNotLogIn"), e?.message);
             } finally {
                 setIsSubmitting(false);
             }

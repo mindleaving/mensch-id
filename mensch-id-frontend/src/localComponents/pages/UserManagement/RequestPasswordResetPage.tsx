@@ -28,7 +28,9 @@ export const RequestPasswordResetPage = (props: RequestPasswordResetPageProps) =
             () => {
                 showSuccessAlert(resolveText("ResetPassword_SuccessfullySubmittedRequest"));
                 navigate("/");
-            }
+            },
+            undefined,
+            () => setIsSubmitting(false)
         )
     }
     return (
@@ -44,6 +46,7 @@ export const RequestPasswordResetPage = (props: RequestPasswordResetPageProps) =
                 </FormGroup>
                 <StoreButton
                     isStoring={isSubmitting}
+                    className='m-3'
                 />
             </Form>
         </>
