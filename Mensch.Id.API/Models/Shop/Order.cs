@@ -16,6 +16,7 @@ namespace Mensch.Id.API.Models.Shop
 
         [Required]
         public PaymentMethod PaymentMethod { get; set; }
+        public bool IsPaymentReceived { get; set; }
 
         [Required]
         public Contact InvoiceAddress { get; set; }

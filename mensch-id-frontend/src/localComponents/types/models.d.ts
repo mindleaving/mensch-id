@@ -105,6 +105,7 @@ export namespace Models {
         interface Order extends Models.IId {
             orderedByAccountId: string;
             paymentMethod: Enums.PaymentMethod;
+            isPaymentReceived: boolean;
             invoiceAddress: Models.Contact;
             sendInvoiceSeparately: boolean;
             shippingMethod: Enums.ShippingMethod;

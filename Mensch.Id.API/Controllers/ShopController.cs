@@ -90,6 +90,7 @@ namespace Mensch.Id.API.Controllers
                 return StatusCode((int)HttpStatusCode.Forbidden, "Only assigners can order");
             order.OrderedByAccountId = accountId;
             order.SetStatus(OrderStatus.Placed);
+            order.IsPaymentReceived = false;
             order.InvoiceAddress ??= assignerAccount.Contact;
             order.SendInvoiceSeparately = false;
             order.ShippingAddress ??= assignerAccount.Contact;
@@ -172,6 +173,22 @@ namespace Mensch.Id.API.Controllers
             if (order == null)
                 return NotFound();
             order.SetStatus(OrderStatus.Shipped);
+            await orderStore.StoreAsync(order);
+            return Ok(order);
+        }
+
+        [Authorize(Policy = AccountTypeRequirement.AdminPolicyName)]
+        [HttpPost("orders/{id}/paid/{isPaid}")]
+        public async Task<IActionResult> MarkOrderAsPaid(
+            [FromRoute] string id,
+            [FromRoute] bool isPaid)
+        {
+            if (!ControllerInputSanitizer.ValidateAndSanitizeMandatoryId(id, out id))
+                return BadRequest("Invalid order-ID");
+            var order = await orderStore.GetByIdAsync(id);
+            if (order == null)
+                return NotFound();
+            order.IsPaymentReceived = isPaid;
             await orderStore.StoreAsync(order);
             return Ok(order);
         }

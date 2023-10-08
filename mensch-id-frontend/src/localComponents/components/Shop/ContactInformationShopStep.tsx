@@ -2,7 +2,7 @@ import { Col, FormCheck, Row } from "react-bootstrap";
 import { resolveText } from "../../../sharedCommonComponents/helpers/Globalizer";
 import { Update } from "../../../sharedCommonComponents/types/frontendTypes";
 import { Models } from "../../types/models";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ContactFormSection } from "./ContactFormSection";
 import { PreviousNextButtonRow } from "./PreviousNextButtonRow";
 
@@ -16,7 +16,7 @@ interface ContactInformationShopStepProps {
 export const ContactInformationShopStep = (props: ContactInformationShopStepProps) => {
 
     const { order, onChange, onPrevious, onNext } = props;
-    const [ useInvoiceAddressForShipping, setuUseInvoiceAddressForShipping ] = useState<boolean>(true);
+    const [ useInvoiceAddressForShipping, setUseInvoiceAddressForShipping ] = useState<boolean>(true);
     const isInvoiceAddressComplete = useMemo(() => {
         const address = order.invoiceAddress;
         return address?.name?.trim().length > 0
@@ -25,6 +25,33 @@ export const ContactInformationShopStep = (props: ContactInformationShopStepProp
             && address?.address.city?.trim().length > 0
             && address?.address.country?.trim().length > 0
     }, [ order ]);
+
+    useEffect(() => {
+        if(useInvoiceAddressForShipping) {
+            onChange(state => ({
+                ...state,
+                shippingAddress: state.invoiceAddress
+            }));
+        }
+    }, [ useInvoiceAddressForShipping ]);
+
+    const updateInvoiceAddress = (update: Update<Models.Contact>) => {
+        if(useInvoiceAddressForShipping) {
+            onChange(state => {
+                const updatedInvoiceAddress = update(state.invoiceAddress);
+                return {
+                    ...state,
+                    invoiceAddress: updatedInvoiceAddress,
+                    shippingAddress: updatedInvoiceAddress
+                };
+            });
+        } else {
+            onChange(state => ({
+                ...state,
+                invoiceAddress: update(state.invoiceAddress)
+            }));
+        }
+    }
 
     return (
     <>
@@ -37,10 +64,7 @@ export const ContactInformationShopStep = (props: ContactInformationShopStepProp
                     required
                     requireEmail
                     value={order.invoiceAddress}
-                    onChange={update => onChange(state => ({
-                        ...state,
-                        invoiceAddress: update(state.invoiceAddress)
-                    }))}
+                    onChange={updateInvoiceAddress}
                 />
             </Col>
             <Col lg>
@@ -48,7 +72,7 @@ export const ContactInformationShopStep = (props: ContactInformationShopStepProp
                 <FormCheck
                     label={resolveText("Order_UseInvoiceAddressForShipping")}
                     checked={useInvoiceAddressForShipping}
-                    onChange={e => setuUseInvoiceAddressForShipping(e.target.checked)}
+                    onChange={e => setUseInvoiceAddressForShipping(e.target.checked)}
                 />
                 {useInvoiceAddressForShipping
                 ? null

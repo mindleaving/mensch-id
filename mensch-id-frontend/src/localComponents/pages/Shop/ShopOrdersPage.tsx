@@ -77,6 +77,21 @@ export const ShopOrdersPage = (props: ShopOrdersPageProps) => {
         );
     }
 
+    const setPaymentStatus = async (id: string, isPaid: boolean) => {
+        setIsSubmitting(true);
+        await sendPostRequest(
+            `api/shop/orders/${id}/paid/${isPaid}`, {},
+            resolveText("Order_CouldNotSetPaymentStatus"),
+            null,
+            async response => {
+                const updatedOrder = await response.json() as Models.Shop.Order;
+                setOrders(state => state.map(order => order.id === id ? updatedOrder : order));
+            },
+            undefined,
+            () => setIsSubmitting(false)
+        );
+    }
+
     const reject = async (id: string, force: boolean = false) => {
         if(!force) {
             const order = orders.find(x => x.id === id);
@@ -126,6 +141,7 @@ export const ShopOrdersPage = (props: ShopOrdersPageProps) => {
                     <th>{resolveText("Order_InvoiceAddress")}</th>
                     <th>{resolveText("Order_Items")}</th>
                     <th>{resolveText("Order_Status")}</th>
+                    <th>{resolveText("Order_IsPaymentReceived")}</th>
                     <th></th>
                     <th></th>
                 </tr>
@@ -156,6 +172,12 @@ export const ShopOrdersPage = (props: ShopOrdersPageProps) => {
                             }>
                                 <strong>{resolveText(`OrderStatus_${order.status}`)}</strong>
                             </span>
+                        </td>
+                        <td>
+                            <FormCheck
+                                checked={order.isPaymentReceived}
+                                onChange={e => setPaymentStatus(order.id, e.target.checked)}
+                            />
                         </td>
                         <td>
                             {order.status === OrderStatus.Placed

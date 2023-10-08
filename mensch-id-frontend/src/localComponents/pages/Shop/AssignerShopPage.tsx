@@ -27,6 +27,7 @@ export const AssignerShopPage = (props: AssignerShopPageProps) => {
         shippingAddress: user.contactInformation,
         shippingMethod: ShippingMethod.Standard,
         paymentMethod: PaymentMethod.Invoice,
+        isPaymentReceived: false,
         statusChanges: []
     });
 
@@ -41,6 +42,7 @@ export const AssignerShopPage = (props: AssignerShopPageProps) => {
             shippingAddress: user.contactInformation,
             shippingMethod: ShippingMethod.Standard,
             paymentMethod: PaymentMethod.Invoice,
+            isPaymentReceived: false,
             statusChanges: []
         });
         setStep(ShopSteps.ProductSelection);
