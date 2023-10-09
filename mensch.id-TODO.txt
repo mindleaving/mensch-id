@@ -3,12 +3,10 @@
 ## Bugs
 - Can register multiple anonymous accounts linked to same mensch.ID, but only one password works. Desired behavior: Prohibit multiple anonymous accounts for same mensch.ID.
 - When already logged in: On startup page is in english and then switches to the prefered language.
-- Changes to invoice address are not reflected to shipping address even though "Use invoice address" is selected
 
 ## Features
 - Write terms of service
 - Implement mechanism for assigners to set their initial password.
-- Add flag to track payment of order
 
 
 ## Tasks
