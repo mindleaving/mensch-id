@@ -41,7 +41,8 @@ function App() {
         }
         sessionStorage.setItem(SessionStoreKeys.UserViewModel, JSON.stringify(userViewModel));
         if(userViewModel.userType === UserType.Assigner) {
-            setLanguage((userViewModel as ViewModels.AssignerAccountViewModel).preferedLanguage);
+            // Don't set prefered language for now, use browser settings instead
+            //setLanguage((userViewModel as ViewModels.AssignerAccountViewModel).preferedLanguage);
         }
     }, [ userViewModel ]);
 
