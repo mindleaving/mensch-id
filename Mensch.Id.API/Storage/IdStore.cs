@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Mensch.Id.API.Models;
 using MongoDB.Driver;
@@ -12,6 +13,12 @@ namespace Mensch.Id.API.Storage
             string collectionName = null)
             : base(mongoDatabase, collectionName)
         {
+        }
+
+        public async Task<long> CountIdsMatching(
+            Regex regex)
+        {
+            return await collection.CountDocumentsAsync(x => regex.IsMatch(x.Id));
         }
 
         public async Task<bool> TryReserveCandidate(
