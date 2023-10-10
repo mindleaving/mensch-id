@@ -41,7 +41,7 @@ export const NewProfileForm = (props: NewProfileFormProps) => {
         }
         setIsSubmitting(true);
         await sendPostRequest(
-            `api/profiles/claim/${selectedId}`,
+            `api/profiles/claim/${selectedId}`, {},
             resolveText('Profile_CouldNotStore'),
             null,
             async response => {

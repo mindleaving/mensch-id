@@ -3,7 +3,7 @@ import { ButtonGroup, Button, Card } from 'react-bootstrap';
 import { Center } from '../../sharedCommonComponents/components/Center';
 import { HorizontalLineWithText } from '../../sharedCommonComponents/components/HorizontalLineWithText';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
-import { LoginProvider } from '../types/enums.d';
+import { LoginProvider } from '../types/enums';
 import { Models } from '../types/models';
 import { ExternalLogins } from './ExternalLogins';
 import { LocalLoginForm } from './LocalLoginForm';
@@ -11,7 +11,7 @@ import { RegistrationForm } from './RegistrationForm';
 
 interface LoginFormProps {
     availableExternalProviders: LoginProvider[];
-    onLocalLogin: (authenticationResult: Models.AuthenticationResult) => void;
+    onLocalLogin: (isLoggedInResponse: Models.IsLoggedInResponse) => void;
     onLocalLoggingIn?: (loginInformation: Models.LoginInformation) => Promise<void>;
     onExternalProviderSelected: (loginProvider: LoginProvider) => void;
 }

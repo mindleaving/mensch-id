@@ -100,6 +100,9 @@ export const PrivacyPolicyEn = () => {
                 email: <a href="mailto:jan@janscholtyssek.dk">jan@janscholtyssek.dk</a>
             </p>
             <h3>Cookies</h3>
+            <p>
+                mensch.ID only uses essential cookies to perform the logn functionality.
+            </p>
             <p>Cookies are a technology for storing small chunks of information.
                 mensch.ID uses a cookie when you log-in using an external account.
                 This cookie contains information about you (account ID and some other

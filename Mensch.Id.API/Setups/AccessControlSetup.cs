@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Security;
 using System.Security.Cryptography;
+using System.Threading.Tasks;
 using Mensch.Id.API.AccessControl;
 using Mensch.Id.API.AccessControl.EventHandlers;
 using Mensch.Id.API.AccessControl.Policies;
-using Mensch.Id.API.Models;
+using Mensch.Id.API.Models.AccessControl;
 using Mensch.Id.API.Workflow;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -24,11 +25,13 @@ namespace Mensch.Id.API.Setups
             IConfiguration configuration)
         {
             SetupExternalLoginObscurer(services, configuration);
+
+            services.AddSingleton<IClaimBuilder, ClaimBuilder>();
             var jwtPrivateKey = GetOrGenerateJwtPrivateKey(configuration);
-            services.AddScoped<ISecurityTokenBuilder>(_ => new JwtSecurityTokenBuilder(jwtPrivateKey, TimeSpan.FromMinutes(60)));
+            services.AddSingleton<ISecurityTokenBuilder>(_ => new JwtSecurityTokenBuilder(jwtPrivateKey));
             services.AddScoped<IAuthenticationModule, AuthenticationModule>();
             services.AddScoped<IAccountCreator, AccountCreator>();
-            services.AddSingleton<IPasswordHasher<LocalAnonymousAccount>, PasswordHasher<LocalAnonymousAccount>>();
+            services.AddSingleton<IPasswordHasher<IAccountWithPassword>, PasswordHasher<IAccountWithPassword>>();
             services.AddScoped<GoogleAuthenticationEvents>();
             services.AddScoped<TwitterAuthenticationEvents>();
             services.AddScoped<FacebookAuthenticationEvents>();
@@ -46,10 +49,26 @@ namespace Mensch.Id.API.Setups
                     {
                         options.TokenValidationParameters = new TokenValidationParameters
                         {
+                            ValidateIssuer = true,
+                            ValidateAudience = true,
                             ValidateIssuerSigningKey = true,
                             IssuerSigningKey = jwtPrivateKey,
-                            ValidAudience = "mensch.ID",
-                            ValidIssuer = "mensch.ID"
+                            ValidAlgorithms = new[] { "HS256" },
+                            ValidTypes = new[] { "JWT" },
+                            ValidAudience = JwtSecurityTokenBuilder.Audience,
+                            ValidIssuer = JwtSecurityTokenBuilder.Issuer
+                        };
+                        // Events can be null
+                        // ReSharper disable once ConstantNullCoalescingCondition
+                        options.Events ??= new();
+                        options.Events.OnMessageReceived = context => {
+
+                            if (context.Request.Cookies.ContainsKey(JwtSecurityTokenBuilder.AccessTokenCookieName))
+                            {
+                                context.Token = context.Request.Cookies[JwtSecurityTokenBuilder.AccessTokenCookieName];
+                            }
+
+                            return Task.CompletedTask;
                         };
                     })
                 .AddGoogle(
@@ -85,12 +104,13 @@ namespace Mensch.Id.API.Setups
                         options.EventsType = typeof(MicrosoftAuthenticationEvents);
                     });
 
-            services.AddSingleton<IAuthorizationHandler, AssignerPolicy>();
+            services.AddSingleton<IAuthorizationHandler, AccountTypeRequirementHandler>();
             services.AddSingleton<IAuthorizationHandler, RegularUserPolicy>();
             services.AddAuthorization(
                 options =>
                 {
-                    options.AddPolicy(AssignerPolicy.PolicyName, policy => policy.AddRequirements(new AssignerRequirement()));
+                    options.AddPolicy(AccountTypeRequirement.AssignerPolicyName, policy => policy.AddRequirements(new AccountTypeRequirement(AccountType.Assigner)));
+                    options.AddPolicy(AccountTypeRequirement.AdminPolicyName, policy => policy.AddRequirements(new AccountTypeRequirement(AccountType.Admin)));
                     options.AddPolicy(RegularUserPolicy.PolicyName, policy => policy.AddRequirements(new RegularUserRequirement()));
                 });
         }

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Mensch.Id.API.AccessControl;
 using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Models;
+using Mensch.Id.API.Models.AccessControl;
 using Mensch.Id.API.Workflow;
 using MongoDB.Driver;
 
@@ -41,23 +42,28 @@ namespace Mensch.Id.API.Storage
             var filterBuilder = Builders<Account>.Filter;
             var filter = filterBuilder.And(
                 filterBuilder.Ne("_t", nameof(ExternalAccount)),
-                filterBuilder.Eq(nameof(Account.PersonId), menschId));
+                filterBuilder.Eq(nameof(PersonAccount.PersonId), menschId));
             var localAccounts = await collection.Find(filter).ToListAsync();
             return localAccounts.Cast<LocalAnonymousAccount>().ToList();
         }
 
-        public async Task<List<LocalAnonymousAccount>> GetLocalsByEmailOrMenschIdAsync(string emailOrMenschId)
+        public async Task<List<Account>> GetLocalsByEmailMenschIdOrUsernameAsync(string emailMenschIdOrUsername)
         {
-            if (MenschIdGenerator.ValidateId(emailOrMenschId))
+            if (MenschIdGenerator.ValidateId(emailMenschIdOrUsername))
             {
-                return await GetLocalsByMenschId(emailOrMenschId);
+                return (await GetLocalsByMenschId(emailMenschIdOrUsername)).Cast<Account>().ToList();
             }
-            if (EmailValidator.IsValidEmailFormat(emailOrMenschId))
+            if (EmailValidator.IsValidEmailFormat(emailMenschIdOrUsername))
             {
-                var localAccount = await GetLocalByEmailAsync(emailOrMenschId);
-                return new List<LocalAnonymousAccount> { localAccount };
+                var localAccount = await GetLocalByEmailAsync(emailMenschIdOrUsername);
+                if(localAccount != null)
+                    return new List<Account> { localAccount };
             }
-            return null;
+
+            var assignerOrAdminAccount = await GetProfessionalByUsernameAsync(emailMenschIdOrUsername);
+            if(assignerOrAdminAccount != null)
+                return new List<Account> { assignerOrAdminAccount };
+            return new List<Account>();
         }
 
         public Task<ExternalAccount> GetExternalByIdAsync(
@@ -86,11 +92,26 @@ namespace Mensch.Id.API.Storage
             return await GetExternalByIdAsync(loginProvider, externalId);
         }
 
-        public Task<List<Account>> GeAllForMenschIdAsync(
+        public async Task<List<PersonAccount>> GetAllForMenschIdAsync(
             string menschId)
         {
             if (menschId == null) throw new ArgumentNullException(nameof(menschId));
-            return collection.Find(x => x.PersonId == menschId).ToListAsync();
+            var localAccounts = await collection.OfType<LocalAccount>().Find(x => x.PersonId == menschId).ToListAsync();
+            var localAnonymousAccounts = await collection.OfType<LocalAnonymousAccount>().Find(x => x.PersonId == menschId).ToListAsync();
+            var externalAccounts = await collection.OfType<ExternalAccount>().Find(x => x.PersonId == menschId).ToListAsync();
+            return localAccounts.Cast<PersonAccount>().Concat(localAnonymousAccounts).Concat(externalAccounts).ToList();
+        }
+
+        public async Task<ProfessionalAccount> GetProfessionalByUsernameAsync(
+            string username)
+        {
+            var assignerAccount = await collection.OfType<AssignerAccount>().Find(x => x.Username == username).FirstOrDefaultAsync();
+            if (assignerAccount != null)
+                return assignerAccount;
+            var adminAccount = await collection.OfType<AdminAccount>().Find(x => x.Username == username).FirstOrDefaultAsync();
+            if (adminAccount != null)
+                return adminAccount;
+            return null;
         }
 
         public async Task<StorageResult> ChangePasswordAsync(
@@ -139,8 +160,7 @@ namespace Mensch.Id.API.Storage
                             .UpdateOneAsync(
                                 x => x.Id == accountId,
                                 updateBuilder.Combine(
-                                    updateBuilder.Set(x => x.PasswordHash, passwordHash),
-                                    updateBuilder.Set(x => x.PasswordResetToken, null)
+                                    updateBuilder.Set(x => x.PasswordHash, passwordHash)
                                 )
                             );
                     }
@@ -153,11 +173,13 @@ namespace Mensch.Id.API.Storage
             return StorageResult.Error(StoreErrorType.NoMatch);
         }
 
-        public Task DeleteAllForPerson(
+        public async Task DeleteAllForPerson(
             string personId)
         {
             if (personId == null) throw new ArgumentNullException(nameof(personId));
-            return collection.DeleteManyAsync(x => x.PersonId == personId);
+            await collection.OfType<LocalAnonymousAccount>().DeleteManyAsync(x => x.PersonId == personId);
+            await collection.OfType<LocalAccount>().DeleteManyAsync(x => x.PersonId == personId);
+            await collection.OfType<ExternalAccount>().DeleteManyAsync(x => x.PersonId == personId);
         }
     }
 }

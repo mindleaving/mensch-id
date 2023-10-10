@@ -1,6 +1,7 @@
 ﻿using System;
 using Mensch.Id.API.AccessControl;
 using Mensch.Id.API.Models;
+using Mensch.Id.API.Models.AccessControl;
 
 namespace Mensch.Id.API.Workflow
 {

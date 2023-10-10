@@ -1,6 +1,7 @@
 import { format } from 'date-fns';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import { CopyButton } from '../../../sharedCommonComponents/components/CopyButton';
 import { PagedTable } from '../../../sharedCommonComponents/components/PagedTable';
 import { resolveText } from '../../../sharedCommonComponents/helpers/Globalizer';
@@ -8,21 +9,26 @@ import PagedTableLoader from '../../../sharedCommonComponents/helpers/PagedTable
 import { Models } from '../../types/models';
 
 interface AssignedProfilesTableProps {
+    filter: Models.RequestParameters.AssignedProfilesRequestParameters;
     latestAssignedId?: string;
 }
 
 export const AssignedProfilesTable = (props: AssignedProfilesTableProps) => {
 
+    const { filter, latestAssignedId } = props;
     const [ profiles, setProfiles ] = useState<Models.AssignerControlledProfile[]>([]);
+    const navigate = useNavigate();
     const loader = useMemo(() => new PagedTableLoader(
         'api/assigner/assigned-ids', 
         resolveText("AssignerControlledProfiles_CouldNotLoad"),
-        setProfiles), []);
+        setProfiles,
+        filter), 
+    [ filter ]);
 
     useEffect(() => {
         loader.load(0, 10);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [ props.latestAssignedId ]);
+    }, [ loader, latestAssignedId ]);
 
     return (
         <PagedTable
@@ -45,16 +51,16 @@ export const AssignedProfilesTable = (props: AssignedProfilesTableProps) => {
                         <strong>{profile.id}</strong>
                         <CopyButton
                             value={profile.id}
-                            size='sm'
+                            size='xs'
                             className='ms-3'
                         />
                     </td>
                     <td>
                         <Button
                             variant='primary'
-                            onClick={() => alert("Not implemented")}
+                            onClick={() => navigate(`/print/certificate/${profile.id}`)}
                         >
-                            {resolveText("AssignerControlledProfile_DownloadCertificate")}
+                            {resolveText("AssignerControlledProfile_PrintCertificate")}
                         </Button>
                     </td>
                 </tr>

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Claims;
 using Mensch.Id.API.AccessControl;
 using Mensch.Id.API.Models;
+using Mensch.Id.API.Models.AccessControl;
 
 namespace Mensch.Id.API.Helpers
 {
@@ -12,18 +13,19 @@ namespace Mensch.Id.API.Helpers
         public static string GetPersonId(List<Claim> claims)
         {
             var jwtClaims = claims.Where(x => x.Issuer == JwtSecurityTokenBuilder.Issuer).ToList();
-            return jwtClaims.FirstOrDefault(x => x.Type == JwtSecurityTokenBuilder.PersonIdClaimName)?.Value;
+            return jwtClaims.FirstOrDefault(x => x.Type == MenschIdClaimTypes.PersonIdClaimName)?.Value;
         }
 
-        public static LoginProvider GetLoginProvider(List<Claim> claims)
+        public static IEnumerable<LoginProvider> GetLoginProviders(List<Claim> claims)
         {
-            if(!claims.Any())
-                throw new Exception("No claims made");
-            var externalClaims = claims.Where(x => x.Issuer != JwtSecurityTokenBuilder.Issuer).ToList();
-            if (externalClaims.Any())
+            var hasLocalClaims = claims.Any(x => x.Issuer == JwtSecurityTokenBuilder.Issuer);
+            if(hasLocalClaims)
+                yield return LoginProvider.LocalJwt;
+            var externalClaims = claims.Where(x => x.Issuer != JwtSecurityTokenBuilder.Issuer);
+            var issuers = externalClaims.Select(x => x.Issuer).Distinct();
+            foreach (var issuer in issuers)
             {
-                var issuer = externalClaims.Select(x => x.Issuer).Distinct().Single();
-                return issuer switch
+                yield return issuer switch
                 {
                     "Facebook" => LoginProvider.Facebook,
                     "Google" => LoginProvider.Google,
@@ -32,6 +34,16 @@ namespace Mensch.Id.API.Helpers
                     _ => throw new Exception($"Unknown claim issuer '{issuer}'")
                 };
             }
+        }
+
+        public static LoginProvider GetLoginProvider(List<Claim> claims)
+        {
+            if(!claims.Any())
+                throw new Exception("No claims made");
+            var loginProviders = GetLoginProviders(claims).ToList();
+            var hasExternalLoginProviders = loginProviders.Any(x => x != LoginProvider.LocalJwt);
+            if (hasExternalLoginProviders)
+                return loginProviders.Single(x => x != LoginProvider.LocalJwt);
             return LoginProvider.LocalJwt;
         }
 
@@ -76,7 +88,7 @@ namespace Mensch.Id.API.Helpers
                     return AccountType.External;
                 case LoginProvider.LocalJwt:
                     {
-                        var accountTypeString = claims.Single(x => x.Type == JwtSecurityTokenBuilder.AccountTypeClaimName).Value;
+                        var accountTypeString = claims.Single(x => x.Type == MenschIdClaimTypes.AccountTypeClaimName).Value;
                         return Enum.Parse<AccountType>(accountTypeString);
                     }
                 default:

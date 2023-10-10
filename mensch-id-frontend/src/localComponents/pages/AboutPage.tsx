@@ -2,7 +2,7 @@ import { VerbatimText } from '../../sharedCommonComponents/components/VerbatimTe
 import { defaultGlobalizer, resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { FAQ_DE } from '../components/FAQ/FAQ_DE';
 import { FAQ_EN } from '../components/FAQ/FAQ_EN';
-import { Language } from '../types/enums.d';
+import { Language } from '../types/enums';
 
 export const AboutPage = () => {
 
@@ -12,6 +12,7 @@ export const AboutPage = () => {
             <div className='lead'>
                 <VerbatimText
                     text={resolveText("About_ElevatorPitch")}
+                    paragraphClassName='m-0'
                 />
             </div>
             <hr />
@@ -22,3 +23,4 @@ export const AboutPage = () => {
     );
 
 }
+export default AboutPage;

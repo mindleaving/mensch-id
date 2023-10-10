@@ -32,3 +32,4 @@ _ReSharper*/
 packages/
 *.zip
 /mensch-id-frontend/public/docs/*
+/mensch-id-frontend/public/font-awesome-4.7.0

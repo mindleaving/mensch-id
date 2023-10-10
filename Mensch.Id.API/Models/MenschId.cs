@@ -12,9 +12,4 @@ namespace Mensch.Id.API.Models
         [TypescriptIsOptional]
         public string ReservingAccountId { get; set; }
     }
-
-    public enum IdType
-    {
-        MenschID
-    }
 }

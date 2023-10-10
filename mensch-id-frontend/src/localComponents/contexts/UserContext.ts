@@ -1,13 +1,6 @@
 import { createContext } from "react";
 import { ViewModels } from "../types/viewModels";
 
-
-interface UserContextState {
-    profileData?: ViewModels.ProfileViewModel;
-    setProfileData: (profileData?: ViewModels.ProfileViewModel) => void;
-}
-const UserContext = createContext<UserContextState>({
-    setProfileData: () => {}
-});
+const UserContext = createContext<ViewModels.IUserViewModel | undefined>(undefined);
 export const UserProvider = UserContext.Provider;
 export default UserContext;

@@ -1,4 +1,6 @@
-﻿namespace Mensch.Id.API.Models
+﻿using Mensch.Id.API.Models.AccessControl;
+
+namespace Mensch.Id.API.Models
 {
     public class IsLoggedInResponse
     {

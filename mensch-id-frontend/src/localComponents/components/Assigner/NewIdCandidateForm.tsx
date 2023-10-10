@@ -1,5 +1,5 @@
 import { useState, FormEvent } from "react";
-import { Form, FormGroup, FormLabel } from "react-bootstrap";
+import { Button, Form, FormGroup, FormLabel, InputGroup } from "react-bootstrap";
 import { AsyncButton } from "../../../sharedCommonComponents/components/AsyncButton";
 import { resolveText } from "../../../sharedCommonComponents/helpers/Globalizer";
 import { loadObject } from "../../../sharedCommonComponents/helpers/LoadingHelpers";
@@ -32,10 +32,17 @@ export const NewIdCandidateForm = (props: NewCandidateFormProps) => {
     return (<Form onSubmit={loadIdCandidate}>
         <FormGroup>
             <FormLabel>{resolveText("NewProfile_BirthDate")}</FormLabel>
-            <BirthDateFormControl
-                value={props.birthDate}
-                onChange={props.onBirthDateChanged}
-            />
+            <InputGroup>
+                <BirthDateFormControl
+                    value={props.birthDate}
+                    onChange={props.onBirthDateChanged}
+                />
+                <Button
+                    onClick={() => props.onBirthDateChanged(new Date().toISOString().substring(0,10))}
+                >
+                    {resolveText("Today")}
+                </Button>
+            </InputGroup>
         </FormGroup>
         <AsyncButton
             className='m-2'

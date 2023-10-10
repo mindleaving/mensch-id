@@ -2,24 +2,25 @@ import { FormEvent, useContext, useState } from 'react';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import UserContext from '../contexts/UserContext';
 import { Models } from '../types/models';
-import { NotificationManager } from 'react-notifications';
 import { apiClient } from '../../sharedCommonComponents/communication/ApiClient';
-import { AuthenticationErrorType } from '../types/enums.d';
+import { AuthenticationErrorType } from '../types/enums';
 import { useNavigate } from 'react-router-dom';
 import { Button, Col, Form, Row } from 'react-bootstrap';
 import { AsyncButton } from '../../sharedCommonComponents/components/AsyncButton';
 import { Center } from '../../sharedCommonComponents/components/Center';
-import { RowFormGroup } from '../../sharedCommonComponents/components/RowFormGroup';
+import { RowFormGroup } from '../../sharedCommonComponents/components/FormControls/RowFormGroup';
+import { showErrorAlert } from '../../sharedCommonComponents/helpers/AlertHelpers';
+import { ViewModels } from '../types/viewModels';
 
 interface LocalLoginFormProps {
     onSubmit?: (loginInformation: Models.LoginInformation) => Promise<void>;
-    onLoggedIn: (authenticationResult: Models.AuthenticationResult) => void;
+    onLoggedIn: (isLoggedInResponse: Models.IsLoggedInResponse) => void;
 }
 
 export const LocalLoginForm = (props: LocalLoginFormProps) => {
 
-    const { profileData } = useContext(UserContext);
-    const [ emailOrMenschID, setEmailOrMenschID ] = useState<string>(profileData?.id ?? '');
+    const profileData = useContext(UserContext)! as ViewModels.ProfileViewModel;
+    const [ username, setUsername ] = useState<string>(profileData?.id ?? '');
     const [ password, setPassword ] = useState<string>('');
     const [ isSubmitting, setIsSubmitting ] = useState<boolean>(false);
     const navigate = useNavigate();
@@ -28,7 +29,7 @@ export const LocalLoginForm = (props: LocalLoginFormProps) => {
         e?.preventDefault();
         setIsSubmitting(true);
         const loginInformation: Models.LoginInformation = {
-            emailOrMenschId: emailOrMenschID,
+            emailMenschIdOrUsername: username,
             password: password
         };
         if(props.onSubmit) {
@@ -39,20 +40,18 @@ export const LocalLoginForm = (props: LocalLoginFormProps) => {
             }
         } else {
             try {
-                const response = await apiClient.instance!.post('api/accounts/login', {}, loginInformation, { handleError: false });
-                const authenticationResult = await response.json() as Models.AuthenticationResult;
-                if(!authenticationResult) {
-                    throw new Error("Could not log in");
+                const response = await apiClient.instance!.post('api/accounts/login', loginInformation, {}, { handleError: false });
+                if(!response.ok) {
+                    const error = await response.json() as AuthenticationErrorType;
+                    if(error === AuthenticationErrorType.EmailNotVerified && username.includes('@')) {
+                        navigate(`/verify-email?email=${encodeURIComponent(username)}`);
+                    }
+                    throw new Error(resolveText(`AuthenticationErrorType_${error}`));
                 }
-                if(authenticationResult.isAuthenticated) {
-                    props.onLoggedIn(authenticationResult);
-                } else if(authenticationResult.error === AuthenticationErrorType.EmailNotVerified && emailOrMenschID.includes('@')) {
-                    navigate(`/verify-email?email=${encodeURIComponent(emailOrMenschID)}`);
-                } else {
-                    throw new Error("Could not log in");
-                }
-            } catch {
-                NotificationManager.error(resolveText("Login_CouldNotLogIn"));
+                const isLoggedInResponse = await response.json() as Models.IsLoggedInResponse;
+                props.onLoggedIn(isLoggedInResponse);
+            } catch(e: any) {
+                showErrorAlert(resolveText("Login_CouldNotLogIn"), e?.message);
             } finally {
                 setIsSubmitting(false);
             }
@@ -62,11 +61,11 @@ export const LocalLoginForm = (props: LocalLoginFormProps) => {
     return (
         <Form onSubmit={login}>
             <RowFormGroup required
-                label={`웃ID / ${resolveText("Email")}`}
+                label={`웃ID / ${resolveText("Email")} / ${resolveText("Username")}`}
                 id="username"
                 name='username'
-                value={emailOrMenschID}
-                onChange={setEmailOrMenschID}
+                value={username}
+                onChange={setUsername}
             />
             <RowFormGroup required
                 type='password'

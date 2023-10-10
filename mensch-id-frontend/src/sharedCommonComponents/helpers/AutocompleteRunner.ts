@@ -5,20 +5,24 @@ export class AutocompleteRunner<T> {
     searchParameter: string;
     maxSuggestions?: number;
     orderBy?: string;
+    additionalParameters: { [key: string]: string };
 
     constructor(
         url: string, 
         searchParameter: string, 
         maxSuggestions?: number,
-        orderBy?: string) {
+        orderBy?: string,
+        additionalParameters?: { [key:string]: string}) {
         this.url = url;
         this.searchParameter = searchParameter;
         this.maxSuggestions = maxSuggestions;
         this.orderBy = orderBy;
+        this.additionalParameters = additionalParameters ?? {};
     }
 
     search = async (searchText: string): Promise<T[]> => {
-        const params = { 
+        const params = {
+            ...this.additionalParameters,
             [this.searchParameter]: searchText, 
         };
         if(this.maxSuggestions) {

@@ -8,6 +8,7 @@ using System.Web;
 using Mensch.Id.API.AccessControl;
 using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Models;
+using Mensch.Id.API.Models.AccessControl;
 using Mensch.Id.API.Storage;
 using Mensch.Id.API.Workflow;
 using Mensch.Id.API.Workflow.Email;
@@ -57,7 +58,7 @@ namespace Mensch.Id.API.Controllers
             if (IsLoggedIn())
             {
                 var accountType = ControllerHelpers.GetAccountType(httpContextAccessor);
-                return Ok(new IsLoggedInResponse(accountType.Value));
+                return Ok(new IsLoggedInResponse(accountType!.Value));
             }
             return StatusCode((int)HttpStatusCode.Unauthorized);
         }
@@ -71,11 +72,11 @@ namespace Mensch.Id.API.Controllers
             if (personId == null)
             {
                 var currentAccount = await store.GetFromClaimsAsync(claims);
-                if (currentAccount?.PersonId == null)
+                if(currentAccount is not PersonAccount personAccount || personAccount.PersonId == null)
                     return Ok(new List<Account>());
-                personId = currentAccount.PersonId;
+                personId = personAccount.PersonId;
             }
-            var myAccounts = await store.GeAllForMenschIdAsync(personId);
+            var myAccounts = await store.GetAllForMenschIdAsync(personId);
             return Ok(myAccounts);
         }
 
@@ -109,6 +110,8 @@ namespace Mensch.Id.API.Controllers
             [FromRoute] string accountId,
             [FromQuery] string token)
         {
+            if (!ControllerInputSanitizer.ValidateAndSanitizeMandatoryId(accountId, out accountId))
+                return BadRequest("Invalid account-ID");
             var account = await store.GetByIdAsync(accountId);
             if (account == null)
                 return NotFound();
@@ -133,6 +136,8 @@ namespace Mensch.Id.API.Controllers
             var account = await store.GetLocalByEmailAsync(body.Email);
             if (account == null)
                 return NotFound();
+            if (account is AdminAccount)
+                return StatusCode((int)HttpStatusCode.Forbidden);
             account.PasswordResetToken = PasswordReset.GenerateToken(account.EmailVerificationAndPasswordResetSalt, out var unencryptedToken);
             await store.StoreAsync(account);
             var passwordResetEmail = new PasswordResetEmail
@@ -154,7 +159,9 @@ namespace Mensch.Id.API.Controllers
         {
             if (accountId != null && accountId != body.AccountId)
                 return BadRequest("Account ID of body doesn't match route");
-            var account = await store.GetByIdAsync(body.AccountId);
+            if (!ControllerInputSanitizer.ValidateAndSanitizeMandatoryId(body.AccountId, out accountId))
+                return BadRequest("Invalid account-ID");
+            var account = await store.GetByIdAsync(accountId);
             if (account == null)
                 return NotFound();
             if (account is not LocalAccount localAccount)
@@ -165,8 +172,12 @@ namespace Mensch.Id.API.Controllers
                 return BadRequest($"Password too short. Must be at least {MinimumPasswordLength} characters long.");
             if (!await authenticationModule.ChangePasswordAsync(localAccount.Id, body.Password))
                 return StatusCode((int)HttpStatusCode.InternalServerError, "An unknown error occured");
-            var authenticationResult = await authenticationModule.AuthenticateLocalByEmailOrMenschIdAsync(new LoginInformation(localAccount.Email, body.Password));
-            return Ok(authenticationResult);
+            var authenticationResult = await authenticationModule.AuthenticateLocalByEmailMenschIdOrUsernameAsync(new LoginInformation(localAccount.Email, body.Password));
+            if (!authenticationResult.IsAuthenticated)
+                return StatusCode((int)HttpStatusCode.Unauthorized, authenticationResult.Error);
+
+            SetAccessTokenCookie(authenticationResult);
+            return Ok(new IsLoggedInResponse(authenticationResult.AccountType!.Value));
         }
 
         
@@ -189,7 +200,7 @@ namespace Mensch.Id.API.Controllers
                 if (personId == null)
                 {
                     var currentAccount = await store.GetFromClaimsAsync(claims);
-                    personId = currentAccount?.PersonId;
+                    personId = (currentAccount as PersonAccount)?.PersonId;
                 }
             }
             switch (body.AccountType)
@@ -224,10 +235,14 @@ namespace Mensch.Id.API.Controllers
                         body.PreferedLanguage ?? Language.en,
                         personId);
                     var authenticationResult = authenticationModule.BuildSecurityTokenForUser(localAnonymousAccount);
-                    return Ok(authenticationResult);
+                    SetAccessTokenCookie(authenticationResult);
+                    return Ok(new IsLoggedInResponse(AccountType.LocalAnonymous));
                 }
                 case AccountType.External:
                     return BadRequest($"Invalid account type '{body.AccountType}'");
+                case AccountType.Assigner:
+                case AccountType.Admin:
+                    return StatusCode((int)HttpStatusCode.Forbidden);
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -236,14 +251,18 @@ namespace Mensch.Id.API.Controllers
 
         [AllowAnonymous]
         [HttpPost("login")]
-        public async Task<IActionResult> LocalLogin([FromBody] LoginInformation loginInformation)
+        public async Task<IActionResult> LocalLogin(
+            [FromBody] LoginInformation loginInformation)
         {
             if (loginInformation == null)
                 return BadRequest("No login information provided");
-            var authenticationResult = await authenticationModule.AuthenticateLocalByEmailOrMenschIdAsync(loginInformation);
+            var authenticationResult = await authenticationModule.AuthenticateLocalByEmailMenschIdOrUsernameAsync(loginInformation);
             if (authenticationResult.IsAuthenticated)
-                return Ok(authenticationResult);
-            return StatusCode((int)HttpStatusCode.Unauthorized, authenticationResult);
+            {
+                SetAccessTokenCookie(authenticationResult);
+                return Ok(new IsLoggedInResponse(authenticationResult.AccountType!.Value));
+            }
+            return StatusCode((int)HttpStatusCode.Unauthorized, authenticationResult.Error);
         }
 
         [Authorize]
@@ -281,8 +300,8 @@ namespace Mensch.Id.API.Controllers
         }
 
         [Authorize]
-        [HttpGet("accesstoken")]
-        public async Task<IActionResult> GetAccessToken()
+        [HttpGet("convert-to-local")]
+        public async Task<IActionResult> ConvertToLocal()
         {
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
             var loginProvider = ClaimsHelpers.GetLoginProvider(claims);
@@ -293,7 +312,10 @@ namespace Mensch.Id.API.Controllers
                 case LoginProvider.Facebook:
                 case LoginProvider.Microsoft:
                     var authenticationResult = await authenticationModule.AuthenticateExternalAsync(claims);
-                    return Ok(authenticationResult);
+                    if (!authenticationResult.IsAuthenticated)
+                        return StatusCode((int)HttpStatusCode.Unauthorized, authenticationResult.Error);
+                    SetAccessTokenCookie(authenticationResult);
+                    return Ok(new IsLoggedInResponse(authenticationResult.AccountType!.Value));
                 case LoginProvider.LocalJwt:
                     return StatusCode((int)HttpStatusCode.Forbidden, "This method cannot be used with JWT authentication");
                 default:
@@ -315,28 +337,50 @@ namespace Mensch.Id.API.Controllers
                 if (jwtAccountId == null)
                     return BadRequest("Your JWT bearer token doesn't contain an account ID");
                 var originalAccount = await store.GetByIdAsync(jwtAccountId);
-                if(originalAccount?.PersonId == null)
+                if(originalAccount is not PersonAccount personAccount || personAccount.PersonId == null)
                     return BadRequest("Your JWT bearer token doesn't contain a person ID. If you just created your profile please log out and back in again");
-                personId = originalAccount.PersonId;
+                personId = personAccount.PersonId;
             }
 
             var loginProviderClaims = claims.Except(jwtClaims).ToList();
+            if(loginProviderClaims.Count == 0)
+                return BadRequest("No external logins active");
             var account = await store.GetFromClaimsAsync(loginProviderClaims);
-            if (account.PersonId == personId)
-                return Ok();
-            if (account.PersonId != null)
+            if (account == null)
             {
-                await httpContextAccessor.HttpContext.SignOutAsync();
+                var externalLoginProviders = ClaimsHelpers.GetLoginProviders(loginProviderClaims)
+                    .Except(new [] { LoginProvider.LocalJwt })
+                    .ToList();
+                if (externalLoginProviders.Count > 1)
+                {
+                    await HttpContext.SignOutAsync(); // Logout ASP.NET controlled external logins, keeps X-Access-Token-cookie intact.
+                    return StatusCode(
+                        (int)HttpStatusCode.Conflict,
+                        "Multiple external logins are active. Cannot determine which of them to link. "
+                        + "You have been logged out of all external logins.");
+                }
+
+                var externalLoginProvider = externalLoginProviders.Single();
+                var externalId = ClaimsHelpers.GetExternalId(loginProviderClaims);
+                account = await accountCreator.CreateExternal(externalLoginProvider, externalId);
+            }
+
+            if (account is not ExternalAccount externalAccount)
+                return StatusCode((int)HttpStatusCode.InternalServerError, "Found unexpected account type");
+            if (externalAccount.PersonId == personId)
+                return Ok();
+            if (externalAccount.PersonId != null)
+            {
+                await LogOutImpl();
                 return StatusCode((int)HttpStatusCode.Forbidden, 
-                    "You current account is already linked to another profile. "
+                    "That account is already linked to another profile. "
                     + "You have been logged out to avoid confusion about which account you are logged into.");
             }
-            account.PersonId = personId;
-            await store.StoreAsync(account);
+            externalAccount.PersonId = personId;
+            await store.StoreAsync(externalAccount);
             return Ok();
         }
 
-        
 
         [Authorize]
         [HttpPost("link/local")]
@@ -344,24 +388,26 @@ namespace Mensch.Id.API.Controllers
         {
             if (loginInformation == null)
                 return BadRequest("No login information provided");
-            var authenticationResult = await authenticationModule.AuthenticateLocalByEmailOrMenschIdAsync(loginInformation);
+            var authenticationResult = await authenticationModule.AuthenticateLocalByEmailMenschIdOrUsernameAsync(loginInformation);
             if (!authenticationResult.IsAuthenticated)
-                return StatusCode((int)HttpStatusCode.Unauthorized, authenticationResult);
+                return StatusCode((int)HttpStatusCode.Unauthorized, authenticationResult.Error);
 
-            var accountsToBeLinked = await store.GetLocalsByEmailOrMenschIdAsync(loginInformation.EmailOrMenschId);
+            var accountsToBeLinked = (await store.GetLocalsByEmailMenschIdOrUsernameAsync(loginInformation.EmailMenschIdOrUsername))
+                .OfType<PersonAccount>()
+                .ToList();
             if(accountsToBeLinked.Any(account => account.PersonId != null))
                 return StatusCode((int)HttpStatusCode.Forbidden, "One or more matching accounts are already linked to another profile");
 
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
             var currentAccount = await store.GetFromClaimsAsync(claims);
-            if (currentAccount == null)
+            if (currentAccount is not PersonAccount currentPersonAccount)
                 return StatusCode((int)HttpStatusCode.InternalServerError, "Couldn't find current account information");
-            if (currentAccount.PersonId == null)
+            if (currentPersonAccount.PersonId == null)
                 return StatusCode((int)HttpStatusCode.ServiceUnavailable, "Your current account doesn't have a profile yet");
 
             foreach (var accountToBeLinked in accountsToBeLinked)
             {
-                accountToBeLinked.PersonId = currentAccount.PersonId;
+                accountToBeLinked.PersonId = currentPersonAccount.PersonId;
                 await store.StoreAsync(accountToBeLinked);
             }
             return Ok();
@@ -374,8 +420,14 @@ namespace Mensch.Id.API.Controllers
         {
             if (!IsLoggedIn())
                 return Ok();
-            await httpContextAccessor.HttpContext.SignOutAsync();
+            await LogOutImpl();
             return Ok();
+        }
+
+        private async Task LogOutImpl()
+        {
+            await HttpContext.SignOutAsync();
+            Response.Cookies.Delete(JwtSecurityTokenBuilder.AccessTokenCookieName);
         }
 
         [Authorize]
@@ -386,18 +438,18 @@ namespace Mensch.Id.API.Controllers
         {
             if (body.AccountId != accountId)
                 return BadRequest("Account ID in body doesn't match route");
+            if (!ControllerInputSanitizer.ValidateAndSanitizeMandatoryId(body.AccountId, out accountId))
+                return BadRequest("Invalid account-ID");
             if(body.NewPassword.Length < MinimumPasswordLength)
                 return BadRequest($"Password too short. Must be at least {MinimumPasswordLength} characters long.");
-            var authenticationResult = await authenticationModule.AuthenticateLocalByAccountIdAsync(body.AccountId, body.CurrentPassword);
+            var authenticationResult = await authenticationModule.AuthenticateLocalByAccountIdAsync(accountId, body.CurrentPassword);
             if (!authenticationResult.IsAuthenticated)
             {
                 switch (authenticationResult.Error)
                 {
-                    case AuthenticationErrorType.UserNotFound:
-                        return NotFound();
                     case AuthenticationErrorType.AuthenticationMethodNotAvailable:
                         return StatusCode((int)HttpStatusCode.ServiceUnavailable);
-                    case AuthenticationErrorType.InvalidPassword:
+                    case AuthenticationErrorType.InvalidUserOrPassword:
                     case AuthenticationErrorType.Unknown:
                     case AuthenticationErrorType.EmailNotVerified:
                     case null:
@@ -409,7 +461,7 @@ namespace Mensch.Id.API.Controllers
 
             if (authenticationResult.AccountType == AccountType.External)
                 return BadRequest("Cannot change password for external account");
-            if(await authenticationModule.ChangePasswordAsync(body.AccountId, body.NewPassword))
+            if(await authenticationModule.ChangePasswordAsync(accountId, body.NewPassword))
                 return Ok();
             return StatusCode((int)HttpStatusCode.InternalServerError);
         }
@@ -419,15 +471,22 @@ namespace Mensch.Id.API.Controllers
         public async Task<IActionResult> DeleteAccount(
             [FromRoute] string accountId)
         {
+            if (!ControllerInputSanitizer.ValidateAndSanitizeMandatoryId(accountId, out accountId))
+                return BadRequest("Invalid account-ID");
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
             var personId = ClaimsHelpers.GetPersonId(claims);
             var matchingAccount = await store.GetByIdAsync(accountId);
             if (matchingAccount == null)
                 return Ok();
-            if (matchingAccount.PersonId == null)
+            if (matchingAccount is not PersonAccount personAccount || personAccount.PersonId == null)
                 return BadRequest("Only accounts associated with a mensch.ID can be deleted");
-            if (matchingAccount.PersonId != personId)
-                return StatusCode((int)HttpStatusCode.Forbidden, "Your current login indicates a different mensch.ID than the account you are trying to delete. If this is your account, please login using credentials corresponding to the mensch.ID associated with that account");
+            if (personAccount.PersonId != personId)
+            {
+                return StatusCode(
+                    (int)HttpStatusCode.Forbidden, 
+                    "Your current login indicates a different mensch.ID than the account you are trying to delete. "
+                    + "If this is your account, please login using credentials corresponding to the mensch.ID associated with that account");
+            }
             await store.DeleteAsync(accountId);
             return Ok();
         }
@@ -436,6 +495,23 @@ namespace Mensch.Id.API.Controllers
         private bool IsLoggedIn()
         {
             return httpContextAccessor.HttpContext?.User.Identities.Any(x => x.IsAuthenticated) ?? false;
+        }
+
+        private void SetAccessTokenCookie(
+            AuthenticationResult authenticationResult)
+        {
+            if (!authenticationResult.IsAuthenticated)
+                throw new InvalidOperationException("Cannot set access  token cookie, because authentication failed");
+            Response.Cookies.Append(
+                JwtSecurityTokenBuilder.AccessTokenCookieName, 
+                authenticationResult.AccessToken, 
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTimeOffset.UtcNow.Add(JwtSecurityTokenBuilder.ExpirationTime)
+                });
         }
     }
 }

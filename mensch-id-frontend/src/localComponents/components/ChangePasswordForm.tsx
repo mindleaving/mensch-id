@@ -5,6 +5,8 @@ import { showSuccessAlert } from '../../sharedCommonComponents/helpers/AlertHelp
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { sendPostRequest } from '../../sharedCommonComponents/helpers/StoringHelpers';
 import { Models } from '../types/models';
+import { Center } from '../../sharedCommonComponents/components/Center';
+import PasswordFormControl from '../../sharedCommonComponents/components/FormControls/PasswordFormControl';
 
 interface ChangePasswordFormProps {
     accountId: string;
@@ -27,7 +29,7 @@ export const ChangePasswordForm = (props: ChangePasswordFormProps) => {
             newPassword: newPassword
         };
         await sendPostRequest(
-            `api/accounts/${props.accountId}/change-password`,
+            `api/accounts/${props.accountId}/change-password`, {},
             resolveText("Account_CouldNotChangePassword"),
             body,
             () => {
@@ -45,8 +47,7 @@ export const ChangePasswordForm = (props: ChangePasswordFormProps) => {
         <Form onSubmit={changePassword}>
             <FormGroup>
                 <FormLabel>{resolveText("Account_CurrentPassword")}</FormLabel>
-                <FormControl required
-                    type='password'
+                <PasswordFormControl required
                     value={currentPassword}
                     onChange={(e:any) => setCurrentPassword(e.target.value)}
                     id="current-password"
@@ -55,8 +56,7 @@ export const ChangePasswordForm = (props: ChangePasswordFormProps) => {
             </FormGroup>
             <FormGroup>
                 <FormLabel>{resolveText("ResetPassword_NewPassword")}</FormLabel>
-                <FormControl required
-                    type='password'
+                <PasswordFormControl required
                     value={newPassword}
                     onChange={(e:any) => setNewPassword(e.target.value)}
                     id="new-password"
@@ -65,8 +65,7 @@ export const ChangePasswordForm = (props: ChangePasswordFormProps) => {
             </FormGroup>
             <FormGroup>
                 <FormLabel>{resolveText("ResetPassword_NewPasswordRepeat")}</FormLabel>
-                <FormControl required
-                    type='password'
+                <PasswordFormControl required
                     value={newPasswordRepeat}
                     onChange={(e:any) => setNewPasswordRepeat(e.target.value)}
                     isInvalid={newPasswordRepeat !== newPassword}
@@ -75,10 +74,12 @@ export const ChangePasswordForm = (props: ChangePasswordFormProps) => {
                 />
                 <FormControl.Feedback type='invalid'>{resolveText("ResetPassword_PasswordsDoNotMatch")}</FormControl.Feedback>
             </FormGroup>
-            <StoreButton
-                isStoring={isSubmitting}
-                disabled={newPassword.length === 0 || newPasswordRepeat !== newPassword}
-            />
+            <Center>
+                <StoreButton
+                    isStoring={isSubmitting}
+                    disabled={newPassword.length === 0 || newPasswordRepeat !== newPassword}
+                />
+            </Center>
         </Form>
     );
 

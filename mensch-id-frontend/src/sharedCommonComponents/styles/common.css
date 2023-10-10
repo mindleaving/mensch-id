@@ -23,14 +23,11 @@
 .treeview {
     list-style-type: none;
 }
-.timelineSeparator { 
-    width:100%; 
-    text-align:center; 
+.horizontal-line { 
+    width:100%;
     border-bottom: 1px solid #000; 
     line-height:0.1em; 
-    margin:10px 0 20px; 
 }
-.timelineSeparator span { 
-    background:#fff; 
-    padding:0 10px; 
+.list-group-hover .list-group-item:hover {
+    background-color: #f5f5f5;
 }

@@ -38,7 +38,13 @@ export class Globalizer {
         return false;
     }
 
-    resolveText = (resourceId: string) => {
+    resolveText = (resourceId: string, language?: string) => {
+        if(language && language !== this.preferedLanguage) {
+            const overrideTranslation = this.tryGetResourceDictionary(language);
+            if(overrideTranslation && overrideTranslation[resourceId]) {
+                return overrideTranslation[resourceId];
+            }
+        }
         const preferedTranslation = this.tryGetResourceDictionary(this.preferedLanguage);
         if(preferedTranslation && preferedTranslation[resourceId]) {
             return preferedTranslation[resourceId];
@@ -68,6 +74,6 @@ export function getFallbackLanguage(): string {
 export function canResolveText(resourceId: string): boolean {
     return defaultGlobalizer.instance!.canResolveText(resourceId);
 }
-export function resolveText(resourceId: string): string {
-    return defaultGlobalizer.instance!.resolveText(resourceId);
+export function resolveText(resourceId: string, language?: string): string {
+    return defaultGlobalizer.instance!.resolveText(resourceId, language);
 }

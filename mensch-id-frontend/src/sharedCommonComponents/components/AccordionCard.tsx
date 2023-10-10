@@ -1,5 +1,5 @@
-import React, { PropsWithChildren, ReactNode } from 'react';
-import { Accordion } from 'react-bootstrap';
+import React, { PropsWithChildren, ReactNode, useEffect, useState } from 'react';
+import { Accordion, Card } from 'react-bootstrap';
 import '../styles/accordion-card.css';
 
 interface AccordionCardProps extends PropsWithChildren<{}> {
@@ -12,11 +12,30 @@ interface AccordionCardProps extends PropsWithChildren<{}> {
     bg?: string;
     standalone?: boolean;
     isOpenAtCreate?: boolean;
+    mountOnEnter?: boolean;
+    onMount?: () => void;
 }
 
 export const AccordionCard = (props: AccordionCardProps) => {
 
-    const isCollapsed = false;
+    const [ hasBeenMounted, setHasBeenMounted ] = useState<boolean>(!props.mountOnEnter || (props.isOpenAtCreate ?? false));
+    const [ isCollapsed, setIsCollapsed ] = useState<boolean>(!props.isOpenAtCreate);
+
+    useEffect(() => {
+        if(!isCollapsed) {
+            if(!hasBeenMounted) {
+                setHasBeenMounted(true);
+            }
+        }
+    }, [ isCollapsed ]);
+
+    useEffect(() => {
+        if(hasBeenMounted) {
+            if(props.onMount) {
+                props.onMount();
+            }
+        }
+    }, [ hasBeenMounted ]);
 
     const accordionItem = (
         <Accordion.Item
@@ -24,12 +43,21 @@ export const AccordionCard = (props: AccordionCardProps) => {
             className={props.className}
             eventKey={props.eventKey}
         >
-            <Accordion.Button className={props.headerClassName} bsPrefix={`accordion-button` + (props.bg ? ` bg-${props.bg}` : '')}>
+            <Accordion.Button as="div"
+                className={props.headerClassName + " clickable"}
+                bsPrefix={`accordion-button` + (props.bg ? ` bg-${props.bg}` : '')}
+            >
                 {isCollapsed && props.collapsedTitle ? props.collapsedTitle : props.title}
             </Accordion.Button>
-            <Accordion.Body>
-                {props.children}
-            </Accordion.Body>
+            <Accordion.Collapse 
+                eventKey={props.eventKey}
+                onEnter={() => setIsCollapsed(false)}
+                onExited={() => setIsCollapsed(true)}
+            >
+                <Card.Body className='py-2 px-3'>
+                    {hasBeenMounted ? props.children : null}
+                </Card.Body>
+            </Accordion.Collapse>
         </Accordion.Item>
     );
     if(!props.standalone) {

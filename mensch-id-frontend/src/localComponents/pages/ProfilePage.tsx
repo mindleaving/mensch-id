@@ -2,20 +2,25 @@ import '../styles/profile.css';
 import { useEffect, useState } from 'react';
 import { Alert, Badge, Button, Col, Row } from 'react-bootstrap';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
-import { NotificationManager } from 'react-notifications';
 import { apiClient } from '../../sharedCommonComponents/communication/ApiClient';
 import { ApiError } from '../../sharedCommonComponents/communication/ApiError';
 import { CopyButton } from '../../sharedCommonComponents/components/CopyButton';
-import { LoginProvider } from '../types/enums.d';
+import { LoginProvider } from '../types/enums';
 import { useContext } from 'react';
 import UserContext from '../contexts/UserContext';
 import { useNavigate } from 'react-router-dom';
+import { showErrorAlert } from '../../sharedCommonComponents/helpers/AlertHelpers';
+import { ViewModels } from '../types/viewModels';
+import { LoadingAlert } from '../../sharedCommonComponents/components/LoadingAlert';
 
-interface ProfilePageProps {}
+interface ProfilePageProps {
+    setUserViewModel: (profileData: ViewModels.ProfileViewModel) => void;
+}
 
 export const ProfilePage = (props: ProfilePageProps) => {
 
-    const { profileData, setProfileData } = useContext(UserContext);
+    const { setUserViewModel } = props;
+    const profileData = useContext(UserContext)! as ViewModels.ProfileViewModel;
     const [ isLoading, setIsLoading ] = useState<boolean>(true);
     const navigate = useNavigate();
 
@@ -34,10 +39,10 @@ export const ProfilePage = (props: ProfilePageProps) => {
                     }
                 } else {
                     const result = await response.json();
-                    setProfileData(result);
+                    setUserViewModel(result);
                 }
             } catch(error: any) {
-                NotificationManager.error(error.message, resolveText("Person_CouldNotLoad"));
+                showErrorAlert(error.message, resolveText("Person_CouldNotLoad"));
             } finally {
                 setIsLoading(false);
             }
@@ -47,7 +52,7 @@ export const ProfilePage = (props: ProfilePageProps) => {
 
 
     if(isLoading) {
-        return (<h3>{resolveText("Loading...")}</h3>);
+        return (<LoadingAlert />);
     }
 
     if(!profileData) {
@@ -124,3 +129,4 @@ export const ProfilePage = (props: ProfilePageProps) => {
         </>
     );
 }
+export default ProfilePage;

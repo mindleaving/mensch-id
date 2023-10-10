@@ -5,6 +5,7 @@ import { AsyncButton } from '../../sharedCommonComponents/components/AsyncButton
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { sendPostRequest } from '../../sharedCommonComponents/helpers/StoringHelpers';
 import { isMenschId } from '../helpers/MenschIdHelpers';
+import { formatOwnershipSecret, removeInvalidCharactersFromOwnershipSecret } from '../helpers/OwnershipSecretFormatter';
 import { Models } from '../types/models';
 
 interface TakeControlFormProps {}
@@ -24,7 +25,7 @@ export const TakeControlForm = (props: TakeControlFormProps) => {
             ownershipSecret: ownershipSecret.replaceAll(/[^A-Z0-9]/g, "")
         };
         await sendPostRequest(
-            `api/profiles/take-control`,
+            `api/profiles/take-control`, {},
             resolveText("TakeControl_CouldNotTakeControl"),
             body,
             () => {
@@ -34,16 +35,6 @@ export const TakeControlForm = (props: TakeControlFormProps) => {
             () => setIsSubmitting(false)
         );
     }
-    const formatOwnershipSecret = (str: string) => {
-        const parts = removeInvalidCharactersFromOwnershipSecret(str).match(/.{1,6}/g);
-        if(parts === null) {
-            return '';
-        }
-        return parts!.join("  ");
-    }
-    const removeInvalidCharactersFromOwnershipSecret = (str: string) => {
-        return str.toUpperCase().replaceAll(/[^A-Z0-9]/g,"");
-    }
 
     return (
         <Form onSubmit={takeControl}>
@@ -51,7 +42,7 @@ export const TakeControlForm = (props: TakeControlFormProps) => {
                 <FormLabel>{resolveText("Person_ID")}</FormLabel>
                 <FormControl
                     value={id}
-                    onChange={(e:any) => setId(e.target.value.toUpperCase())}
+                    onChange={(e:any) => setId(e.target.value.toUpperCase().trim())}
                     size='lg'
                 />
             </FormGroup>

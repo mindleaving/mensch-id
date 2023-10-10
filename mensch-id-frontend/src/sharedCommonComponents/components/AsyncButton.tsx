@@ -1,15 +1,15 @@
-import React from "react"
+import { ReactNode } from "react"
 import { Button } from "react-bootstrap";
 
 interface AsyncButtonProps {
-    type?: "button" | "submit" | "reset" | undefined;
+    type?: "button" | "submit" | "reset";
     form?: string;
     onClick?: () => void;
     variant?: string;
     size?: "sm" | "lg";
     isExecuting?: boolean;
-    activeText: string;
-    executingText: string;
+    activeText: ReactNode;
+    executingText: ReactNode;
     className?: string;
     disabled?: boolean;
 }

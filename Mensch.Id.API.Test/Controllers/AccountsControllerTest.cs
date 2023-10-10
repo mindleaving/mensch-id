@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Mensch.Id.API.AccessControl;
 using Mensch.Id.API.Controllers;
 using Mensch.Id.API.Models;
+using Mensch.Id.API.Models.AccessControl;
 using Mensch.Id.API.Storage;
 using Mensch.Id.API.Workflow;
 using Mensch.Id.API.Workflow.Email;
@@ -25,7 +26,7 @@ namespace Mensch.Id.API.Test.Controllers
         private AccountCreator accountCreator;
         private Mock<IEmailSender> emailSender;
         private Mock<IExternalLoginObscurer> externalLoginObscurer;
-        private Mock<IPasswordHasher<LocalAnonymousAccount>> passwordHasher;
+        private Mock<IPasswordHasher<IAccountWithPassword>> passwordHasher;
 
         [SetUp]
         public void Setup()
@@ -34,7 +35,7 @@ namespace Mensch.Id.API.Test.Controllers
             httpContextAccessor = new Mock<IHttpContextAccessor>();
             authenticationModule = new Mock<IAuthenticationModule>();
             externalLoginObscurer = new Mock<IExternalLoginObscurer>();
-            passwordHasher = new Mock<IPasswordHasher<LocalAnonymousAccount>>();
+            passwordHasher = new Mock<IPasswordHasher<IAccountWithPassword>>();
             accountCreator = new AccountCreator(accountStore.Object, externalLoginObscurer.Object, passwordHasher.Object);
             emailSender = new Mock<IEmailSender>();
             controller = new AccountsController(
@@ -79,7 +80,7 @@ namespace Mensch.Id.API.Test.Controllers
             var personId = "20220609-XUTH9";
             var claims = new List<Claim>
             {
-                new(JwtSecurityTokenBuilder.PersonIdClaimName, personId, null, JwtSecurityTokenBuilder.Issuer)
+                new(MenschIdClaimTypes.PersonIdClaimName, personId, null, JwtSecurityTokenBuilder.Issuer)
             };
             var httpContext = new DefaultHttpContext
             {
@@ -97,7 +98,7 @@ namespace Mensch.Id.API.Test.Controllers
             accountStore.Verify(x => x.StoreAsync(It.IsAny<LocalAccount>()), Times.Once);
             Assert.That(account, Is.Not.Null);
             Assert.That(account, Is.TypeOf<LocalAccount>());
-            Assert.That(account.PersonId, Is.EqualTo(personId));
+            Assert.That(((LocalAccount)account).PersonId, Is.EqualTo(personId));
         }
     }
 }

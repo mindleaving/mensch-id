@@ -1,5 +1,6 @@
 interface VerbatimTextProps {
     text: string;
+    paragraphClassName?: string;
 }
 
 export const VerbatimText = (props: VerbatimTextProps) => {
@@ -8,7 +9,7 @@ export const VerbatimText = (props: VerbatimTextProps) => {
     return (
     <>
         {paragraphs.map((paragraph,idx) => (
-            <p key={idx} className='m-0'>
+            <p key={idx} className={props.paragraphClassName}>
                 {paragraph}
             </p>
         ))}

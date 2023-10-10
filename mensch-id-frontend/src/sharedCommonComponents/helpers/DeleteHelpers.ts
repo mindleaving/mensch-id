@@ -1,5 +1,5 @@
-import { NotificationManager } from 'react-notifications';
 import { apiClient } from '../communication/ApiClient';
+import { showErrorAlert, showSuccessAlert } from './AlertHelpers';
 
 export const deleteObject = async (
     apiPath: string,
@@ -7,16 +7,20 @@ export const deleteObject = async (
     successText: string,
     errorText: string,
     onSuccess?: () => void,
+    onFailure?: () => void,
     onFinally?: () => void
 ) => {
     try {
         await apiClient.instance!.delete(apiPath, params);
-        NotificationManager.success(successText);
+        showSuccessAlert(successText);
         if(onSuccess) {
             onSuccess();
         }
     } catch(error: any) {
-        NotificationManager.error(error.message, errorText);
+        showErrorAlert(errorText, error.message);
+        if(onFailure) {
+            onFailure();
+        }
     } finally {
         if(onFinally) {
             onFinally();

@@ -56,3 +56,4 @@ export const NewProfilePage = (props: NewProfilePageProps) => {
     return null;
 
 }
+export default NewProfilePage;

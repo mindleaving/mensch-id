@@ -27,6 +27,8 @@ namespace Mensch.Id.API.Workflow
 
         public static bool ValidateId(string id)
         {
+            if (string.IsNullOrWhiteSpace(id))
+                return false;
             return Regex.IsMatch(id, $"[0-9]{{8}}-[{CharacterSpace}]{{{IdSuffixLength}}}");
         }
     }

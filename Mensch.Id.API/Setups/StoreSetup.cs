@@ -1,4 +1,6 @@
 ﻿using Mensch.Id.API.Models;
+using Mensch.Id.API.Models.AccessControl;
+using Mensch.Id.API.Models.Shop;
 using Mensch.Id.API.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,7 +15,7 @@ namespace Mensch.Id.API.Setups
         public void Run(IServiceCollection services, IConfiguration configuration)
         {
             SetupMongoDB(services, configuration);
-            SetupStores(services);
+            SetupStores(services, configuration);
         }
 
         private void SetupMongoDB(IServiceCollection services, IConfiguration configuration)
@@ -22,7 +24,11 @@ namespace Mensch.Id.API.Setups
             {
                 new EnumRepresentationConvention(BsonType.String)
             }, type => true);
-            services.AddSingleton<IMongoClient>(new MongoClient());
+            var mongoSettings = new MongoClientSettings
+            {
+                Credential = MongoCredential.CreateCredential("admin", configuration["MongoDB:User"], configuration["MongoDB:Password"])
+            };
+            services.AddSingleton<IMongoClient>(new MongoClient(mongoSettings));
             services.AddSingleton<IMongoDatabase>(
                 provider =>
                 {
@@ -31,15 +37,22 @@ namespace Mensch.Id.API.Setups
                 });
         }
 
-        private static void SetupStores(IServiceCollection services)
+        private static void SetupStores(
+            IServiceCollection services,
+            IConfiguration configuration)
         {
             SetupTypeStores<Account>(services);
             services.AddScoped<IAccountStore, AccountStore>();
+            SetupTypeStores<AssignerAccountRequest>(services);
             SetupTypeStores<AssignerControlledProfile>(services);
+            services.Configure<FileStoreSettings>(configuration.GetSection(FileStoreSettings.AppSettingsSectionName));
+            services.AddScoped<IFilesStore, FilesStore>();
+            services.AddScoped<IIdStore, IdStore>();
             SetupTypeStores<MenschIdChallenge>(services);
             SetupTypeStores<MenschId>(services);
-            services.AddScoped<IIdStore, IdStore>();
+            SetupTypeStores<Order>(services);
             SetupTypeStores<Person>(services);
+            SetupTypeStores<Product>(services);
             SetupTypeStores<Verification>(services);
         }
 

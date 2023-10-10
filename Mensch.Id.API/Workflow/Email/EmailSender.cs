@@ -34,6 +34,20 @@ namespace Mensch.Id.API.Workflow.Email
             await SendMessage(message);
         }
 
+        public async Task SendAssignerAccountApprovedEmail(
+            AssignerAccountRequestApprovedEmail email)
+        {
+            var message = emailComposer.Compose(email);
+            await SendMessage(message);
+        }
+
+        public async Task SendOrderDigestEmail(
+            OrderDigestEmail email)
+        {
+            var message = emailComposer.Compose(email);
+            await SendMessage(message);
+        }
+
         private async Task SendMessage(
             MimeMessage message)
         {
@@ -41,7 +55,12 @@ namespace Mensch.Id.API.Workflow.Email
             {
                 Console.WriteLine("Sending email...");
                 using var mailClient = new SmtpClient();
-                await mailClient.ConnectAsync(settings.SmtpServerName, settings.SmtpServerPort, SecureSocketOptions.None);
+                await mailClient.ConnectAsync(
+                    settings.SmtpServerName, 
+                    settings.SmtpServerPort, 
+                    settings.UseAuthentication ? SecureSocketOptions.Auto : SecureSocketOptions.None);
+                if(settings.UseAuthentication)
+                    await mailClient.AuthenticateAsync(settings.SmtpUsername, settings.SmtpPassword);
                 await mailClient.SendAsync(message);
                 await mailClient.DisconnectAsync(true);
                 Console.WriteLine("Email sent!");

@@ -56,66 +56,74 @@ export const PrivacyPolicyDe = () => {
             </ul>
             <p>mensch.ID teilt deine Daten nicht mit Dritten.</p>
             <h3>Wie werden die Daten gespeichert?</h3>
-            <p>mensch.ID speichert die Daten sicher auf Servern bei Hetzner in Falkenstein,
+            <p>
+                mensch.ID speichert die Daten sicher auf Servern bei Hetzner in Falkenstein,
                 Deutschland. Die Server sind durch eine Firewall geschützt und werden laufend
                 mit den neuesten Sicherheitsupdates aktualisiert.
-                mensch.ID behält sich vor die Daten auf andere Server in der EU zu kopieren oder überführen um die Stabilität, Zuverlässigkeit und Geschwindigkeit der Webseite sicherzustellen</p>
-            <p>mensch.ID will keep your data until you delete your account. Your
-                mensch.ID will remain locked and not be assigned to anyone else, even
-                after deleting the last account associated with your mensch.ID. This
-                is necessary to provide the core functionality of this site: Provide
-                anyone with a <u>unique</u> ID. When deleting your account your data
-                remains stored in backups for up to 180 days.</p>
+                mensch.ID behält sich vor die Daten auf andere Server in der EU zu kopieren oder überführen um die Stabilität, Zuverlässigkeit und Geschwindigkeit der Webseite sicherzustellen
+            </p>
+            <p>
+                mensch.ID speichert deine Daten bis du deine Konten löschts. 
+                Deine mensch.ID bleibt allerdings gesperrt und wird nicht neu vergeben.
+                Nach der Löschung sind deine Daten noch bis zu 180 Tage in Backups gespeichert.
+            </p>
             <h3>Was sind deine Datenschutzrechte?</h3>
-            <p>mensch.ID would like to make sure you are fully aware of all of
-                your data protection rights. Every user is entitled to the following:</p>
+            <p>
+                mensch.ID möchte dich gerne mit deinen Rechten vertraut machen. Deine Rechte sind:</p>
             <ul>
-                <p><strong>The right to access</strong> &ndash;
-                    You have the right to request mensch.ID for copies of your personal
-                    data.</p>
-                <p><strong>The right to rectification</strong>
-                    &ndash; You have the right to request that mensch.ID correct any
-                    information you believe is inaccurate. You also have the right to
-                    request mensch.ID to complete the information you believe is
-                    incomplete.</p>
-                <p><strong>The right to erasure</strong>
-                    &ndash; You have the right to request that mensch.ID erase your
-                    personal data, under certain conditions.</p>
-                <p><strong>The right to restrict
-                    processing</strong> &ndash; You have the right to request that
-                    mensch.ID restrict the processing of your personal data, under
-                    certain conditions.</p>
-                <p><strong>The right to object to
-                    processing</strong> &ndash; You have the right to object to
-                    mensch.ID's processing of your personal data, under certain
-                    conditions.</p>
-                <p><strong>The right to data portability</strong>
-                    &ndash; You have the right to request that mensch.ID transfer the
-                    data that we have collected to another organization, or directly to
-                    you, under certain conditions.</p>
+                <p>
+                    <strong>Recht auf Einsicht</strong> &ndash;
+                    Du hast das Recht dir von mensch.ID die Daten zuschicken zu lassen die über dich gespeichert sind.
+                </p>
+                <p>
+                    <strong>Recht auf Korrektur</strong>
+                    &ndash; Du hast das Recht Informationen berichtigen zu lassen, die du für falsch hälst. 
+                    Du hast auch das Recht unvollständige Informationen von mensch.ID vervollständigen zu lassen.
+                </p>
+                <p>
+                    <strong>Recht auf Löschung</strong>
+                    &ndash; Du hast das Recht, mit gewissen Einschränkungen, deine persönliche Daten von mensch.ID löschen zu lassen.
+                </p>
+                <p>
+                    <strong>Recht auf Einschränkung der Verarbeitung</strong> 
+                    &ndash; Du hast das Recht von mensch.ID zu verlangen die Verarbeitung, mit gewissen Einschränkungen, einschränken zu lassen.
+                </p>
+                <p>
+                    <strong>Recht der Verarbeitung zu widersprechen</strong> 
+                    &ndash; Du hast das Recht der Verarbeitung deiner Daten durch mensch.ID zu widersprechen.
+                </p>
+                <p>
+                    <strong>Recht auf Datenübertragung</strong>
+                    &ndash; Du hast das Recht, mit gewissen Einschränkungen, von mensch.ID die Übertragung deiner Daten an dich oder eine andere Organisation zu verlangen.
+                </p>
             </ul>
-            <p>If you make a request, we have one month to respond to you. If you
-                would like to exercise any of these rights, please contact us at our
-                email: <a href="mailto:jan@janscholtyssek.dk">jan@janscholtyssek.dk</a>
+            <p>
+                Wenn du eine Anfrage bezüglich dieser Rechte stellst, hat mensch.ID einen Monat Zeit dir zu Antworten.
+                Wenn du deine Rechte ausüben möchtest kannst du uns per Mail erreichen: <a href="mailto:jan@janscholtyssek.dk">jan@janscholtyssek.dk</a>
             </p>
             <h3>Cookies</h3>
-            <p>Cookies are a technology for storing small chunks of information.
-                mensch.ID uses a cookie when you log-in using an external account.
-                This cookie contains information about you (account ID and some other
-                information provided by your external login provider) and is used to
-                authenticate and authorize requests made against the mensch.ID-API
-                when navigating the website. It is removed when you log out or close
-                your browser.</p>
-            <p>For further information about cookies, visit allaboutcookies.org.</p>
-            <h3>How to manage cookies</h3>
-            <p>You can set your browser not to accept cookies, and the above
-                website tells you how to remove cookies from your browser. However,
-                in a few cases, some of our website features may not function as a
-                result.</p>
+            <p>
+                mensch.ID nutzt ausschließlich essentielle Cookies um die Anmeldung zu ermöglichen.
+            </p>
+            <p>
+                Cookies sind eine Web-Technologie um kleine Informationsstücke zu speichern.
+                mensch.ID benutzt Cookies wenn ein externer Anmeldedienst genutzt wird.
+                Dieser Cookie enthält Informationen über dich, die der externe Anmeldedienst bei der Anmeldung zurückschickt.
+                Typischerweise sind dies deine Konto-ID bei dem Anmeldedienst und evtl. dein Name und andere Profildaten.
+                Dieser Cookie ist nötig um den Anmeldeprozess durchführen zu können und dich bei allen Anfragen gegenüber dem mensch.ID-API auszuweisen.
+                Der Cookie wird gelöscht wenn du dich abmeldest oder der Browser geschlossen wird.
+            </p>
+            <p>Für weitere Informationen zu Cookies verweisen wir auf allaboutcookies.org.</p>
+            <h3>Cookies verwalten</h3>
+            <p>
+                Du kannst deinen Browser dazu anweisen keine Cookies zu akzeptieren, und die obenstehende Webseite erklärt dir wie du Cookies aus deinem Browser löschen kannst.
+                Allerdings können dadurch einige Funktionen der Webseite nicht mehr funktionieren.
+            </p>
             <h3>Datenschutzerklärungen anderer Webseiten</h3>
-            <p>The mensch.ID website contains links to other websites. Our
-                privacy policy applies only to our website, so if you click on a link
-                to another website, you should read their privacy policy.</p>
+            <p>
+                Die mensch.ID-Webseite enthält Links/Verweise zu anderen Webseiten. Diese Datenschutzerklärung gilt nur für unsere Webseite. 
+                Wenn du einen Link zu einer anderen Webseite anklickst solltest du deren Datenschutzerklärung lesen.
+            </p>
             <h3>Änderung der Datenschutzerklärung</h3>
             <p>
                 mensch.ID aktualisiert regelmäßig diese Datenschutzerklärung und legt sie auf dieser Seite ab. Letze Aktualisierung am 2022-09-28.

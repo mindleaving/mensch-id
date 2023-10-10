@@ -16,6 +16,7 @@ namespace Mensch.Id.API.Setups
                 .IncludeAllInNamespace(Assembly.GetAssembly(typeof(Person)), "Mensch.Id.API.Models")
                 .IncludeAllInNamespace(Assembly.GetAssembly(typeof(NewProfileViewModel)), "Mensch.Id.API.ViewModels")
                 .ReactDefaults()
+                .SetDefaultFilenameForEnums("enums.ts")
                 .ConfigureNamespace("Mensch.Id.API.Models", options => options.Translation = "Models")
                 .ConfigureNamespace("Mensch.Id.API.ViewModels", options =>
                 {
