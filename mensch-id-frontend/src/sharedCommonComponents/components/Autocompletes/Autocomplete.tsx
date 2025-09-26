@@ -1,4 +1,4 @@
-import { KeyboardEvent, useEffect, useState } from 'react';
+import { KeyboardEvent, useEffect, useMemo, useState } from 'react';
 import Autosuggest from 'react-autosuggest';
 import { defaultGlobalizer, resolveText } from '../../helpers/Globalizer';
 import '../../styles/react-autosuggest.css';
@@ -19,9 +19,11 @@ export interface AutocompleteProps<T> {
     className?: string;
     autoFocus?: boolean;
     autoSelectSingleItem?: boolean;
+    highlightFirstSuggestion?: boolean;
+    size?: "sm" | "lg";
 }
 
-export const Autocomplete = <T extends unknown>(props: AutocompleteProps<T>) => {
+export const Autocomplete = <T,>(props: AutocompleteProps<T>) => {
 
     const { 
         defaultValue,
@@ -36,9 +38,11 @@ export const Autocomplete = <T extends unknown>(props: AutocompleteProps<T>) => 
         required,
         className,
         autoFocus,
-        autoSelectSingleItem 
+        autoSelectSingleItem,
+        highlightFirstSuggestion,
+        size
     } = props;
-    const [ searchTimer, setSearchTimer ] = useState<NodeJS.Timeout>();
+    const [ searchTimer, setSearchTimer ] = useState<number>();
     const [ searchText, setSearchText ] = useState<string>(defaultValue ?? '');
     const [ suggestions, setSuggestions ] = useState<T[]>([]);
 
@@ -92,6 +96,17 @@ export const Autocomplete = <T extends unknown>(props: AutocompleteProps<T>) => 
         onKeyUp(keyEvent, searchText);
     }
 
+    const formControlClasses = useMemo(() => {
+        const classes: string[] = [ "form-control"];
+        if(size) {
+            classes.push(`form-control-${size}`);
+        }
+        if(className) {
+            classes.push(className);
+        }
+        return classes.join(' ');
+    }, [ className, size ]);
+
     return (
         <Autosuggest
             getSuggestionValue={displayNameSelector}
@@ -106,14 +121,16 @@ export const Autocomplete = <T extends unknown>(props: AutocompleteProps<T>) => 
                 },
                 onKeyUp: keyPressed,
                 placeholder: placeholder ?? (defaultGlobalizer.instance ? resolveText('Search') : 'Enter search text'),
-                className: `form-control ${className ?? ''}`,
+                className: formControlClasses,
                 disabled: disabled,
                 required: required,
-                autoFocus: autoFocus
+                pattern: required ? '/Please select a value/' : undefined,
+                autoFocus: autoFocus,
             }}
             renderSuggestion={item => (
                 <div>{displayNameSelector(item)}</div>
             )}
+            highlightFirstSuggestion={highlightFirstSuggestion}
             onSuggestionsFetchRequested={({ value }) => runSearch(value)}
             onSuggestionsClearRequested={() => setSuggestions([])}
             shouldRenderSuggestions={(value) => value ? value.trim().length >= (minSearchTextLength ?? 3) : false}

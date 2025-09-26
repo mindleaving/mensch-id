@@ -161,7 +161,7 @@ namespace Mensch.Id.API.Controllers
 
 
         [HttpGet("new")]
-        public async Task<IActionResult> NewProfile([FromQuery] DateTime birthDate)
+        public async Task<IActionResult> NewProfile([FromQuery] DateOnly birthDate)
         {
             if (birthDate == default)
                 return BadRequest("No birthdate specified, but it's required for generating ID candidates");

@@ -31,3 +31,48 @@
 .list-group-hover .list-group-item:hover {
     background-color: #f5f5f5;
 }
+.cursor-default {
+    cursor: default;
+}
+.cursor-pointer {
+    cursor: pointer;
+}
+.cursor-help {
+    cursor: help;
+}
+.text-xxs {
+    font-size: xx-small;
+}
+.text-xs {
+    font-size: x-small;
+}
+.text-sm {
+    font-size: small;
+}
+.text-md {
+    font-size: medium;
+}
+.text-lg {
+    font-size: large;
+}
+.text-xl {
+    font-size: x-large;
+}
+.text-xxl {
+    font-size: xx-large;
+}
+.text-bold {
+    font-weight: bold;
+}
+.text-bolder {
+    font-weight: bolder;
+}
+.text-lighter {
+    font-weight: lighter;
+}
+.text-underline {
+    text-decoration: underline;
+}
+.text-strikethrough {
+    text-decoration: line-through;
+}

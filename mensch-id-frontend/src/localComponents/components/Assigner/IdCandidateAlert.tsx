@@ -20,7 +20,7 @@ export const IdCandidateAlert = (props: IdCandidateAlertProps) => {
             `api/assigner/claim/${props.idCandidate}`, {},
             resolveText("Assigner_CouldNotClaimId"),
             null,
-            () => {
+            async () => {
                 props.onAccepted(props.idCandidate);
             },
             undefined,
@@ -34,7 +34,7 @@ export const IdCandidateAlert = (props: IdCandidateAlertProps) => {
             `api/assigner/reject/${props.idCandidate}`, {},
             resolveText("Assigner_CouldNotRejectId"),
             null,
-            () => {
+            async () => {
                 props.onRejected()
             },
             undefined,

@@ -28,7 +28,7 @@ export const TakeControlForm = (props: TakeControlFormProps) => {
             `api/profiles/take-control`, {},
             resolveText("TakeControl_CouldNotTakeControl"),
             body,
-            () => {
+            async () => {
                 navigate("/me");
             },
             undefined,

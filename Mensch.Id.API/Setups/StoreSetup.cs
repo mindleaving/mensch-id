@@ -24,6 +24,7 @@ namespace Mensch.Id.API.Setups
             {
                 new EnumRepresentationConvention(BsonType.String)
             }, type => true);
+            //BsonSerializer.RegisterSerializer(new DateOnlySerializer()); // Necessary, now that MongoDB supports DateOnly?
             var mongoSettings = new MongoClientSettings
             {
                 Credential = MongoCredential.CreateCredential("admin", configuration["MongoDB:User"], configuration["MongoDB:Password"])

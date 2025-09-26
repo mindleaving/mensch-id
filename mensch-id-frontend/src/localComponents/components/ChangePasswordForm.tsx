@@ -32,7 +32,7 @@ export const ChangePasswordForm = (props: ChangePasswordFormProps) => {
             `api/accounts/${props.accountId}/change-password`, {},
             resolveText("Account_CouldNotChangePassword"),
             body,
-            () => {
+            async () => {
                 showSuccessAlert(resolveText("ResetPassword_SuccessfullyChanged"));
                 if(props.onPasswordChanged) {
                     props.onPasswordChanged();

@@ -79,7 +79,7 @@ namespace Mensch.Id.API.Storage
 
         public Task ReleaseReservationsNotMatchingBirthdate(
             string accountId,
-            DateTime birthDate)
+            DateOnly birthDate)
         {
             if (accountId == null) throw new ArgumentNullException(nameof(accountId));
 

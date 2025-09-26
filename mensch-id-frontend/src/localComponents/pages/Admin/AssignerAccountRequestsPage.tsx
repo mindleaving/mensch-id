@@ -47,9 +47,9 @@ export const AssignerAccountRequestsPage = (props: AssignerAccountRequestsPagePr
         setIsSubmitting(true);
         await deleteObject(
             `api/admin/assigner-requests/${id}`, {},
-            resolveText("AssignerAccountRequest_SuccessfullyDeleted"),
             resolveText("AssignerAccountRequest_CouldNotDelete"),
             () => {
+                showSuccessAlert(resolveText("AssignerAccountRequest_SuccessfullyDeleted"));
                 setRequests(state => state.filter(x => x.id !== id));
             },
             undefined,
@@ -63,7 +63,7 @@ export const AssignerAccountRequestsPage = (props: AssignerAccountRequestsPagePr
             `api/admin/assigner-requests/${id}/approve`, {},
             resolveText("AssignerAccountRequest_CouldNotApprove"),
             null,
-            () => {
+            async () => {
                 showSuccessAlert(resolveText("AssignerAccountRequest_SuccessfullyApproved"))
                 setRequests(state => state.filter(x => x.id !== id));
             },

@@ -9,7 +9,7 @@ export const TermsOfServicePage = (props: TermsOfServicePageProps) => {
 
     return (
     <>
-        {defaultGlobalizer.instance!.preferedLanguage === Language.de ? <TermsAndConditionsDE />
+        {defaultGlobalizer.instance!.preferredLanguage === Language.de ? <TermsAndConditionsDE />
         : <TermsAndConditionsEN />}
     </>
     );

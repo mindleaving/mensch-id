@@ -37,7 +37,7 @@ export const RequestAssignerAccountPage = (props: RequestAssignerAccountPageProp
             'api/admin/assigner-requests', {}, 
             resolveText("Assigner_CouldNotRequest"),
             request,
-            () => {
+            async () => {
                 setHasBeenSubmitted(true);
                 showSuccessAlert(resolveText("Assigner_SuccessfullyRequested"));
             },

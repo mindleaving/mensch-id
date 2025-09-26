@@ -36,7 +36,7 @@ export const SummaryShopStep = (props: SummaryShopStepProps) => {
             'api/shop/submit-order', {},
             resolveText("Shop_CouldNotOrder"),
             order,
-            () => {
+            async () => {
                 showSuccessAlert(resolveText("Order_SuccessfullyPlaced"));
                 // TODO: Reset order
                 setHasAcceptedTermsAndConditions(false);

@@ -1,14 +1,19 @@
 import { confirmAlert } from "react-confirm-alert";
 import { toast } from "react-toastify";
 import { resolveText } from "./Globalizer";
+import { ToastContent } from "../components/ToastContent";
+import { ConfirmAlertOptions } from "../types/frontendTypes";
 
+export const openConfirmAlert = (options: ConfirmAlertOptions) => {
+    confirmAlert(options);
+}
 export const openConfirmDeleteAlert = (
     nameOfObjectToBeDeleted: string, 
     title: string, 
     message: string, 
     yesCallback: () => void, 
     noCallback: () => void = () => {}) => {        
-    confirmAlert({
+    openConfirmAlert({
         title: title,
         message: message.replace('{0}', nameOfObjectToBeDeleted),
         closeOnClickOutside: true,
@@ -43,19 +48,4 @@ export const showInfoAlert = (title: string, message?: string, durationInMs?: nu
     toast.info(<ToastContent title={title} message={message} />, {
         autoClose: durationInMs
     });
-}
-
-export interface ToastContentProps {
-    title: string;
-    message?: string;
-}
-export const ToastContent = (props: ToastContentProps) => {
-    return (
-    <>
-        <strong>{props.title}</strong>
-        {props.message 
-        ? <div>
-            {props.message}
-        </div> : null}
-    </>);
 }

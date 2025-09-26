@@ -1,6 +1,7 @@
+import { accessTokenExpirationSessionStorageKey, accessTokenSessionStorageKey, csrfTokenSessionStorageKey } from '../helpers/Constants';
 import { translateErrorMessage } from '../helpers/ErrorMessageTranslator';
 import { buildUrl } from '../helpers/UrlBuilder';
-import { QueryParameters } from '../types/frontendTypes';
+import { JsonPatchDocument, QueryParameters } from '../types/frontendTypes';
 import { ApiError } from './ApiError';
 
 export interface ApiClientOptions {
@@ -8,33 +9,56 @@ export interface ApiClientOptions {
     contentType?: string;
     includeCredentials?: boolean;
     stringifyBody?: boolean;
+    csrfHeaderName?: string;
 }
 export class ApiClient {
+    isLoggedIn: boolean;
     serverAddress: string;
     port: number;
+    accessToken: string | undefined;
+    csrfToken: string | undefined;
+    loginExpirationTime: string | undefined;
     defaultOptions: ApiClientOptions;
 
     constructor(serverAddress: string, port: number) {
+        this.isLoggedIn = false;
         this.serverAddress = serverAddress;
         this.port = port;
+        this.accessToken = undefined;
         this.defaultOptions = { 
             handleError: true, 
-            contentType: 'application/json', 
-            includeCredentials: true,
-            stringifyBody: true
+            contentType: 'application/json',
+            stringifyBody: true,
+            csrfHeaderName: "X-XSRF-TOKEN"
         };
     }
 
-    isLoggedIn = async () => {
+    checkLoginStatus = async () => {
         const response = await this.get('api/logins/is-logged-in', [], { handleError: false });
         if(response.ok) {
+            this.isLoggedIn = true;
             return true;
         }
         if(response.status === 401) {
+            this.isLoggedIn = false;
             return false;
         }
         this._handleError(response);
         return false;
+    }
+
+    logOut = async () => {
+        try {
+            await apiClient.instance!.post('api/logins/logout', null);
+        } finally {
+            this.isLoggedIn = false;
+            this.accessToken = undefined;
+            this.csrfToken = undefined;
+            this.loginExpirationTime = undefined;
+            sessionStorage.removeItem(accessTokenSessionStorageKey);
+            sessionStorage.removeItem(accessTokenExpirationSessionStorageKey);
+            sessionStorage.removeItem(csrfTokenSessionStorageKey);
+        }
     }
 
     get = async (path: string, params?: QueryParameters, options?: ApiClientOptions) => {
@@ -49,7 +73,7 @@ export class ApiClient {
         return await this._sendRequest("POST", path, params, body, options);
     }
 
-    patch = async (path: string, body: any, params?: QueryParameters, options?: ApiClientOptions) => {
+    patch = async (path: string, body: JsonPatchDocument[], params?: QueryParameters, options?: ApiClientOptions) => {
         return await this._sendRequest("PATCH", path, params, body, options);
     }
 
@@ -74,6 +98,12 @@ export class ApiClient {
         const headers: HeadersInit = {};
         if(effectiveOptions.contentType) {
             headers['Content-Type'] = effectiveOptions.contentType;
+        }
+        if(method !== "GET") {
+            headers[effectiveOptions.csrfHeaderName ?? "X-XSRF-TOKEN"] = this.csrfToken ?? "1";
+        }
+        if(this.accessToken) {
+            headers['Authorization'] = `Bearer ${this.accessToken}`;
         }
         const response = await fetch(requestUrl, {
             method: method,

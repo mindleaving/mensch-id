@@ -11,13 +11,14 @@ interface MemoryFormControlProps {
     required?: boolean;
     disabled?: boolean;
     className?: string;
+    size?: "sm" | "lg";
 }
 
 export const MemoryFormControl = (props: MemoryFormControlProps) => {
 
     const autocompleteRunner = useMemo(() => new AutocompleteRunner<string>(`api/autocomplete/${props.context}`, 'searchText', 10), [ props.context ]);
     return (
-        <Autocomplete required={props.required}
+        <Autocomplete
             className={props.className}
             defaultValue={props.defaultValue}
             search={autocompleteRunner.search}
@@ -27,6 +28,7 @@ export const MemoryFormControl = (props: MemoryFormControlProps) => {
             placeholder={props.placeholder}
             minSearchTextLength={props.minSearchTextLength}
             disabled={props.disabled}
+            size={props.size}
         />
     );
 

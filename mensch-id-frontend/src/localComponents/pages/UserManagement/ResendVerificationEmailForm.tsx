@@ -25,7 +25,7 @@ export const ResendVerificationEmailForm = (props: ResendVerificationEmailFormPr
             `api/accounts/resend-verification-email`, {},
             resolveText("VerifyEmail_CouldNotSend"),
             body,
-            () => {
+            async () => {
                 setVerificationEmailHasBeenSent(true);
             }
         );

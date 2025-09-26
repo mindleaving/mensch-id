@@ -1,0 +1,17 @@
+.feedback {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    height: 60px;
+    width: 60px;
+
+    font-size: 48px;
+    line-height: 0;
+    text-align: center;
+    opacity: 50%;
+
+}
+.feedback:hover {
+    cursor: pointer;
+    opacity: 100%;
+}

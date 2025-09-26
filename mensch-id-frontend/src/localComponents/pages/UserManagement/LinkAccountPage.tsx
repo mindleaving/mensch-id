@@ -41,7 +41,7 @@ export const LinkAccountPage = (props: LinkAccountPageProps) => {
             'api/accounts/link/local', {},
             resolveText("LinkAccount_CouldNotLink"),
             loginInformation,
-            () => {
+            async () => {
                 showSuccessAlert(resolveText("LinkAccount_SuccessfullyLinked"));
                 navigate("/me");
             }

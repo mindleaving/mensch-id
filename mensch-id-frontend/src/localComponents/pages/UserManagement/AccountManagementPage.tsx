@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Badge, Button, Table } from 'react-bootstrap';
 import { DeleteButton } from '../../../sharedCommonComponents/components/DeleteButon';
-import { openConfirmDeleteAlert } from '../../../sharedCommonComponents/helpers/AlertHelpers';
+import { openConfirmDeleteAlert, showSuccessAlert } from '../../../sharedCommonComponents/helpers/AlertHelpers';
 import { deleteObject } from '../../../sharedCommonComponents/helpers/DeleteHelpers';
 import { resolveText } from '../../../sharedCommonComponents/helpers/Globalizer';
 import { loadObject } from '../../../sharedCommonComponents/helpers/LoadingHelpers';
@@ -49,9 +49,9 @@ export const AccountManagementPage = (props: AccountManagementPageProps) => {
         setIsDeleting(true);
         await deleteObject(
             `api/accounts/${accountId}`, {},
-            resolveText("Account_SuccessfullyDeleted"),
             resolveText("Account_CouldNotDelete"),
             () => {
+                showSuccessAlert(resolveText("Account_SuccessfullyDeleted"));
                 setAccounts(state => state.filter(x => x.id !== accountId));
             },
             () => setIsDeleting(false)
@@ -61,12 +61,15 @@ export const AccountManagementPage = (props: AccountManagementPageProps) => {
     const formatAccount = (account: Models.AccessControl.Account) => {
         switch(account.accountType) {
             case AccountType.External:
+            {
                 const externalAccount = account as Models.AccessControl.ExternalAccount;
                 return resolveText(`LoginProvider_${externalAccount.loginProvider}`);
+            }
             case AccountType.LocalAnonymous:
                 return '';
             case AccountType.Local:
             case AccountType.Assigner:
+            {
                 const localAccount = account as Models.AccessControl.LocalAccount;
                 return (<>
                     {localAccount.email}
@@ -81,6 +84,7 @@ export const AccountManagementPage = (props: AccountManagementPageProps) => {
                     </Badge> 
                     : null}
                 </>);
+            }
             default:
                 return '';
         }

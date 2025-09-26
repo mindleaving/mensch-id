@@ -1,7 +1,4 @@
-import { apiClient, ApiClient } from './sharedCommonComponents/communication/ApiClient';
-import { defaultGlobalizer, Globalizer, setLanguage } from './sharedCommonComponents/helpers/Globalizer';
-import germanTranslation from './localComponents/resources/translation.de.json';
-import englishTranslation from './localComponents/resources/translation.en.json';
+import { apiClient } from './sharedCommonComponents/communication/ApiClient';
 import { Layout } from './localComponents/components/Layout';
 import { useNavigate } from 'react-router-dom';
 import { Models } from './localComponents/types/models';
@@ -17,19 +14,13 @@ import { NoUserRoutes } from './localComponents/navigation/NoUserRoutes';
 import { PageContainer } from './localComponents/components/PageContainer';
 import { AdminRoutes } from './localComponents/navigation/AdminRoutes';
 
-defaultGlobalizer.instance = new Globalizer(
-    navigator.languages.map(x => x.substring(0, 2)), 
-    "en", 
-    [germanTranslation, englishTranslation]);
-apiClient.instance = window.location.hostname.toLowerCase() === "localhost"
-    ? new ApiClient(window.location.hostname, 44321)
-    : new ApiClient(window.location.hostname, 443);
+
 
 function App() {
     const navigate = useNavigate();
     const [ isLoggedIn, setIsLoggedIn ] = useState<boolean>(false);
     const [ userViewModel, setUserViewModel ] = useState<ViewModels.IUserViewModel | undefined>(
-        !!sessionStorage.getItem(SessionStoreKeys.UserViewModel) 
+        sessionStorage.getItem(SessionStoreKeys.UserViewModel) 
             ? JSON.parse(sessionStorage.getItem(SessionStoreKeys.UserViewModel)!)
             : undefined
     );

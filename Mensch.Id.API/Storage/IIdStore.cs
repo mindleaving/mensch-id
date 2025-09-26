@@ -11,7 +11,9 @@ namespace Mensch.Id.API.Storage
         Task UnclaimId(string id);
         Task ReleaseSpecificReservation(string accountId, string idCandidate);
         Task ReleaseReservations(string accountId);
-        Task ReleaseReservationsNotMatchingBirthdate(string accountId, DateTime birthDate);
+        Task ReleaseReservationsNotMatchingBirthdate(
+            string accountId,
+            DateOnly birthDate);
 
     }
 }

@@ -8,7 +8,7 @@ export const PrivacyPage = () => {
     return (
         <>
             <h1>{resolveText("Privacy")}</h1>
-            {defaultGlobalizer.instance!.preferedLanguage === Language.de ? <PrivacyPolicyDe />
+            {defaultGlobalizer.instance!.preferredLanguage === Language.de ? <PrivacyPolicyDe />
             : <PrivacyPolicyEn />}
         </>
     );

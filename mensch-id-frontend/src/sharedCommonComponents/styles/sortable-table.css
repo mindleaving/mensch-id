@@ -1,0 +1,22 @@
+.sortable {
+    cursor: pointer;
+}
+.sortable .sort-direction-indicator {
+    opacity: 30%;
+    position: absolute;
+    top: 0px;
+    right: 0px;
+}
+.sortable:hover .sort-direction-indicator {
+    opacity: 100%;
+}
+.sortable.is-sort-column .sort-direction-indicator {
+    color: blue;
+    opacity: 100%;
+}
+@media print
+{
+    .sort-direction-indicator {
+        display: none;
+    }
+}

@@ -153,7 +153,7 @@ public class AssignerController : ControllerBase
 
     [HttpGet("candidate")]
     public async Task<IActionResult> GetIdCandidate(
-        [FromQuery] DateTime birthDate)
+        [FromQuery] DateOnly birthDate)
     {
         if (birthDate == default)
             return BadRequest("No birthdate specified, but it's required for generating ID candidates");

@@ -9,7 +9,7 @@ namespace Mensch.Id.API.Workflow
         private const string CharacterSpace = "ACDEFGHJKLMNPQRSTUVWXYZ2345679";
         private const int IdSuffixLength = 5;
 
-        public string Generate(DateTime birthday)
+        public string Generate(DateOnly birthday)
         {
             var suffix = GenerateSuffix(IdSuffixLength);
             return $"{birthday:yyyyMMdd}-{suffix}";

@@ -4,7 +4,6 @@ import { showErrorAlert, showSuccessAlert } from './AlertHelpers';
 export const deleteObject = async (
     apiPath: string,
     params: { [key: string]: string },
-    successText: string,
     errorText: string,
     onSuccess?: () => void,
     onFailure?: () => void,
@@ -12,7 +11,6 @@ export const deleteObject = async (
 ) => {
     try {
         await apiClient.instance!.delete(apiPath, params);
-        showSuccessAlert(successText);
         if(onSuccess) {
             onSuccess();
         }
