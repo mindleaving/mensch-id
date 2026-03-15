@@ -3,20 +3,28 @@ import { resolveText } from '../helpers/Globalizer';
 import { AsyncButton } from './AsyncButton';
 
 interface DeleteButtonProps {
-    isDeleting: boolean;
+    isDeleting?: boolean;
     onClick: (isConfirmed?: boolean) => void;
-    requireConfirm: boolean;
+    requireConfirm?: boolean;
     confirmDialogTitle?: string;
     confirmDialogMessage?: string;
-    type?: "button" | "submit" | "reset";
-    size?: "sm" | "lg";
     className?: string;
+    size?: "xs" | "sm" | "lg";
+    type?: "button" | "submit" | "reset";
 }
 
 export const DeleteButton = (props: DeleteButtonProps) => {
 
     if(props.requireConfirm && !(props.confirmDialogTitle && props.confirmDialogMessage)) {
         throw new Error("If delete confirmation is required, title and message for the confirmation dialog must be specified");
+    }
+
+    const onClick = () => {
+        if(props.requireConfirm) {
+            confirmDelete();
+            return;
+        }
+        props.onClick(false);
     }
 
     const confirmDelete = () => {
@@ -37,16 +45,29 @@ export const DeleteButton = (props: DeleteButtonProps) => {
         });
     }
 
+    if(props.size === "xs") {
+        return (<i
+            className={`fa fa-trash red clickable ${props.className}`}
+            onClick={e => {
+                e.stopPropagation();
+                onClick();
+            }}
+        />);
+    }
+
     return (
         <AsyncButton
-            type={props.type}
             variant="danger"
-            size={props.size}
             className={props.className ?? 'm-2'}
-            activeText={resolveText('Delete')}
-            executingText={resolveText('Deleting...')}
+            activeText={<><i className='fa fa-trash' /> {resolveText('Delete')}</>}
+            executingText={<><i className='fa fa-trash' /> {resolveText('Deleting...')}</>}
             isExecuting={props.isDeleting}
-            onClick={props.requireConfirm ? confirmDelete : () => props.onClick(false)}
+            onClick={e => {
+                e.stopPropagation();
+                onClick();
+            }}
+            size={props.size}
+            type={props.type}
         />
     );
 

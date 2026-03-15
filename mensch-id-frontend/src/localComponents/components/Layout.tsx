@@ -42,7 +42,7 @@ export const Layout = (props: PropsWithChildren<LayoutProps>) => {
             `api/accounts/logout`, {},
             resolveText('CouldNotLogOut'),
             null,
-            onLogOut
+            async () => onLogOut()
         );
     }
 

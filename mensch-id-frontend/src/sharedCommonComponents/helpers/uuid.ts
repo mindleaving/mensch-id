@@ -1,3 +1,2 @@
-import { v4 } from 'uuid';
-
-export const uuid = v4;
+export const uuid = () => crypto.randomUUID();
+export const EmptyUUID = '00000000-0000-0000-0000-000000000000';

@@ -20,3 +20,23 @@ export const removeSurroundingQuotes = (str: string | null | undefined) => {
 export const isNullOrEmpty = (word: string) => {
     return word === undefined || word === null || word === '';
 }
+export const truncateText = (str: string, maxLength: number) => {
+    if(!str) {
+        return str;
+    }
+    if(str.length <= maxLength) {
+        return str;
+    }
+    return str.substring(0, maxLength - 3) + '...';
+}
+export const includesAll = (str: string, searchTerms: string[]) => {
+    for (const searchTerm of searchTerms) {
+        if(!str.includes(searchTerm)) {
+            return false;
+        }
+    }
+    return true;
+}
+export const insertTextAt = (str: string, insertText: string, position: number) => {
+    return str.slice(0, position) + insertText + str.slice(position);
+}

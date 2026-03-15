@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using Commons.Extensions;
 using Mensch.Id.API.Helpers;
-using Mensch.Id.API.Models;
 using Mensch.Id.API.Models.AccessControl;
 using Microsoft.AspNetCore.Authorization;
 

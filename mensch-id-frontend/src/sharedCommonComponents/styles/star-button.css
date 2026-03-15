@@ -1,0 +1,7 @@
+.star-button {
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: inline-block;
+    margin-left: 2px;
+    margin-right: 2px;
+}

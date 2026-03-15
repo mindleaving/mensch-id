@@ -24,6 +24,7 @@ namespace Mensch.Id.API.Setups
                     options.Filename = "viewModels.d.ts";
                 })
                 .CustomizeType(x => x == typeof(Guid), _ => "string")
+                .CustomizeType(x => x == typeof(DateTime), _ => "string")
                 .SetOutputDirectory(Path.Combine(repositoryPath, "mensch-id-frontend", "src", "localComponents", "types"))
                 .Generate();
         }

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../../sharedCommonComponents/communication/ApiClient';
 import { Center } from '../../sharedCommonComponents/components/Center';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
+import { format } from 'date-fns';
 
 interface HomePageProps {
     isLoggedIn: boolean;
@@ -18,7 +19,7 @@ export const HomePage = (props: HomePageProps) => {
         const today = new Date();
         const getRandomId = async () => {
             try {
-                const response = await apiClient.instance!.get(`api/id/random`, { birthdate: today.toISOString() });
+                const response = await apiClient.instance!.get(`api/id/random`, { birthdate: format(today, 'yyyy-MM-dd') });
                 const result = await response.text();
                 setRandomId(result);
             } catch {

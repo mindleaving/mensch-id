@@ -10,23 +10,19 @@ export namespace ViewModels {
         contactInformation: Models.Contact;
         preferedLanguage: Enums.Language;
     }
-
     interface IUserViewModel {
         userType: Enums.UserType;
     }
-
     interface NewProfileViewModel {
         idCandidates: string[];
     }
-
     interface ProfileViewModel extends ViewModels.IUserViewModel {
         id: string;
         loginProviders: Enums.LoginProvider[];
         verifications: Models.Verification[];
     }
-
     interface SignedAssignerControlledProfile extends Models.AssignerControlledProfile {
-        timestamp: Date;
+        timestamp: string;
         signature: string;
     }
 }

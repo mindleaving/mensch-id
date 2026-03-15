@@ -20,7 +20,7 @@ namespace Mensch.Id.API.Workflow.ViewModelBuilders
         }
 
         public async Task<NewProfileViewModel> BuildForNormalUser(
-            DateTime birthDate,
+            DateOnly birthDate,
             string accountId,
             int idCandidateCount = 10)
         {
@@ -45,7 +45,7 @@ namespace Mensch.Id.API.Workflow.ViewModelBuilders
         }
 
         public async Task<NewProfileViewModel> BuildForAssigner(
-            DateTime birthDate,
+            DateOnly birthDate,
             string accountId,
             int idCandidateCount = 1)
         {

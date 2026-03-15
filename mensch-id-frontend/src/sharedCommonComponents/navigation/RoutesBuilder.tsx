@@ -30,3 +30,4 @@ export const RoutesBuilder = (props: RoutesBuilderProps) => {
     </Routes>);
 
 }
+export default RoutesBuilder;

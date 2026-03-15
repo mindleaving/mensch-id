@@ -1,8 +1,9 @@
-import React, { PropsWithChildren, useEffect, useState } from 'react';
+import { PropsWithChildren, useEffect, useState } from 'react';
 import Table from 'react-bootstrap/Table';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Form from 'react-bootstrap/Form';
+import FormSelect from 'react-bootstrap/FormSelect';
 import Button from 'react-bootstrap/Button';
 import { resolveText } from '../helpers/Globalizer';
 import { OrderDirection } from '../types/enums';
@@ -63,8 +64,7 @@ export const PagedTable = (props: PropsWithChildren<PagedTableProps>) => {
             </Col>
             <Form.Label column xs="auto">Entries per page</Form.Label>
             <Col xs="auto">
-                <Form.Control
-                    as="select"
+                <FormSelect
                     value={entriesPerPage}
                     onChange={(e:any) => setEntriesPerPage(e.target.value)}
                 >
@@ -74,7 +74,7 @@ export const PagedTable = (props: PropsWithChildren<PagedTableProps>) => {
                     <option value="30">30</option>
                     <option value="50">50</option>
                     <option value="100">100</option>
-                </Form.Control>
+                </FormSelect>
             </Col>
             <Col></Col>
             <Col xs="auto">

@@ -25,7 +25,7 @@ export const RequestPasswordResetPage = (props: RequestPasswordResetPageProps) =
             `api/accounts/request-password-reset`, {},
             resolveText("ResetPassword_CouldNotRequest"),
             body,
-            () => {
+            async () => {
                 showSuccessAlert(resolveText("ResetPassword_SuccessfullySubmittedRequest"));
                 navigate("/");
             },

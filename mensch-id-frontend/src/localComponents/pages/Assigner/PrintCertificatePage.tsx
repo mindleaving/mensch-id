@@ -6,7 +6,7 @@ import { useParams } from 'react-router-dom';
 import { Center } from '../../../sharedCommonComponents/components/Center';
 import { LoadingAlert } from '../../../sharedCommonComponents/components/LoadingAlert';
 import { VerbatimText } from '../../../sharedCommonComponents/components/VerbatimText';
-import { getPreferedLanguage, resolveText } from '../../../sharedCommonComponents/helpers/Globalizer';
+import { getPreferredLanguage, resolveText } from '../../../sharedCommonComponents/helpers/Globalizer';
 import { buildLoadObjectFunc } from '../../../sharedCommonComponents/helpers/LoadingHelpers';
 import { MenschId } from '../../components/MenschId';
 import UserContext from '../../contexts/UserContext';
@@ -27,8 +27,8 @@ export const PrintCertificatePage = (props: PrintCertificatePageProps) => {
     const contactInformation = useMemo(() => assignerProfile.contactInformation, [ assignerProfile ]);
     const address = useMemo(() => contactInformation.address, [ contactInformation ]);
     const [ language, setLanguage ] = useState<string>(
-        availableLanguages.includes(getPreferedLanguage() as Language) 
-        ? getPreferedLanguage() 
+        availableLanguages.includes(getPreferredLanguage() as Language) 
+        ? getPreferredLanguage() 
         : Language.en
     );
 

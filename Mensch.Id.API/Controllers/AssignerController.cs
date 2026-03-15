@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Commons.DatabaseTools;
 using Commons.Extensions;
 using Mensch.Id.API.AccessControl.Policies;
 using Mensch.Id.API.Helpers;
@@ -153,7 +154,7 @@ public class AssignerController : ControllerBase
 
     [HttpGet("candidate")]
     public async Task<IActionResult> GetIdCandidate(
-        [FromQuery] DateTime birthDate)
+        [FromQuery] DateOnly birthDate)
     {
         if (birthDate == default)
             return BadRequest("No birthdate specified, but it's required for generating ID candidates");

@@ -109,9 +109,9 @@ export const ShopOrdersPage = (props: ShopOrdersPageProps) => {
         setIsSubmitting(true);
         await deleteObject(
             `api/shop/orders/${id}`, {},
-            resolveText("Order_SuccessfullyDeleted"),
             resolveText("Order_CouldNotDelete"),
             () => {
+                showSuccessAlert(resolveText("Order_SuccessfullyDeleted"));
                 setOrders(state => state.filter(x => x.id !== id));
             },
             undefined,

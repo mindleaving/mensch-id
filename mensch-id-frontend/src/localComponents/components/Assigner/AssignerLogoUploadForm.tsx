@@ -63,9 +63,9 @@ export const AssignerLogoUploadForm = (props: AssignerLogoUploadFormProps) => {
         setIsDeleting(true);
         await deleteObject(
             'api/assigner/me/logo', {},
-            resolveText("Assigner_Logo_SuccessfullyRemoved"),
             resolveText("Assigner_Logo_CouldNotRemove"),
             () => {
+                showSuccessAlert(resolveText("Assigner_Logo_SuccessfullyRemoved"));
                 reloadProfile();
             },
             undefined,

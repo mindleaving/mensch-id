@@ -1,7 +1,7 @@
 import { VerbatimText } from '../../sharedCommonComponents/components/VerbatimText';
 import { defaultGlobalizer, resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { FAQ_DE } from '../components/FAQ/FAQ_DE';
-import { FAQ_EN } from '../components/FAQ/FAQ_EN';
+import { FAQ_EN } from '../components/FAQ/FAQ_en';
 import { Language } from '../types/enums';
 
 export const AboutPage = () => {
@@ -17,7 +17,7 @@ export const AboutPage = () => {
             </div>
             <hr />
             <h3>{resolveText("FAQ")}</h3>
-            {defaultGlobalizer.instance!.preferedLanguage === Language.de ? <FAQ_DE />
+            {defaultGlobalizer.instance!.preferredLanguage === Language.de ? <FAQ_DE />
             : <FAQ_EN />}
         </>
     );

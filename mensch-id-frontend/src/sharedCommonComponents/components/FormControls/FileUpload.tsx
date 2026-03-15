@@ -1,5 +1,5 @@
 import React, {CSSProperties, useMemo} from 'react';
-import { DropzoneOptions, useDropzone} from 'react-dropzone';
+import {DropzoneOptions, useDropzone} from 'react-dropzone';
 
 interface FileUploadProps extends DropzoneOptions {
 }

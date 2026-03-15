@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useMemo, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { Models } from '../../../localComponents/types/models';
 import { resolveText } from '../../helpers/Globalizer';
 import { loadObject } from '../../helpers/LoadingHelpers';
@@ -15,7 +15,7 @@ interface GenericIdAutocompleteProps<T> extends IdAutocompleteProps {
 
 export const GenericIdAutocomplete = <T extends Models.IId>(props: GenericIdAutocompleteProps<T>) => {
 
-    const { value, onChange, disabled, required } = props;
+    const { value, onChange, disabled, required, placeholder } = props;
     const [ isLoading, setIsLoading ] = useState<boolean>(!!value);
     const [ item, setItem ] = useState<T>();
     const key = useMemo(() => uuid(), []);
@@ -58,10 +58,10 @@ export const GenericIdAutocomplete = <T extends Models.IId>(props: GenericIdAuto
             value: item,
             onChange: setItem,
             disabled,
-            required
+            required,
+            placeholder
         }
     )}
     </>);
 
 }
-export default GenericIdAutocomplete;

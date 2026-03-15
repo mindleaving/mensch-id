@@ -27,7 +27,7 @@ namespace Mensch.Id.API.Controllers
         }
 
         [HttpGet("random")]
-        public IActionResult GetRandomId([FromQuery] DateTime birthdate)
+        public IActionResult GetRandomId([FromQuery] DateOnly birthdate)
         {
             var idGenerator = new MenschIdGenerator();
             var id = idGenerator.Generate(birthdate);

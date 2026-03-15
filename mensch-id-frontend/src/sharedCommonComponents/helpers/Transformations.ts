@@ -1,4 +1,4 @@
-export const toDictionary = <T extends unknown, TOut extends unknown>(
+export const toDictionary = <T, TOut>(
     items: T[], 
     keySelector: (item: T) => string, 
     itemSelector?: (item: T) => TOut)
