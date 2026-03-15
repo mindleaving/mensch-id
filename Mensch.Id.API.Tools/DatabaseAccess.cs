@@ -7,14 +7,14 @@ namespace Mensch.Id.API.Tools
 {
     public abstract class DatabaseAccess
     {
-        private const string DatabaseName = "MenschID";
+        private const string DatabaseName = "menschid";
         private readonly IMongoDatabase database;
 
         protected DatabaseAccess()
         {
             var settings = new MongoClientSettings
             {
-                Credential = MongoCredential.CreateCredential("admin", "dev", File.ReadAllText(@"C:\Temp\mongodb-dev-credential.txt"))
+                Credential = MongoCredential.CreateCredential("admin", "dev", File.ReadAllText("/home/jan/mongodb-dev-credential.txt"))
             };
             var mongoClient = new MongoClient(settings);
             ConventionRegistry.Register("EnumStringConvetion", new ConventionPack

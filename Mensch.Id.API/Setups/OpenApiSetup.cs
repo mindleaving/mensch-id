@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 
 namespace Mensch.Id.API.Setups
 {

@@ -9,6 +9,7 @@ namespace Mensch.Id.API
         {
             {"stationary-win8", @"F:\Projects\mensch.id"},
             {"ubuntu-stationary", @"/mnt/data/Projects/mensch.id"},
+            {"nebulacube", @"/home/jan/git/mensch-id"},
         };
         public static string GetRepositoryPath()
         {
