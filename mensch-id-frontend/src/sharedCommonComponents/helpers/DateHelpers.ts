@@ -23,3 +23,9 @@ export const toTimeOnly = (date: Date): string => {
 export const isValidDate = (date: Date) => {
     return !isNaN(date.getTime());
 }
+export const formatDateFormControlValue = (value: Date | string | undefined | null, enableTime?: boolean): string => {
+    if(!value) {
+        return '';
+    }
+    return format(new Date(value), enableTime ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd');
+};

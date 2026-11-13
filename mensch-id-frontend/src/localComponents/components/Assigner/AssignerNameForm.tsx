@@ -38,15 +38,14 @@ export const AssignerNameForm = (props: AssignerNameFormProps) => {
         );
     }
 
-    useEffect(() => {
-        setIsStored(false);
-    }, [ name ]);
-
     return (<Form onSubmit={store}>
         <RowFormGroup required
             label={resolveText("AssignerAccount_Name")}
             value={name}
-            onChange={setName}
+            onChange={(updatedName: string) => {
+                setIsStored(false);
+                setName(updatedName);
+            }}
         />
         <Center>
             <StoreButton

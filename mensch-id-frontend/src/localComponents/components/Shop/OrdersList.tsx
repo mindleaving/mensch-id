@@ -78,8 +78,8 @@ export const OrdersList = (props: OrdersListProps) => {
                     <tr key={order.id}>
                         <td>{formatDateTime(new Date(order.statusChanges[0].timestamp))}</td>
                         <td>
-                            {order.items.map(item => (
-                                <div>
+                            {order.items.map((item, itemIndex) => (
+                                <div key={itemIndex}>
                                     {item.amount}x {item.product.name}
                                 </div>
                             ))}

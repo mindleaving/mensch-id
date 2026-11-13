@@ -1,5 +1,5 @@
 import Flatpickr, { OptionsType } from 'react-flatpickr';
-import { isValidDate, toDateOnly } from '../../helpers/DateHelpers';
+import { formatDateFormControlValue, isValidDate, toDateOnly } from '../../helpers/DateHelpers';
 import { Row, Col, Button } from 'react-bootstrap';
 import { resolveText } from '../../helpers/Globalizer';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -33,19 +33,14 @@ export const DateFormControl = (props: DateFormControlProps) => {
         size
     } = props;
 
-    const [ localValue, setLocalValue ] = useState<string>('');
-
-    useEffect(() => {
-        if(!value) {
-            setLocalValue('');
-        } else {
-            if(enableTime) {
-                setLocalValue(format(new Date(value), 'yyyy-MM-dd HH:mm'));
-            } else {
-                setLocalValue(format(new Date(value), 'yyyy-MM-dd'));
-            }
-        }
-    }, [ value, enableTime ]);
+    const [ localValue, setLocalValue ] = useState<string>(formatDateFormControlValue(value, enableTime));
+    const [ previousValue, setPreviousValue ] = useState(value);
+    const [ previousEnableTime, setPreviousEnableTime ] = useState(enableTime);
+    if(value !== previousValue || enableTime !== previousEnableTime) {
+        setPreviousValue(value);
+        setPreviousEnableTime(enableTime);
+        setLocalValue(formatDateFormControlValue(value, enableTime));
+    }
 
     const flatpickrOptions = useMemo(() => ({
         allowInput: true,

@@ -4,7 +4,7 @@ import { DeleteButton } from '../../../sharedCommonComponents/components/DeleteB
 import { openConfirmDeleteAlert, showSuccessAlert } from '../../../sharedCommonComponents/helpers/AlertHelpers';
 import { deleteObject } from '../../../sharedCommonComponents/helpers/DeleteHelpers';
 import { resolveText } from '../../../sharedCommonComponents/helpers/Globalizer';
-import { buildLoadObjectFunc, loadObject } from '../../../sharedCommonComponents/helpers/LoadingHelpers';
+import { buildLoadObjectFunc } from '../../../sharedCommonComponents/helpers/LoadingHelpers';
 import { getLoginProviderDisplayName } from '../../helpers/LoginProviderHelpers';
 import { ViewModels } from '../../types/viewModels';
 import { ChangePasswordForm } from '../../components/ChangePasswordForm';
@@ -22,18 +22,14 @@ export const AccountManagementPage = (props: AccountManagementPageProps) => {
     const [ loginProviders, setLoginProviders ] = useState<ViewModels.LoginProviderViewModel[]>([]);
 
 
-    const loadAccounts = async () => {
-        setIsLoading(true);
-        await loadObject<Models.AccessControl.Account[]>(
+    useEffect(() => {
+        const loadAccounts = buildLoadObjectFunc<Models.AccessControl.Account[]>(
             'api/accounts', {},
             resolveText("Accounts_CouldNotLoad"),
             items => setAccounts(items.filter(x => x.accountType !== AccountType.Assigner)),
             undefined,
             () => setIsLoading(false)
-        )
-    };
-
-    useEffect(() => {
+        );
         loadAccounts();
         const loadLoginProviders = buildLoadObjectFunc<ViewModels.LoginProviderViewModel[]>(
             'api/accounts/login-providers', {},

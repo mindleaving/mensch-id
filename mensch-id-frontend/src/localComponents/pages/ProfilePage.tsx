@@ -25,7 +25,6 @@ export const ProfilePage = (props: ProfilePageProps) => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        setIsLoading(true);
         const loadProfileData = async () => {
             try {
                 const response = await apiClient.instance!.get(`api/profiles/me`, {}, { handleError: false });

@@ -19,7 +19,6 @@ export const AssignerAccountRequestsPage = (props: AssignerAccountRequestsPagePr
     const [ isSubmitting, setIsSubmitting ] = useState<boolean>(false);
 
     useEffect(() => {
-        setIsLoading(true);
         const loadRequests = buildLoadObjectFunc(
             'api/admin/assigner-requests', {},
             resolveText("AssignerAccountRequests_CouldNotLoad"),

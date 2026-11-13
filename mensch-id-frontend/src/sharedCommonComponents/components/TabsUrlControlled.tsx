@@ -22,12 +22,14 @@ export const TabsUrlControlled = (props: PropsWithChildren<TabsUrlControlledProp
     const [ selectedTab, setSelectedTab ] = useState<string>(tabFromUrl && validTabs.includes(tabFromUrl) ? tabFromUrl : validTabs[0]);
     const navigate = useNavigate();
 
-    useEffect(() => {
-        const requestedTab = q.get(urlParameterName ?? defaultUrlParameterName);
+    const requestedTab = q.get(urlParameterName ?? defaultUrlParameterName);
+    const [ previousRequestedTab, setPreviousRequestedTab ] = useState<string | null>(requestedTab);
+    if(requestedTab !== previousRequestedTab) {
+        setPreviousRequestedTab(requestedTab);
         if(requestedTab && validTabs.includes(requestedTab)) {
             setSelectedTab(requestedTab);
         }
-    }, [ q, validTabs ]);
+    }
 
     const changeTab = useMemo(() => (key: string) => {
         if(urlBuilder) {

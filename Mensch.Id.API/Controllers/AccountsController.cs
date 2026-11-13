@@ -156,8 +156,6 @@ namespace Mensch.Id.API.Controllers
             var account = await store.GetLocalByEmailAsync(body.Email);
             if (account == null)
                 return NotFound();
-            if (account is AdminAccount)
-                return StatusCode((int)HttpStatusCode.Forbidden);
             var resetToken = accountTokenService.Generate(AccountTokenPurpose.PasswordReset, account.Id);
             account.PasswordResetNonce = resetToken.Nonce;
             await store.StoreAsync(account);
