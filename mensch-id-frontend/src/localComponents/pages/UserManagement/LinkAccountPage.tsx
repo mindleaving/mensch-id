@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiClient } from '../../../sharedCommonComponents/communication/ApiClient';
 import { showSuccessAlert } from '../../../sharedCommonComponents/helpers/AlertHelpers';
 import { resolveText } from '../../../sharedCommonComponents/helpers/Globalizer';
 import { buildLoadObjectFunc } from '../../../sharedCommonComponents/helpers/LoadingHelpers';
 import { sendPostRequest } from '../../../sharedCommonComponents/helpers/StoringHelpers';
 import { LoginForm } from '../../components/LoginForm';
+import { buildExternalLoginUrl } from '../../helpers/LoginHelpers';
 import { Models } from '../../types/models';
 import { ViewModels } from '../../types/viewModels';
 
@@ -40,9 +40,8 @@ export const LinkAccountPage = (props: LinkAccountPageProps) => {
     }, []);
 
     const linkExternalAccount = async (loginProviderId: string) => {
-        const redirectUrl = encodeURIComponent(`https://${window.location.host}/linkaccount/finish`);
-        const actionUrl = apiClient.instance!.buildUrl(`api/accounts/login/${encodeURIComponent(loginProviderId)}?redirectUrl=${redirectUrl}`, {});
-        window.location.href = actionUrl;
+        const redirectUrl = `https://${window.location.host}/linkaccount/finish`;
+        window.location.href = buildExternalLoginUrl(loginProviderId, redirectUrl, true);
     }
 
     const linkLocalAccount = async (loginInformation: Models.LoginInformation) => {

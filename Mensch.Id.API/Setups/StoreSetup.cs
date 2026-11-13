@@ -27,8 +27,14 @@ namespace Mensch.Id.API.Setups
             //BsonSerializer.RegisterSerializer(new DateOnlySerializer()); // Necessary, now that MongoDB supports DateOnly?
             var mongoSettings = new MongoClientSettings
             {
-                Credential = MongoCredential.CreateCredential("admin", configuration["MongoDB:User"], configuration["MongoDB:Password"])
+                Server = MongoServerAddress.Parse(configuration["MongoDB:Server"] ?? "localhost:27017")
             };
+            var replicaSetName = configuration["MongoDB:ReplicaSetName"];
+            if (!string.IsNullOrWhiteSpace(replicaSetName))
+                mongoSettings.ReplicaSetName = replicaSetName;
+            var user = configuration["MongoDB:User"];
+            if (!string.IsNullOrWhiteSpace(user))
+                mongoSettings.Credential = MongoCredential.CreateCredential("admin", user, configuration["MongoDB:Password"]);
             services.AddSingleton<IMongoClient>(new MongoClient(mongoSettings));
             services.AddSingleton<IMongoDatabase>(
                 provider =>

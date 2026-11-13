@@ -41,8 +41,8 @@ public class AssignerControllerTest
 
         var claims = new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, AssignerAccountId, ClaimValueTypes.String, JwtSecurityTokenBuilder.Issuer),
-            new Claim(MenschIdClaimTypes.AccountTypeClaimName, nameof(AccountType.Assigner), ClaimValueTypes.String, JwtSecurityTokenBuilder.Issuer)
+            new Claim(MenschIdClaimTypes.Subject, AssignerAccountId),
+            new Claim(MenschIdClaimTypes.AccountTypeClaimName, nameof(AccountType.Assigner))
         };
         var httpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "test")) };
         var httpContextAccessor = Mock.Of<IHttpContextAccessor>(x => x.HttpContext == httpContext);

@@ -1,0 +1,59 @@
+import { ExpoConfig } from 'expo/config';
+
+const config: ExpoConfig = {
+    name: 'mensch.ID',
+    slug: 'mensch-id',
+    scheme: 'menschid',
+    version: '1.0.0',
+    orientation: 'portrait',
+    icon: './assets/icon.png',
+    userInterfaceStyle: 'automatic',
+    ios: {
+        bundleIdentifier: 'id.mensch.app',
+        supportsTablet: true,
+        infoPlist: {
+            ITSAppUsesNonExemptEncryption: false
+        }
+    },
+    android: {
+        package: 'id.mensch.app',
+        adaptiveIcon: {
+            backgroundColor: '#1e1e1e',
+            foregroundImage: './assets/android-icon-foreground.png',
+            backgroundImage: './assets/android-icon-background.png',
+            monochromeImage: './assets/android-icon-monochrome.png'
+        },
+        predictiveBackGestureEnabled: false
+    },
+    locales: {
+        en: './locales/en.json',
+        de: './locales/de.json'
+    },
+    plugins: [
+        'expo-router',
+        'expo-web-browser',
+        'expo-secure-store',
+        'expo-localization',
+        [
+            'expo-splash-screen',
+            {
+                image: './assets/splash-icon.png',
+                imageWidth: 200,
+                resizeMode: 'contain',
+                backgroundColor: '#1e1e1e'
+            }
+        ],
+        [
+            'expo-camera',
+            {
+                cameraPermission: 'mensch.ID uses the camera to scan challenge QR codes.',
+                recordAudioAndroid: false
+            }
+        ]
+    ],
+    experiments: {
+        typedRoutes: true
+    }
+};
+
+export default config;

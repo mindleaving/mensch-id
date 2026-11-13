@@ -1,7 +1,5 @@
 using System;
-using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Mensch.Id.API.AccessControl;
 using Mensch.Id.API.Helpers;
@@ -11,7 +9,6 @@ using Mensch.Id.API.Test.TestInfrastructure;
 using Mensch.Id.API.Workflow;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using NUnit.Framework;
 
 namespace Mensch.Id.API.Test.AccessControl;
@@ -31,11 +28,8 @@ public class AuthenticationModuleTest
         accountStore = new InMemoryAccountStore(obscurer);
         passwordHasher = new PasswordHasher<IAccountWithPassword>();
         accountCreator = new AccountCreator(accountStore, obscurer, passwordHasher);
-        var signingKey = new SymmetricSecurityKey(RandomNumberGenerator.GetBytes(32));
-        var tokenBuilder = new JwtSecurityTokenBuilder(signingKey);
         authenticationModule = new AuthenticationModule(
             accountStore,
-            tokenBuilder,
             passwordHasher,
             new ClaimBuilder());
     }
@@ -49,19 +43,19 @@ public class AuthenticationModuleTest
     }
 
     [Test]
-    public async Task CorrectPasswordAuthenticatesAndIssuesToken()
+    public async Task CorrectPasswordAuthenticatesAndBuildsSessionPrincipal()
     {
         var account = await CreateVerifiedLocalAccount("20000101-ACDEF");
 
         var result = await authenticationModule.AuthenticateLocalByEmailMenschIdOrUsernameAsync(new LoginInformation("joe@example.org", Password));
 
-        var token = new JwtSecurityTokenHandler().ReadJwtToken(result.AccessToken);
+        var claims = result.Principal.Claims.ToList();
         Assert.That(result.IsAuthenticated, Is.True);
         Assert.That(result.AccountType, Is.EqualTo(AccountType.Local));
-        Assert.That(token.Issuer, Is.EqualTo(JwtSecurityTokenBuilder.Issuer));
-        Assert.That(token.Claims.Any(x => x.Value == account.Id), Is.True);
-        Assert.That(token.Claims.Any(x => x.Type == MenschIdClaimTypes.PersonIdClaimName && x.Value == "20000101-ACDEF"), Is.True);
-        Assert.That(token.ValidTo, Is.GreaterThan(DateTime.UtcNow));
+        Assert.That(result.Principal.Identity!.AuthenticationType, Is.EqualTo(MenschIdAuthenticationSchemes.Session));
+        Assert.That(ClaimsHelpers.GetAccountId(claims), Is.EqualTo(account.Id));
+        Assert.That(ClaimsHelpers.GetPersonId(claims), Is.EqualTo("20000101-ACDEF"));
+        Assert.That(claims.Any(x => x.Value == account.PasswordHash), Is.False);
     }
 
     [Test]
@@ -72,7 +66,7 @@ public class AuthenticationModuleTest
         var result = await authenticationModule.AuthenticateLocalByEmailMenschIdOrUsernameAsync(new LoginInformation("joe@example.org", "wrong-password"));
 
         Assert.That(result.IsAuthenticated, Is.False);
-        Assert.That(result.AccessToken, Is.Null);
+        Assert.That(result.Principal, Is.Null);
         Assert.That(result.Error, Is.EqualTo(AuthenticationErrorType.InvalidUserOrPassword));
     }
 
@@ -172,23 +166,20 @@ public class AuthenticationModuleTest
     {
         var google = new LoginProvider("google");
         var account = await accountCreator.CreateExternal(google, "google-user-1");
-        var claims = ClaimsHelpers.BuildExternalClaims(google, "google-user-1");
 
-        var result = await authenticationModule.AuthenticateExternalAsync(claims);
+        var result = await authenticationModule.AuthenticateExternalAsync(google, "google-user-1");
 
-        var token = new JwtSecurityTokenHandler().ReadJwtToken(result.AccessToken);
+        var claims = result.Principal.Claims.ToList();
         Assert.That(result.IsAuthenticated, Is.True);
         Assert.That(result.AccountType, Is.EqualTo(AccountType.External));
-        Assert.That(token.Claims.Any(x => x.Value == account.Id), Is.True);
-        Assert.That(token.Claims.Any(x => x.Value == "google-user-1"), Is.False);
+        Assert.That(ClaimsHelpers.GetAccountId(claims), Is.EqualTo(account.Id));
+        Assert.That(claims.Any(x => x.Value == "google-user-1"), Is.False);
     }
 
     [Test]
     public async Task ExternalLoginWithoutAccountFails()
     {
-        var claims = ClaimsHelpers.BuildExternalClaims(new LoginProvider("google"), "unknown-user");
-
-        var result = await authenticationModule.AuthenticateExternalAsync(claims);
+        var result = await authenticationModule.AuthenticateExternalAsync(new LoginProvider("google"), "unknown-user");
 
         Assert.That(result.IsAuthenticated, Is.False);
     }

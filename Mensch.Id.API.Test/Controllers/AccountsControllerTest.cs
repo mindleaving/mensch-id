@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
@@ -12,11 +13,13 @@ using Mensch.Id.API.ViewModels;
 using Mensch.Id.API.Workflow;
 using Mensch.Id.API.Workflow.Email;
 using Mensch.Id.API.Workflow.ViewModelBuilders;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -50,7 +53,9 @@ public class AccountsControllerTest
             .Returns(Task.CompletedTask);
         var providerRegistry = new OidcProviderRegistry(LoginProviderViewModelBuilderTest.CreateProviders());
         var redirectUrlValidator = new RedirectUrlValidator(new RedirectUrlValidatorOptions { AllowedOrigins = ["https://mensch.id"] });
-        httpContext = new DefaultHttpContext();
+        var services = new ServiceCollection();
+        services.AddSingleton(Mock.Of<IAuthenticationService>());
+        httpContext = new DefaultHttpContext { RequestServices = services.BuildServiceProvider() };
         var httpContextAccessor = new HttpContextAccessor { HttpContext = httpContext };
         controller = new AccountsController(
             accountStore,
@@ -65,6 +70,12 @@ public class AccountsControllerTest
         {
             ControllerContext = new ControllerContext { HttpContext = httpContext }
         };
+    }
+
+    private static AuthenticationResult CreateSuccessResult(Account account)
+    {
+        var principal = new ClaimBuilder().BuildPrincipal(account, MenschIdAuthenticationSchemes.Session);
+        return AuthenticationResult.Success(account, principal);
     }
 
     private static int? GetStatusCode(IActionResult result)
@@ -119,7 +130,7 @@ public class AccountsControllerTest
         const string PersonId = "20220609-XUTH9";
         var claims = new List<Claim>
         {
-            new(MenschIdClaimTypes.PersonIdClaimName, PersonId, null, JwtSecurityTokenBuilder.Issuer)
+            new(MenschIdClaimTypes.PersonIdClaimName, PersonId)
         };
         httpContext.User = new ClaimsPrincipal(new ClaimsIdentity(claims));
 
@@ -140,8 +151,8 @@ public class AccountsControllerTest
             Password = Password
         };
         authenticationModule
-            .Setup(x => x.BuildSecurityTokenForUser(It.IsAny<LocalAnonymousAccount>()))
-            .Returns(AuthenticationResult.Success([], "token", AccountType.LocalAnonymous));
+            .Setup(x => x.BuildAuthenticationResult(It.IsAny<Account>()))
+            .Returns<Account>(CreateSuccessResult);
 
         await controller.RegisterLocalAccount(body);
 
@@ -199,7 +210,7 @@ public class AccountsControllerTest
             .Callback(() => account.PasswordResetNonce = null);
         authenticationModule
             .Setup(x => x.AuthenticateLocalByEmailMenschIdOrUsernameAsync(It.IsAny<LoginInformation>()))
-            .ReturnsAsync(AuthenticationResult.Success([], "token", AccountType.Local));
+            .ReturnsAsync(CreateSuccessResult(account));
         await controller.RequestPasswordResetEmail(new ResetPasswordRequest { Email = "joe@example.org" });
         var resetBody = new ResetPasswordBody
         {
@@ -250,28 +261,29 @@ public class AccountsControllerTest
     }
 
     [Test]
-    public async Task UnknownLoginProviderIsRejected()
+    public void UnknownLoginProviderIsRejected()
     {
-        var result = await controller.ExternalLogin(new LoginProvider("facebook"));
+        var result = controller.ExternalLogin(new LoginProvider("facebook"));
 
         Assert.That(GetStatusCode(result), Is.EqualTo(400));
     }
 
     [Test]
-    public async Task ForeignRedirectUrlIsRejected()
+    public void ForeignRedirectUrlIsRejected()
     {
-        var result = await controller.ExternalLogin(new LoginProvider("google"), "https://evil.example.org/steal");
+        var result = controller.ExternalLogin(new LoginProvider("google"), "https://evil.example.org/steal");
 
         Assert.That(GetStatusCode(result), Is.EqualTo(400));
     }
 
     [Test]
-    public async Task KnownLoginProviderIssuesChallengeWithRedirect()
+    public void KnownLoginProviderIssuesChallengeWithRedirect()
     {
-        var result = await controller.ExternalLogin(new LoginProvider("google"), "https://mensch.id/login/redirect");
+        var result = controller.ExternalLogin(new LoginProvider("google"), "https://mensch.id/login/redirect");
 
         var challengeResult = (ChallengeResult)result;
         Assert.That(challengeResult.AuthenticationSchemes, Is.EqualTo(new[] { "oidc-google" }));
-        Assert.That(challengeResult.Properties!.RedirectUri, Is.EqualTo("https://mensch.id/login/redirect"));
+        Assert.That(challengeResult.Properties!.RedirectUri, Does.StartWith("/api/accounts/external-login-callback?"));
+        Assert.That(challengeResult.Properties.RedirectUri, Does.Contain(Uri.EscapeDataString("https://mensch.id/login/redirect")));
     }
 }

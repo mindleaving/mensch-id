@@ -78,18 +78,16 @@ namespace Mensch.Id.API.Storage
 
         public async Task<Account> GetFromClaimsAsync(List<Claim> claims)
         {
-            var accountIdClaim = claims.Find(x => x.Type == ClaimTypes.NameIdentifier && x.Issuer == JwtSecurityTokenBuilder.Issuer);
-            if (accountIdClaim != null)
-                return await GetByIdAsync(accountIdClaim.Value);
-
-            if (claims.Count == 0)
+            var accountId = ClaimsHelpers.GetAccountId(claims);
+            if (accountId != null)
+                return await GetByIdAsync(accountId);
+            var loginProvider = ClaimsHelpers.GetExternalLoginProvider(claims);
+            if (loginProvider == null)
                 return null;
-            var loginProvider = ClaimsHelpers.GetLoginProvider(claims);
-            if (loginProvider == LoginProvider.Local)
-                throw new Exception("This should not have happened. If login provider is LocalJwt, the accountIdClaim should exist");
-
-            var externalId = ClaimsHelpers.GetExternalId(claims, loginProvider);
-            return await GetExternalByIdAsync(loginProvider, externalId);
+            var externalId = ClaimsHelpers.GetExternalId(claims, loginProvider.Value);
+            if (externalId == null)
+                return null;
+            return await GetExternalByIdAsync(loginProvider.Value, externalId);
         }
 
         public async Task<List<PersonAccount>> GetAllForMenschIdAsync(

@@ -1,0 +1,6 @@
+{
+  "ios": {
+    "CFBundleDisplayName": "mensch.ID",
+    "NSCameraUsageDescription": "mensch.ID verwendet die Kamera, um QR-Codes von Challenges zu scannen."
+  }
+}

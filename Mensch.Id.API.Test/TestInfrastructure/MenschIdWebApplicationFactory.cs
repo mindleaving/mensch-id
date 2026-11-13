@@ -15,6 +15,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using MongoDB.Driver;
 
 namespace Mensch.Id.API.Test.TestInfrastructure;
 
@@ -29,13 +30,17 @@ public class MenschIdWebApplicationFactory : WebApplicationFactory<Program>
     public const string SecondProviderId = "secondprovider";
     public const string WebsiteBaseUrl = "https://mensch.example.org";
 
+    public const string ApiBaseUrl = "https://localhost";
+    public const string MongoServer = "localhost:27017";
     private readonly string fileStoreDirectory = Path.Combine(Path.GetTempPath(), "mensch-id-tests", Guid.NewGuid().ToString());
+    private readonly string databaseName = $"menschid-test-{Guid.NewGuid():N}";
 
     public InMemoryAccountStore AccountStore { get; } = new(TestKeys.CreateObscurer());
     public InMemoryIdStore IdStore { get; } = new();
     public InMemoryStore<Person> PersonStore { get; } = new();
     public InMemoryStore<AssignerControlledProfile> AssignerControlledProfileStore { get; } = new();
     public InMemoryStore<Verification> VerificationStore { get; } = new();
+    public InMemoryStore<MenschIdChallenge> ChallengeStore { get; } = new();
     public CapturingEmailSender EmailSender { get; } = new();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -57,8 +62,12 @@ public class MenschIdWebApplicationFactory : WebApplicationFactory<Program>
                     ["Authentication:OpenIdConnect:Providers:1:Authority"] = "https://second.example.org",
                     ["Authentication:OpenIdConnect:Providers:1:ClientId"] = "SecondClientId",
                     ["Authentication:OpenIdConnect:Providers:1:ClientSecret"] = "SecondClientSecretValue",
-                    ["MongoDB:User"] = "test",
-                    ["MongoDB:Password"] = "test",
+                    ["MongoDB:Server"] = MongoServer,
+                    ["MongoDB:User"] = "",
+                    ["MongoDB:Password"] = "",
+                    ["MongoDB:ReplicaSetName"] = "",
+                    ["MongoDB:DatabaseName"] = databaseName,
+                    ["Authentication:ApiBaseUrl"] = ApiBaseUrl,
                     ["FileStore:Directory"] = fileStoreDirectory,
                     ["CORS:Origins"] = WebsiteBaseUrl,
                     ["Email:WebsiteBaseUrl"] = WebsiteBaseUrl,
@@ -87,7 +96,7 @@ public class MenschIdWebApplicationFactory : WebApplicationFactory<Program>
         ReplaceTypeStore<AssignerControlledProfile>(services, AssignerControlledProfileStore);
         ReplaceTypeStore<Verification>(services, VerificationStore);
         ReplaceTypeStore<AssignerAccountRequest>(services, new InMemoryStore<AssignerAccountRequest>());
-        ReplaceTypeStore<MenschIdChallenge>(services, new InMemoryStore<MenschIdChallenge>());
+        ReplaceTypeStore<MenschIdChallenge>(services, ChallengeStore);
         ReplaceTypeStore<Order>(services, new InMemoryStore<Order>());
         ReplaceTypeStore<Product>(services, new InMemoryStore<Product>());
 
@@ -129,6 +138,8 @@ public class MenschIdWebApplicationFactory : WebApplicationFactory<Program>
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
+        var mongoClient = new MongoClient($"mongodb://{MongoServer}");
+        mongoClient.DropDatabase(databaseName);
         if (Directory.Exists(fileStoreDirectory))
             Directory.Delete(fileStoreDirectory, true);
     }

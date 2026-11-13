@@ -24,10 +24,8 @@ public class OidcAuthenticationEventsTest
     [SetUp]
     public void Setup()
     {
-        var obscurer = TestKeys.CreateObscurer();
-        accountStore = new InMemoryAccountStore(obscurer);
-        var accountCreator = new AccountCreator(accountStore, obscurer, new PasswordHasher<IAccountWithPassword>());
-        events = new OidcAuthenticationEvents(accountStore, accountCreator);
+        accountStore = new InMemoryAccountStore(TestKeys.CreateObscurer());
+        events = new OidcAuthenticationEvents();
     }
 
     private static TokenValidatedContext CreateContext(params Claim[] claims)
@@ -44,25 +42,13 @@ public class OidcAuthenticationEventsTest
     }
 
     [Test]
-    public async Task FirstLoginCreatesExternalAccount()
+    public async Task TokenValidationDoesNotCreateAccounts()
     {
         var context = CreateContext(new Claim("sub", "google-user-1"));
 
         await events.TokenValidated(context);
 
-        var account = await accountStore.GetExternalByIdAsync(Google, "google-user-1");
-        Assert.That(account, Is.Not.Null);
-        Assert.That(accountStore.Items.Count, Is.EqualTo(1));
-    }
-
-    [Test]
-    public async Task RepeatedLoginDoesNotCreateSecondAccount()
-    {
-        await events.TokenValidated(CreateContext(new Claim("sub", "google-user-1")));
-
-        await events.TokenValidated(CreateContext(new Claim("sub", "google-user-1")));
-
-        Assert.That(accountStore.Items.OfType<ExternalAccount>().Count(), Is.EqualTo(1));
+        Assert.That(accountStore.Items, Is.Empty);
     }
 
     [Test]
@@ -79,8 +65,9 @@ public class OidcAuthenticationEventsTest
         Assert.That(claims, Has.Count.EqualTo(2));
         Assert.That(claims.Any(x => x.Value == "joe@example.org"), Is.False);
         Assert.That(claims.Any(x => x.Value == "Joe Doe"), Is.False);
-        Assert.That(ClaimsHelpers.GetLoginProvider(claims), Is.EqualTo(Google));
-        Assert.That(ClaimsHelpers.GetExternalId(claims), Is.EqualTo("google-user-1"));
+        Assert.That(ClaimsHelpers.GetExternalLoginProvider(claims), Is.EqualTo(Google));
+        Assert.That(ClaimsHelpers.GetExternalId(claims, Google), Is.EqualTo("google-user-1"));
+        Assert.That(context.Principal.Identity!.AuthenticationType, Is.EqualTo(MenschIdAuthenticationSchemes.External));
     }
 
     [Test]

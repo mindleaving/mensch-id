@@ -196,11 +196,12 @@ namespace Mensch.Id.API.Controllers
                 return BadRequest($"Password too short. Must be at least {MinimumPasswordLength} characters long.");
             if (!await authenticationModule.ChangePasswordAsync(localAccount.Id, body.Password))
                 return StatusCode((int)HttpStatusCode.InternalServerError, "An unknown error occured");
-            var authenticationResult = await authenticationModule.AuthenticateLocalByEmailMenschIdOrUsernameAsync(new LoginInformation(localAccount.Email, body.Password));
+            var loginInformation = new LoginInformation(localAccount.Email, body.Password);
+            var authenticationResult = await authenticationModule.AuthenticateLocalByEmailMenschIdOrUsernameAsync(loginInformation);
             if (!authenticationResult.IsAuthenticated)
                 return StatusCode((int)HttpStatusCode.Unauthorized, authenticationResult.Error);
 
-            SetAccessTokenCookie(authenticationResult);
+            await SignInSession(authenticationResult);
             return Ok(new IsLoggedInResponse(authenticationResult.AccountType!.Value));
         }
 
@@ -250,8 +251,8 @@ namespace Mensch.Id.API.Controllers
                         body.Password,
                         body.PreferedLanguage ?? Language.en,
                         personId);
-                    var authenticationResult = authenticationModule.BuildSecurityTokenForUser(localAnonymousAccount);
-                    SetAccessTokenCookie(authenticationResult);
+                    var authenticationResult = authenticationModule.BuildAuthenticationResult(localAnonymousAccount);
+                    await SignInSession(authenticationResult);
                     return Ok(new IsLoggedInResponse(AccountType.LocalAnonymous));
                 }
                 case AccountType.External:
@@ -275,7 +276,7 @@ namespace Mensch.Id.API.Controllers
             var authenticationResult = await authenticationModule.AuthenticateLocalByEmailMenschIdOrUsernameAsync(loginInformation);
             if (authenticationResult.IsAuthenticated)
             {
-                SetAccessTokenCookie(authenticationResult);
+                await SignInSession(authenticationResult);
                 return Ok(new IsLoggedInResponse(authenticationResult.AccountType!.Value));
             }
             return StatusCode((int)HttpStatusCode.Unauthorized, authenticationResult.Error);
@@ -289,51 +290,60 @@ namespace Mensch.Id.API.Controllers
             return Ok(loginProviders);
         }
 
-        [Authorize]
         [AllowAnonymous]
         [HttpGet("login/{loginProvider}")]
         [HttpPost("login/{loginProvider}")]
-        public async Task<IActionResult> ExternalLogin(
+        public IActionResult ExternalLogin(
             [FromRoute] LoginProvider loginProvider,
-            [FromQuery] string redirectUrl = null)
+            [FromQuery] string redirectUrl = null,
+            [FromQuery] bool link = false)
         {
             if (!oidcProviderRegistry.TryGetSchemeName(loginProvider, out var schemeName))
                 return BadRequest($"Invalid login provider '{loginProvider}'");
             if (!string.IsNullOrWhiteSpace(redirectUrl) && !redirectUrlValidator.IsAllowed(redirectUrl))
                 return BadRequest("Invalid redirect URL");
-            if (IsLoggedIn())
+            var callbackQuery = QueryString.Create(new Dictionary<string, string>
             {
-                var claims = ControllerHelpers.GetClaims(httpContextAccessor);
-                var loginProviderInUse = ClaimsHelpers.GetLoginProvider(claims);
-                if (loginProvider == loginProviderInUse)
-                {
-                    if (!string.IsNullOrWhiteSpace(redirectUrl))
-                        return Redirect(redirectUrl);
-                    return Ok();
-                }
-            }
+                ["redirectUrl"] = string.IsNullOrWhiteSpace(redirectUrl) ? "/" : redirectUrl,
+                ["link"] = link ? "true" : "false"
+            });
             var properties = new AuthenticationProperties
             {
-                RedirectUri = string.IsNullOrWhiteSpace(redirectUrl) ? "/" : redirectUrl
+                RedirectUri = $"{Request.PathBase}/api/accounts/external-login-callback{callbackQuery}"
             };
             return Challenge(properties, schemeName);
         }
 
-        [Authorize]
-        [HttpGet("convert-to-local")]
-        public async Task<IActionResult> ConvertToLocal()
+        [AllowAnonymous]
+        [HttpGet("external-login-callback")]
+        public async Task<IActionResult> ExternalLoginCallback(
+            [FromQuery] string redirectUrl = "/",
+            [FromQuery] bool link = false)
         {
-            var claims = ControllerHelpers.GetClaims(httpContextAccessor);
-            var loginProvider = ClaimsHelpers.GetLoginProvider(claims);
-            if (loginProvider == LoginProvider.Local)
-                return StatusCode((int)HttpStatusCode.Forbidden, "This method cannot be used with JWT authentication");
-            if (!oidcProviderRegistry.IsExternalProvider(loginProvider))
-                return StatusCode((int)HttpStatusCode.Unauthorized, "Unknown login provider");
-            var authenticationResult = await authenticationModule.AuthenticateExternalAsync(claims);
+            if (!redirectUrlValidator.IsAllowed(redirectUrl))
+                return BadRequest("Invalid redirect URL");
+            if (link)
+                return Redirect(redirectUrl);
+            var externalResult = await HttpContext.AuthenticateAsync(MenschIdAuthenticationSchemes.External);
+            if (!externalResult.Succeeded)
+                return Unauthorized();
+            var externalClaims = externalResult.Principal!.Claims.ToList();
+            var loginProvider = ClaimsHelpers.GetExternalLoginProvider(externalClaims);
+            if (loginProvider == null || !oidcProviderRegistry.IsExternalProvider(loginProvider.Value))
+                return Unauthorized();
+            var externalId = ClaimsHelpers.GetExternalId(externalClaims, loginProvider.Value);
+            if (string.IsNullOrEmpty(externalId))
+                return Unauthorized();
+
+            var existingAccount = await store.GetExternalByIdAsync(loginProvider.Value, externalId);
+            if (existingAccount == null)
+                await accountCreator.CreateExternal(loginProvider.Value, externalId);
+            var authenticationResult = await authenticationModule.AuthenticateExternalAsync(loginProvider.Value, externalId);
             if (!authenticationResult.IsAuthenticated)
                 return StatusCode((int)HttpStatusCode.Unauthorized, authenticationResult.Error);
-            SetAccessTokenCookie(authenticationResult);
-            return Ok(new IsLoggedInResponse(authenticationResult.AccountType!.Value));
+            await HttpContext.SignOutAsync(MenschIdAuthenticationSchemes.External);
+            await SignInSession(authenticationResult);
+            return Redirect(redirectUrl);
         }
 
 
@@ -342,41 +352,23 @@ namespace Mensch.Id.API.Controllers
         public async Task<IActionResult> LinkToExternalAccount()
         {
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
-            var jwtClaims = claims.Where(x => x.Issuer == JwtSecurityTokenBuilder.Issuer).ToList();
-            var personId = ClaimsHelpers.GetPersonId(claims);
-            if (personId == null)
-            {
-                var jwtAccountId = jwtClaims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
-                if (jwtAccountId == null)
-                    return BadRequest("Your JWT bearer token doesn't contain an account ID");
-                var originalAccount = await store.GetByIdAsync(jwtAccountId);
-                if(originalAccount is not PersonAccount personAccount || personAccount.PersonId == null)
-                    return BadRequest("Your JWT bearer token doesn't contain a person ID. If you just created your profile please log out and back in again");
-                personId = personAccount.PersonId;
-            }
+            var currentAccount = await store.GetFromClaimsAsync(claims);
+            if (currentAccount is not PersonAccount { PersonId: not null } currentPersonAccount)
+                return BadRequest("Your current account doesn't have a profile yet");
+            var personId = currentPersonAccount.PersonId;
 
-            var loginProviderClaims = claims.Except(jwtClaims).ToList();
-            if(loginProviderClaims.Count == 0)
+            var externalResult = await HttpContext.AuthenticateAsync(MenschIdAuthenticationSchemes.External);
+            if (!externalResult.Succeeded)
                 return BadRequest("No external logins active");
-            var account = await store.GetFromClaimsAsync(loginProviderClaims);
+            var externalClaims = externalResult.Principal!.Claims.ToList();
+            await HttpContext.SignOutAsync(MenschIdAuthenticationSchemes.External);
+            var externalLoginProvider = ClaimsHelpers.GetExternalLoginProvider(externalClaims);
+            if (externalLoginProvider == null)
+                return BadRequest("No external logins active");
+            var externalId = ClaimsHelpers.GetExternalId(externalClaims, externalLoginProvider.Value);
+            Account account = await store.GetExternalByIdAsync(externalLoginProvider.Value, externalId);
             if (account == null)
-            {
-                var externalLoginProviders = ClaimsHelpers.GetLoginProviders(loginProviderClaims)
-                    .Where(x => x != LoginProvider.Local)
-                    .ToList();
-                if (externalLoginProviders.Count > 1)
-                {
-                    await HttpContext.SignOutAsync(); // Logout ASP.NET controlled external logins, keeps X-Access-Token-cookie intact.
-                    return StatusCode(
-                        (int)HttpStatusCode.Conflict,
-                        "Multiple external logins are active. Cannot determine which of them to link. "
-                        + "You have been logged out of all external logins.");
-                }
-
-                var externalLoginProvider = externalLoginProviders.Single();
-                var externalId = ClaimsHelpers.GetExternalId(loginProviderClaims);
-                account = await accountCreator.CreateExternal(externalLoginProvider, externalId);
-            }
+                account = await accountCreator.CreateExternal(externalLoginProvider.Value, externalId);
 
             if (account is not ExternalAccount externalAccount)
                 return StatusCode((int)HttpStatusCode.InternalServerError, "Found unexpected account type");
@@ -426,21 +418,18 @@ namespace Mensch.Id.API.Controllers
             return Ok();
         }
 
-        [Authorize]
         [AllowAnonymous]
         [HttpPost("logout")]
         public async Task<IActionResult> LogOut()
         {
-            if (!IsLoggedIn())
-                return Ok();
             await LogOutImpl();
             return Ok();
         }
 
         private async Task LogOutImpl()
         {
-            await HttpContext.SignOutAsync();
-            Response.Cookies.Delete(JwtSecurityTokenBuilder.AccessTokenCookieName);
+            await HttpContext.SignOutAsync(MenschIdAuthenticationSchemes.Session);
+            await HttpContext.SignOutAsync(MenschIdAuthenticationSchemes.External);
         }
 
         [Authorize]
@@ -487,7 +476,8 @@ namespace Mensch.Id.API.Controllers
             if (!ControllerInputSanitizer.ValidateAndSanitizeMandatoryId(accountId, out accountId))
                 return BadRequest("Invalid account-ID");
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
-            var personId = ClaimsHelpers.GetPersonId(claims);
+            var currentAccount = await store.GetFromClaimsAsync(claims);
+            var personId = (currentAccount as PersonAccount)?.PersonId;
             var matchingAccount = await store.GetByIdAsync(accountId);
             if (matchingAccount == null)
                 return Ok();
@@ -510,21 +500,11 @@ namespace Mensch.Id.API.Controllers
             return httpContextAccessor.HttpContext?.User.Identities.Any(x => x.IsAuthenticated) ?? false;
         }
 
-        private void SetAccessTokenCookie(
-            AuthenticationResult authenticationResult)
+        private async Task SignInSession(AuthenticationResult authenticationResult)
         {
             if (!authenticationResult.IsAuthenticated)
-                throw new InvalidOperationException("Cannot set access  token cookie, because authentication failed");
-            Response.Cookies.Append(
-                JwtSecurityTokenBuilder.AccessTokenCookieName, 
-                authenticationResult.AccessToken, 
-                new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = true,
-                    SameSite = SameSiteMode.Strict,
-                    Expires = DateTimeOffset.UtcNow.Add(JwtSecurityTokenBuilder.ExpirationTime)
-                });
+                throw new InvalidOperationException("Cannot sign in, because authentication failed");
+            await HttpContext.SignInAsync(MenschIdAuthenticationSchemes.Session, authenticationResult.Principal);
         }
     }
 }

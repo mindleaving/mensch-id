@@ -17,6 +17,20 @@ namespace Mensch.Id.API.Setups
 
         public static void Run(string repositoryPath)
         {
+            var outputDirectories = new[]
+            {
+                Path.Combine(repositoryPath, "mensch-id-frontend", "src", "localComponents", "types"),
+                Path.Combine(repositoryPath, "mensch-id-app", "src", "types")
+            };
+            foreach (var outputDirectory in outputDirectories)
+            {
+                Generate(outputDirectory);
+            }
+        }
+
+        private static void Generate(string outputDirectory)
+        {
+            Directory.CreateDirectory(outputDirectory);
             TypescriptGenerator.TypescriptGenerator.Builder
                 .IncludeAllInNamespace(Assembly.GetAssembly(typeof(Person)), "Mensch.Id.API.Models")
                 .IncludeAllInNamespace(Assembly.GetAssembly(typeof(NewProfileViewModel)), "Mensch.Id.API.ViewModels")
@@ -32,7 +46,7 @@ namespace Mensch.Id.API.Setups
                 .CustomizeType(x => x == typeof(Guid), _ => "string")
                 .CustomizeType(x => x == typeof(LoginProvider), _ => "string")
                 .CustomizeType(x => x == typeof(DateTime), _ => "string")
-                .SetOutputDirectory(Path.Combine(repositoryPath, "mensch-id-frontend", "src", "localComponents", "types"))
+                .SetOutputDirectory(outputDirectory)
                 .Generate();
         }
     }

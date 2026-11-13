@@ -61,14 +61,14 @@ public class InMemoryAccountStore : InMemoryStore<Account>, IAccountStore
 
     public async Task<Account> GetFromClaimsAsync(List<Claim> claims)
     {
-        var accountIdClaim = claims.Find(x => x.Type == ClaimTypes.NameIdentifier && x.Issuer == JwtSecurityTokenBuilder.Issuer);
-        if (accountIdClaim != null)
-            return await GetByIdAsync(accountIdClaim.Value);
-        if (claims.Count == 0)
+        var accountId = ClaimsHelpers.GetAccountId(claims);
+        if (accountId != null)
+            return await GetByIdAsync(accountId);
+        var loginProvider = ClaimsHelpers.GetExternalLoginProvider(claims);
+        if (loginProvider == null)
             return null;
-        var loginProvider = ClaimsHelpers.GetLoginProvider(claims);
-        var externalId = ClaimsHelpers.GetExternalId(claims, loginProvider);
-        return await GetExternalByIdAsync(loginProvider, externalId);
+        var externalId = ClaimsHelpers.GetExternalId(claims, loginProvider.Value);
+        return await GetExternalByIdAsync(loginProvider.Value, externalId);
     }
 
     public Task<List<PersonAccount>> GetAllForMenschIdAsync(string menschId)

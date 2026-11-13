@@ -66,7 +66,6 @@ namespace Mensch.Id.API
                 app.UseCors();
             }
             app.UseAuthentication();
-            app.AddMultiIdentityAuthentication();
             app.UseAuthorization();
             app.UseRateLimiter();
 

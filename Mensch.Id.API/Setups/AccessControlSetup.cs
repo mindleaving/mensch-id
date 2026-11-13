@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Mensch.Id.API.AccessControl;
 using Mensch.Id.API.AccessControl.Policies;
@@ -13,20 +12,27 @@ using Mensch.Id.API.Storage;
 using Mensch.Id.API.Workflow;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using Microsoft.IdentityModel.Tokens;
+using OpenIddict.Validation.AspNetCore;
+using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace Mensch.Id.API.Setups;
 
 public class AccessControlSetup : ISetup
 {
+    public static readonly TimeSpan SessionLifetime = TimeSpan.FromDays(14);
+    public static readonly TimeSpan ExternalLoginLifetime = TimeSpan.FromMinutes(10);
+    public static readonly TimeSpan AccessTokenLifetime = TimeSpan.FromMinutes(15);
+    public static readonly TimeSpan RefreshTokenLifetime = TimeSpan.FromDays(30);
+
     public void Run(
         IServiceCollection services,
         IConfiguration configuration)
@@ -36,8 +42,6 @@ public class AccessControlSetup : ISetup
         SetupRedirectUrlValidator(services, configuration);
 
         services.AddSingleton<IClaimBuilder, ClaimBuilder>();
-        var jwtPrivateKey = GetOrGenerateJwtPrivateKey(configuration);
-        services.AddSingleton<ISecurityTokenBuilder>(_ => new JwtSecurityTokenBuilder(jwtPrivateKey));
         services.AddScoped<IAuthenticationModule, AuthenticationModule>();
         services.AddScoped<IAccountCreator, AccountCreator>();
         services.AddSingleton<IPasswordHasher<IAccountWithPassword>, PasswordHasher<IAccountWithPassword>>();
@@ -51,41 +55,21 @@ public class AccessControlSetup : ISetup
         var authenticationBuilder = services.AddAuthentication(
                 options =>
                 {
-                    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultScheme = MenschIdAuthenticationSchemes.Default;
+                    options.DefaultChallengeScheme = MenschIdAuthenticationSchemes.Default;
                 })
-            .AddCookie()
-            .AddJwtBearer(
-                options =>
-                {
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuer = true,
-                        ValidateAudience = true,
-                        ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = jwtPrivateKey,
-                        ValidAlgorithms = new[] { "HS256" },
-                        ValidTypes = new[] { "JWT" },
-                        ValidAudience = JwtSecurityTokenBuilder.Audience,
-                        ValidIssuer = JwtSecurityTokenBuilder.Issuer
-                    };
-                    // Events can be null
-                    // ReSharper disable once ConstantNullCoalescingCondition
-                    options.Events ??= new();
-                    options.Events.OnMessageReceived = context => {
-
-                        if (context.Request.Cookies.ContainsKey(JwtSecurityTokenBuilder.AccessTokenCookieName))
-                        {
-                            context.Token = context.Request.Cookies[JwtSecurityTokenBuilder.AccessTokenCookieName];
-                        }
-
-                        return Task.CompletedTask;
-                    };
-                });
+            .AddPolicyScheme(
+                MenschIdAuthenticationSchemes.Default,
+                MenschIdAuthenticationSchemes.Default,
+                options => options.ForwardDefaultSelector = SelectScheme)
+            .AddCookie(MenschIdAuthenticationSchemes.Session, ConfigureSessionCookie)
+            .AddCookie(MenschIdAuthenticationSchemes.External, ConfigureExternalCookie);
         foreach (var oidcProvider in oidcProviders)
         {
             AddOpenIdConnectProvider(authenticationBuilder, oidcProvider);
         }
+
+        SetupOpenIddict(services, configuration);
 
         services.AddSingleton<IAuthorizationHandler, AccountTypeRequirementHandler>();
         services.AddSingleton<IAuthorizationHandler, RegularUserPolicy>();
@@ -96,6 +80,99 @@ public class AccessControlSetup : ISetup
                 options.AddPolicy(AccountTypeRequirement.AdminPolicyName, policy => policy.AddRequirements(new AccountTypeRequirement(AccountType.Admin)));
                 options.AddPolicy(RegularUserPolicy.PolicyName, policy => policy.AddRequirements(new RegularUserRequirement()));
             });
+    }
+
+    private static string SelectScheme(HttpContext context)
+    {
+        var authorizationHeader = context.Request.Headers.Authorization.ToString();
+        if (authorizationHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            return OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+        return MenschIdAuthenticationSchemes.Session;
+    }
+
+    private static void ConfigureSessionCookie(CookieAuthenticationOptions options)
+    {
+        options.Cookie.Name = MenschIdAuthenticationSchemes.SessionCookieName;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.ExpireTimeSpan = SessionLifetime;
+        options.SlidingExpiration = true;
+        options.Events.OnRedirectToLogin = context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return Task.CompletedTask;
+        };
+        options.Events.OnRedirectToAccessDenied = context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return Task.CompletedTask;
+        };
+    }
+
+    private static void ConfigureExternalCookie(CookieAuthenticationOptions options)
+    {
+        options.Cookie.Name = MenschIdAuthenticationSchemes.ExternalCookieName;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.ExpireTimeSpan = ExternalLoginLifetime;
+        options.SlidingExpiration = false;
+    }
+
+    private static void SetupOpenIddict(
+        IServiceCollection services,
+        IConfiguration configuration)
+    {
+        var settingsSection = configuration.GetSection(OpenIddictSettings.AppSettingsSectionName);
+        services.Configure<OpenIddictSettings>(settingsSection);
+        var settings = settingsSection.Get<OpenIddictSettings>() ?? new OpenIddictSettings();
+        var contentRoot = configuration[HostDefaults.ContentRootKey] ?? Directory.GetCurrentDirectory();
+        var signingKeyPath = ResolveKeyPath(contentRoot, settings.SigningKeyPath, nameof(settings.SigningKeyPath));
+        var encryptionKeyPath = ResolveKeyPath(contentRoot, settings.EncryptionKeyPath, nameof(settings.EncryptionKeyPath));
+        var isTransportSecurityRequired = configuration.GetValue("OpenIddict:RequireHttps", true);
+
+        services.AddOpenIddict()
+            .AddCore(options => options.UseMongoDb())
+            .AddServer(
+                options =>
+                {
+                    options.SetAuthorizationEndpointUris("api/oidc/authorize")
+                        .SetTokenEndpointUris("api/oidc/token")
+                        .SetEndSessionEndpointUris("api/oidc/endsession")
+                        .SetRevocationEndpointUris("api/oidc/revoke");
+                    options.AllowAuthorizationCodeFlow()
+                        .AllowRefreshTokenFlow()
+                        .RequireProofKeyForCodeExchange();
+                    options.RegisterScopes(Scopes.OpenId, Scopes.OfflineAccess, OpenIddictClientSeeder.ApiScope);
+                    options.SetAccessTokenLifetime(AccessTokenLifetime)
+                        .SetRefreshTokenLifetime(RefreshTokenLifetime);
+                    options.AddSigningKey(OidcServerKeyLoader.LoadSigningKey(signingKeyPath))
+                        .AddEncryptionKey(OidcServerKeyLoader.LoadEncryptionKey(encryptionKeyPath));
+                    var aspNetCoreBuilder = options.UseAspNetCore()
+                        .EnableAuthorizationEndpointPassthrough()
+                        .EnableTokenEndpointPassthrough()
+                        .EnableEndSessionEndpointPassthrough();
+                    if (!isTransportSecurityRequired)
+                        aspNetCoreBuilder.DisableTransportSecurityRequirement();
+                })
+            .AddValidation(
+                options =>
+                {
+                    options.UseLocalServer();
+                    options.UseAspNetCore();
+                });
+        services.AddHostedService<OpenIddictClientSeeder>();
+    }
+
+    private static string ResolveKeyPath(
+        string contentRoot,
+        string configuredPath,
+        string settingName)
+    {
+        if (string.IsNullOrWhiteSpace(configuredPath))
+            throw new SecurityException($"No path configured for OpenIddict:{settingName}");
+        return Path.GetFullPath(Path.Combine(contentRoot, configuredPath));
     }
 
     private static void AddOpenIdConnectProvider(
@@ -109,7 +186,7 @@ public class AccessControlSetup : ISetup
             provider.DisplayName ?? provider.Id,
             options =>
             {
-                options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.SignInScheme = MenschIdAuthenticationSchemes.External;
                 options.Authority = provider.Authority;
                 options.ClientId = provider.ClientId;
                 options.ClientSecret = provider.ClientSecret;
@@ -160,21 +237,10 @@ public class AccessControlSetup : ISetup
         var websiteBaseUrl = configuration["Email:WebsiteBaseUrl"];
         if (!string.IsNullOrWhiteSpace(websiteBaseUrl))
             allowedOrigins.Add(websiteBaseUrl);
+        var apiBaseUrl = configuration["Authentication:ApiBaseUrl"];
+        if (!string.IsNullOrWhiteSpace(apiBaseUrl))
+            allowedOrigins.Add(new Uri(apiBaseUrl).GetLeftPart(UriPartial.Authority));
         var options = new RedirectUrlValidatorOptions { AllowedOrigins = allowedOrigins.Distinct().ToList() };
         services.AddSingleton(new RedirectUrlValidator(options));
-    }
-
-    private static SymmetricSecurityKey GetOrGenerateJwtPrivateKey(IConfiguration configuration)
-    {
-        var privateKeyBase64 = configuration["Authentication:Jwt:PrivateKey"];
-        if (!string.IsNullOrWhiteSpace(privateKeyBase64))
-        {
-            var privateKeyBytes = Convert.FromBase64String(privateKeyBase64);
-            return new SymmetricSecurityKey(privateKeyBytes);
-        }
-        var bytes = RandomNumberGenerator.GetBytes(32);
-        Console.WriteLine("No JWT private key configured. A random key is used, which invalidates all sessions on restart. "
-                          + "Store a base64 encoded 32-byte key as environment variable 'Authentication__Jwt__PrivateKey'.");
-        return new SymmetricSecurityKey(bytes);
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Net;
 using System.Threading.RateLimiting;
@@ -26,7 +26,7 @@ namespace Mensch.Id.API.Setups
                         httpContext =>
                         {
                             var personId = httpContext.User.Claims.FirstOrDefault(
-                                claim => claim.Type == MenschIdClaimTypes.PersonIdClaimName && claim.Issuer == JwtSecurityTokenBuilder.Issuer)
+                                claim => claim.Type == MenschIdClaimTypes.PersonIdClaimName)
                                 ?.Value;
                             if (personId != null)
                             {

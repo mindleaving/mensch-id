@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
@@ -174,7 +175,7 @@ public class ApiIntegrationTest
     }
 
     [Test]
-    public async Task LocalLoginSetsAccessTokenCookie()
+    public async Task LocalLoginSetsHttpOnlySessionCookie()
     {
         await CreateVerifiedUser("joe@example.org");
         using var client = CreateClient();
@@ -182,11 +183,13 @@ public class ApiIntegrationTest
         var response = await Login(client, "joe@example.org");
 
         var setCookieHeaders = response.Headers.GetValues("Set-Cookie").ToList();
-        var accessTokenCookie = setCookieHeaders.Single(x => x.StartsWith(JwtSecurityTokenBuilder.AccessTokenCookieName));
+        var sessionCookie = setCookieHeaders.Single(x => x.StartsWith(MenschIdAuthenticationSchemes.SessionCookieName));
+        var isLoggedInResponse = await client.GetAsync("api/accounts/is-logged-in");
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-        Assert.That(accessTokenCookie, Does.Contain("httponly").IgnoreCase);
-        Assert.That(accessTokenCookie, Does.Contain("secure").IgnoreCase);
-        Assert.That(accessTokenCookie, Does.Contain("samesite=strict").IgnoreCase);
+        Assert.That(sessionCookie, Does.Contain("httponly").IgnoreCase);
+        Assert.That(sessionCookie, Does.Contain("secure").IgnoreCase);
+        Assert.That(sessionCookie, Does.Contain("samesite=lax").IgnoreCase);
+        Assert.That(isLoggedInResponse.StatusCode, Is.EqualTo(HttpStatusCode.OK));
     }
 
     [Test]
@@ -217,15 +220,33 @@ public class ApiIntegrationTest
     }
 
     [Test]
-    public async Task ForgedAccessTokenIsRejected()
+    public async Task ForgedSessionCookieAndBearerTokenAreRejected()
     {
-        using var client = CreateClient();
+        using var cookieClient = CreateClient();
+        using var bearerClient = CreateClient();
         const string ForgedToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50VHlwZSI6IkFkbWluIn0.c2lnbmF0dXJl";
-        client.DefaultRequestHeaders.Add("Cookie", $"{JwtSecurityTokenBuilder.AccessTokenCookieName}={ForgedToken}");
+        cookieClient.DefaultRequestHeaders.Add("Cookie", $"{MenschIdAuthenticationSchemes.SessionCookieName}={ForgedToken}");
+        bearerClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ForgedToken);
 
-        var response = await client.GetAsync("api/accounts/is-logged-in");
+        var cookieResponse = await cookieClient.GetAsync("api/accounts/is-logged-in");
+        var bearerResponse = await bearerClient.GetAsync("api/accounts/is-logged-in");
 
-        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+        Assert.That(cookieResponse.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+        Assert.That(bearerResponse.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+    }
+
+    [Test]
+    public async Task LogoutEndsSession()
+    {
+        await CreateVerifiedUser("joe@example.org");
+        using var client = CreateClient();
+        await Login(client, "joe@example.org");
+
+        var logoutResponse = await client.PostAsync("api/accounts/logout", null);
+        var isLoggedInResponse = await client.GetAsync("api/accounts/is-logged-in");
+
+        Assert.That(logoutResponse.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        Assert.That(isLoggedInResponse.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
     }
 
     [Test]

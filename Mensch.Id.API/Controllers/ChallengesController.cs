@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Threading.Tasks;
 using Mensch.Id.API.AccessControl.Policies;
 using Mensch.Id.API.Helpers;
@@ -43,7 +43,7 @@ namespace Mensch.Id.API.Controllers
             if (account.PersonId == null)
                 return StatusCode((int)HttpStatusCode.ServiceUnavailable, "You cannot see challenges yet because you haven't finished you profile yet");
             var matchingChallenge = await challengeStore.GetByIdAsync(challengeId);
-            if (matchingChallenge == null)
+            if (matchingChallenge == null || matchingChallenge.MenschId != account.PersonId)
             {
                 matchingChallenge = await challengeStore.FirstOrDefaultAsync(x => x.MenschId == account.PersonId && x.ChallengeShortId == challengeId);
                 if (matchingChallenge == null)

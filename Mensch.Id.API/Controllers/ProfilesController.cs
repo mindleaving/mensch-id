@@ -3,6 +3,8 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Commons.Extensions;
+using Mensch.Id.API.AccessControl;
+using IAuthenticationModule = Mensch.Id.API.AccessControl.IAuthenticationModule;
 using Mensch.Id.API.AccessControl.Policies;
 using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Models;
@@ -11,6 +13,7 @@ using Mensch.Id.API.Storage;
 using Mensch.Id.API.Workflow;
 using Mensch.Id.API.Workflow.Models;
 using Mensch.Id.API.Workflow.ViewModelBuilders;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -28,6 +31,7 @@ namespace Mensch.Id.API.Controllers
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly ProfileViewModelBuilder profileViewModelBuilder;
         private readonly OwnershipTransfer ownershipTransfer;
+        private readonly IAuthenticationModule authenticationModule;
 
         public ProfilesController(
             IAccountStore accountStore,
@@ -35,8 +39,10 @@ namespace Mensch.Id.API.Controllers
             IHttpContextAccessor httpContextAccessor,
             ProfileViewModelBuilder profileViewModelBuilder,
             IStore<Verification> verificationStore,
-            OwnershipTransfer ownershipTransfer)
+            OwnershipTransfer ownershipTransfer,
+            IAuthenticationModule authenticationModule)
         {
+            this.authenticationModule = authenticationModule;
             this.accountStore = accountStore;
             this.personStore = personStore;
             this.httpContextAccessor = httpContextAccessor;
@@ -79,6 +85,8 @@ namespace Mensch.Id.API.Controllers
                 account,
                 personId,
                 body.OwnershipSecret);
+            if (result.IsSuccess)
+                await RefreshSessionClaims(account);
             return result.Status switch
             {
                 OwnershipTransferStatus.Success => Ok(result.Profile),
@@ -91,6 +99,16 @@ namespace Mensch.Id.API.Controllers
             };
         }
 
+
+        private async Task RefreshSessionClaims(Account account)
+        {
+            var isSessionAuthenticated = User.Identities.Any(
+                x => x.IsAuthenticated && x.AuthenticationType == MenschIdAuthenticationSchemes.Session);
+            if (!isSessionAuthenticated)
+                return;
+            var authenticationResult = authenticationModule.BuildAuthenticationResult(account);
+            await HttpContext.SignInAsync(MenschIdAuthenticationSchemes.Session, authenticationResult.Principal);
+        }
 
         [HttpPost("{id}/verify")]
         public async Task<IActionResult> VerifyPerson([FromRoute] string id)

@@ -1,44 +1,38 @@
-﻿using System.Collections.Generic;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Mensch.Id.API.Models;
 using Mensch.Id.API.Models.AccessControl;
-using Newtonsoft.Json;
-using TypescriptGenerator.Attributes;
 
-namespace Mensch.Id.API.AccessControl
+namespace Mensch.Id.API.AccessControl;
+
+public class AuthenticationResult
 {
-    public class AuthenticationResult
+    private AuthenticationResult(
+        bool isAuthenticated,
+        AuthenticationErrorType? error,
+        Account account,
+        ClaimsPrincipal principal)
     {
-        [JsonConstructor]
-        private AuthenticationResult(
-            bool isAuthenticated,
-            AuthenticationErrorType? error,
-            string accessToken,
-            AccountType? accountType)
-        {
-            IsAuthenticated = isAuthenticated;
-            Error = error;
-            AccessToken = accessToken;
-            AccountType = accountType;
-        }
-
-        public static AuthenticationResult Success(
-            List<Claim> claims,
-            string accessToken,
-            AccountType accountType)
-        {
-            return new AuthenticationResult(true, null, accessToken, accountType);
-        }
-
-        public static AuthenticationResult Failed(AuthenticationErrorType errorType)
-        {
-            return new AuthenticationResult(false, errorType, null, null);
-        }
-
-        public bool IsAuthenticated { get; }
-        [TypescriptIsOptional]
-        public string AccessToken { get; }
-        public AccountType? AccountType { get; set; }
-        public AuthenticationErrorType? Error { get; }
+        IsAuthenticated = isAuthenticated;
+        Error = error;
+        Account = account;
+        Principal = principal;
     }
+
+    public static AuthenticationResult Success(
+        Account account,
+        ClaimsPrincipal principal)
+    {
+        return new AuthenticationResult(true, null, account, principal);
+    }
+
+    public static AuthenticationResult Failed(AuthenticationErrorType errorType)
+    {
+        return new AuthenticationResult(false, errorType, null, null);
+    }
+
+    public bool IsAuthenticated { get; }
+    public Account Account { get; }
+    public ClaimsPrincipal Principal { get; }
+    public AccountType? AccountType => Account?.AccountType;
+    public AuthenticationErrorType? Error { get; }
 }
