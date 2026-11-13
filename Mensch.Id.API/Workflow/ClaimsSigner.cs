@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Options;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -81,8 +81,12 @@ namespace Mensch.Id.API.Workflow
             {
                 case "rsa":
                 {
+                    if (claimedSignature == null)
+                        return false;
                     var actualSignature = Sign(claims);
-                    return claimedSignature == actualSignature;
+                    var actualSignatureBytes = Encoding.UTF8.GetBytes(actualSignature);
+                    var claimedSignatureBytes = Encoding.UTF8.GetBytes(claimedSignature);
+                    return CryptographicOperations.FixedTimeEquals(actualSignatureBytes, claimedSignatureBytes);
                 }
                 case "ecdsa":
                     return VerifyECDSA(claims, claimedSignature);

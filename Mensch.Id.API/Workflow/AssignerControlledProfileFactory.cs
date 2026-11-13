@@ -1,21 +1,23 @@
-﻿using System;
+using System;
+using System.Security.Cryptography;
 using Mensch.Id.API.Models;
 
-namespace Mensch.Id.API.Workflow
+namespace Mensch.Id.API.Workflow;
+
+public static class AssignerControlledProfileFactory
 {
-    public static class AssignerControlledProfileFactory
+    public const int OwnershipSecretLength = 30;
+    private const string OwnershipSecretCharacters = "ACDEFGHJKLMNPQRSTUVWXYZ2345679";
+
+    public static AssignerControlledProfile Create(
+        string menschId,
+        string assignerAccountId)
     {
-        public static AssignerControlledProfile Create(
-            string menschId,
-            string assignerAccountId)
-        {
-            var passwordGenerator = new TemporaryPasswordGenerator { AllowedCharacters = "ACDEFGHJKLMNPQRSTUVWXYZ2345679" };
-            var ownershipSecret = passwordGenerator.Generate(length: 30);
-            return new AssignerControlledProfile(
-                menschId,
-                assignerAccountId,
-                DateTime.UtcNow,
-                ownershipSecret);
-        }
+        var ownershipSecret = RandomNumberGenerator.GetString(OwnershipSecretCharacters, OwnershipSecretLength);
+        return new AssignerControlledProfile(
+            menschId,
+            assignerAccountId,
+            DateTime.UtcNow,
+            ownershipSecret);
     }
 }

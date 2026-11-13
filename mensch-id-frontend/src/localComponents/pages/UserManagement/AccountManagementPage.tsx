@@ -4,7 +4,9 @@ import { DeleteButton } from '../../../sharedCommonComponents/components/DeleteB
 import { openConfirmDeleteAlert, showSuccessAlert } from '../../../sharedCommonComponents/helpers/AlertHelpers';
 import { deleteObject } from '../../../sharedCommonComponents/helpers/DeleteHelpers';
 import { resolveText } from '../../../sharedCommonComponents/helpers/Globalizer';
-import { loadObject } from '../../../sharedCommonComponents/helpers/LoadingHelpers';
+import { buildLoadObjectFunc, loadObject } from '../../../sharedCommonComponents/helpers/LoadingHelpers';
+import { getLoginProviderDisplayName } from '../../helpers/LoginProviderHelpers';
+import { ViewModels } from '../../types/viewModels';
 import { ChangePasswordForm } from '../../components/ChangePasswordForm';
 import { AccountType } from '../../types/enums';
 import { Models } from '../../types/models';
@@ -17,6 +19,7 @@ export const AccountManagementPage = (props: AccountManagementPageProps) => {
     const [ accounts, setAccounts ] = useState<Models.AccessControl.Account[]>([]);
     const [ selectedAccount, setSelectedAccount ] = useState<Models.AccessControl.Account>();
     const [ isDeleting, setIsDeleting ] = useState<boolean>(false);
+    const [ loginProviders, setLoginProviders ] = useState<ViewModels.LoginProviderViewModel[]>([]);
 
 
     const loadAccounts = async () => {
@@ -32,6 +35,12 @@ export const AccountManagementPage = (props: AccountManagementPageProps) => {
 
     useEffect(() => {
         loadAccounts();
+        const loadLoginProviders = buildLoadObjectFunc<ViewModels.LoginProviderViewModel[]>(
+            'api/accounts/login-providers', {},
+            resolveText("LoginProviders_CouldNotLoad"),
+            setLoginProviders
+        );
+        loadLoginProviders();
     }, []);
 
     const deleteAccount = async (accountId: string, force: boolean = false) => {
@@ -63,7 +72,7 @@ export const AccountManagementPage = (props: AccountManagementPageProps) => {
             case AccountType.External:
             {
                 const externalAccount = account as Models.AccessControl.ExternalAccount;
-                return resolveText(`LoginProvider_${externalAccount.loginProvider}`);
+                return getLoginProviderDisplayName(loginProviders, externalAccount.loginProvider);
             }
             case AccountType.LocalAnonymous:
                 return '';

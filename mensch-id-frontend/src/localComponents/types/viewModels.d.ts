@@ -13,12 +13,16 @@ export namespace ViewModels {
     interface IUserViewModel {
         userType: Enums.UserType;
     }
+    interface LoginProviderViewModel {
+        id: string;
+        displayName: string;
+    }
     interface NewProfileViewModel {
         idCandidates: string[];
     }
     interface ProfileViewModel extends ViewModels.IUserViewModel {
         id: string;
-        loginProviders: Enums.LoginProvider[];
+        loginProviders: string[];
         verifications: Models.Verification[];
     }
     interface SignedAssignerControlledProfile extends Models.AssignerControlledProfile {

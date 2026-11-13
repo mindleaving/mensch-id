@@ -1,5 +1,8 @@
-﻿namespace Mensch.Id.API.Models.AccessControl;
+using MongoDB.Bson.Serialization.Attributes;
 
+namespace Mensch.Id.API.Models.AccessControl;
+
+[BsonIgnoreExtraElements]
 public class ExternalAccount : PersonAccount
 {
     public override AccountType AccountType => AccountType.External;

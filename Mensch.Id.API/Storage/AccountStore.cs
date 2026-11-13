@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
@@ -70,7 +70,7 @@ namespace Mensch.Id.API.Storage
             LoginProvider loginProvider,
             string externalId)
         {
-            var obscuredExternalId = externalLoginObscurer.Obscure(externalId);
+            var obscuredExternalId = externalLoginObscurer.Obscure(loginProvider, externalId);
             return collection.OfType<ExternalAccount>()
                 .Find(x => x.LoginProvider == loginProvider && x.ExternalId == obscuredExternalId)
                 .FirstOrDefaultAsync();
@@ -82,10 +82,10 @@ namespace Mensch.Id.API.Storage
             if (accountIdClaim != null)
                 return await GetByIdAsync(accountIdClaim.Value);
 
-            var loginProvider = ClaimsHelpers.GetLoginProvider(claims);
-            if (loginProvider == LoginProvider.Unknown)
+            if (claims.Count == 0)
                 return null;
-            if (loginProvider == LoginProvider.LocalJwt)
+            var loginProvider = ClaimsHelpers.GetLoginProvider(claims);
+            if (loginProvider == LoginProvider.Local)
                 throw new Exception("This should not have happened. If login provider is LocalJwt, the accountIdClaim should exist");
 
             var externalId = ClaimsHelpers.GetExternalId(claims, loginProvider);
@@ -134,7 +134,7 @@ namespace Mensch.Id.API.Storage
                                 x => x.Id == accountId,
                                 updateBuilder.Combine(
                                     updateBuilder.Set(x => x.PasswordHash, passwordHash),
-                                    updateBuilder.Set(x => x.PasswordResetToken, null)
+                                    updateBuilder.Set(x => x.PasswordResetNonce, null)
                                 )
                             );
                     }

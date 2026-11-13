@@ -5,12 +5,12 @@ import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
 import { apiClient } from '../../sharedCommonComponents/communication/ApiClient';
 import { ApiError } from '../../sharedCommonComponents/communication/ApiError';
 import { CopyButton } from '../../sharedCommonComponents/components/CopyButton';
-import { LoginProvider } from '../types/enums';
 import { useContext } from 'react';
 import UserContext from '../contexts/UserContext';
 import { useNavigate } from 'react-router-dom';
 import { showErrorAlert } from '../../sharedCommonComponents/helpers/AlertHelpers';
 import { ViewModels } from '../types/viewModels';
+import { getLoginProviderIconClass } from '../helpers/LoginProviderHelpers';
 import { LoadingAlert } from '../../sharedCommonComponents/components/LoadingAlert';
 
 interface ProfilePageProps {
@@ -81,13 +81,7 @@ export const ProfilePage = (props: ProfilePageProps) => {
                             {resolveText("Accounts")}: 
                         </div>
                         {profileData.loginProviders.map((loginProvider,loginIndex) => {
-                            const iconLookup: { [key: string]: string } = {
-                                [LoginProvider.Google]: 'google',
-                                [LoginProvider.Twitter]: 'twitter',
-                                [LoginProvider.Facebook]: 'facebook',
-                                [LoginProvider.Microsoft]: 'windows'
-                            };
-                            const iconId = iconLookup[loginProvider] ?? 'user';
+                            const iconClass = getLoginProviderIconClass(loginProvider) ?? 'fa fa-user';
                             return (<Button
                                     key={loginIndex}
                                     variant="outline-success"
@@ -95,7 +89,7 @@ export const ProfilePage = (props: ProfilePageProps) => {
                                     className='mx-2 login-provider-symbol'
                                     title={loginProvider}
                                 >
-                                    <i className={`fa fa-${iconId}`} />
+                                    <i className={iconClass} />
                                 </Button>
                             );
                         })}

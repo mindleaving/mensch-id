@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.Data;
 using Mensch.Id.API.AccessControl.Policies;
 using Mensch.Id.API.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Models.AccessControl;
@@ -66,7 +67,7 @@ public class AdminController : ControllerBase
         var request = await accountRequestStore.GetByIdAsync(id);
         if (request == null)
             return NotFound();
-        var password = new TemporaryPasswordGenerator { AllowedCharacters = "abcdefghijkmnpqrstuvwxyzACDEFGHJKLMNPQRSTUVWXYZ2345679"}.Generate(8);
+        var password = RandomNumberGenerator.GetString("abcdefghijkmnpqrstuvwxyzACDEFGHJKLMNPQRSTUVWXYZ2345679", 8);
         AssignerAccount account;
         try
         {

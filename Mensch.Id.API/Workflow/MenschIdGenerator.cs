@@ -29,7 +29,7 @@ namespace Mensch.Id.API.Workflow
         {
             if (string.IsNullOrWhiteSpace(id))
                 return false;
-            return Regex.IsMatch(id, $"[0-9]{{8}}-[{CharacterSpace}]{{{IdSuffixLength}}}");
+            return Regex.IsMatch(id, $@"^[0-9]{{8}}-[{CharacterSpace}]{{{IdSuffixLength}}}\z");
         }
     }
 }

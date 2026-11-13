@@ -6,7 +6,6 @@ import { resolveText } from '../../../sharedCommonComponents/helpers/Globalizer'
 import { buildLoadObjectFunc } from '../../../sharedCommonComponents/helpers/LoadingHelpers';
 import { sendPostRequest } from '../../../sharedCommonComponents/helpers/StoringHelpers';
 import { LoginForm } from '../../components/LoginForm';
-import { LoginProvider } from '../../types/enums';
 import { Models } from '../../types/models';
 import { ViewModels } from '../../types/viewModels';
 
@@ -16,7 +15,9 @@ interface LinkAccountPageProps {
 export const LinkAccountPage = (props: LinkAccountPageProps) => {
 
     const [ isLoadingLoginProviders, setIsLoadingLoginProviders ] = useState<boolean>(true);
-    const [ existingLoginProviders, setExistingLoginProviders ] = useState<LoginProvider[]>([]);
+    const [ existingLoginProviders, setExistingLoginProviders ] = useState<string[]>([]);
+    const [ isLoadingAvailableLoginProviders, setIsLoadingAvailableLoginProviders ] = useState<boolean>(true);
+    const [ loginProviders, setLoginProviders ] = useState<ViewModels.LoginProviderViewModel[]>([]);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -28,11 +29,19 @@ export const LinkAccountPage = (props: LinkAccountPageProps) => {
             () => setIsLoadingLoginProviders(false)
         );
         loadExistingLoginProviders();
+        const loadLoginProviders = buildLoadObjectFunc<ViewModels.LoginProviderViewModel[]>(
+            'api/accounts/login-providers', {},
+            resolveText("LoginProviders_CouldNotLoad"),
+            setLoginProviders,
+            undefined,
+            () => setIsLoadingAvailableLoginProviders(false)
+        );
+        loadLoginProviders();
     }, []);
 
-    const linkExternalAccount = async (loginProvider: LoginProvider) => {
+    const linkExternalAccount = async (loginProviderId: string) => {
         const redirectUrl = encodeURIComponent(`https://${window.location.host}/linkaccount/finish`);
-        const actionUrl = apiClient.instance!.buildUrl(`api/accounts/login/${loginProvider}?redirectUrl=${redirectUrl}`, {});
+        const actionUrl = apiClient.instance!.buildUrl(`api/accounts/login/${encodeURIComponent(loginProviderId)}?redirectUrl=${redirectUrl}`, {});
         window.location.href = actionUrl;
     }
 
@@ -48,11 +57,11 @@ export const LinkAccountPage = (props: LinkAccountPageProps) => {
         );
     }
 
-    if(isLoadingLoginProviders) {
+    if(isLoadingLoginProviders || isLoadingAvailableLoginProviders) {
         return (<h3>{resolveText("Loading...")}</h3>);
     }
 
-    const availableExternalProviders = Object.values(LoginProvider).filter(x => !existingLoginProviders.includes(x));
+    const availableExternalProviders = loginProviders.filter(x => !existingLoginProviders.includes(x.id));
     return (
         <>
             <h1>{resolveText("LinkAnotherAccount")}</h1>

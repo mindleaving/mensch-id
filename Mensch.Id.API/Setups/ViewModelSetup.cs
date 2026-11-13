@@ -1,4 +1,4 @@
-﻿using Mensch.Id.API.Workflow.ViewModelBuilders;
+using Mensch.Id.API.Workflow.ViewModelBuilders;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -12,6 +12,7 @@ namespace Mensch.Id.API.Setups
         {
             services.AddScoped<NewProfileViewModelBuilder>();
             services.AddScoped<ProfileViewModelBuilder>();
+            services.AddSingleton<LoginProviderViewModelBuilder>();
         }
     }
 }

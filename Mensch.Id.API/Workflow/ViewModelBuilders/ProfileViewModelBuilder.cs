@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Threading.Tasks;
 using Commons.Extensions;
 using Mensch.Id.API.Models;
@@ -28,7 +28,7 @@ namespace Mensch.Id.API.Workflow.ViewModelBuilders
             var loginProviders = accounts.OfType<ExternalAccount>()
                 .Select(x => x.LoginProvider)
                 .ToList();
-            loginProviders.AddRange(accounts.OfType<LocalAnonymousAccount>().Select(_ => LoginProvider.LocalJwt)); // Includes local accounts because they derive from anonymous accounts
+            loginProviders.AddRange(accounts.OfType<LocalAnonymousAccount>().Select(_ => LoginProvider.Local)); // Includes local accounts because they derive from anonymous accounts
             var verifications = await verificationStore.SearchAsync(x => x.PersonId == model.Id).ToListAsync();
             return new ProfileViewModel(model.Id, loginProviders, verifications);
         }

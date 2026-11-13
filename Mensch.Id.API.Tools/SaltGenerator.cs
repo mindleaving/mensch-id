@@ -1,6 +1,5 @@
-﻿using System;
-using Mensch.Id.API.AccessControl;
-using Mensch.Id.API.Workflow;
+using System;
+using System.Security.Cryptography;
 using NUnit.Framework;
 
 namespace Mensch.Id.API.Tools
@@ -10,14 +9,14 @@ namespace Mensch.Id.API.Tools
         [Test]
         public void GenerateSalt()
         {
-            var salt = PasswordHasher.CreateSalt();
+            var salt = RandomNumberGenerator.GetBytes(32);
             Console.WriteLine(Convert.ToBase64String(salt));
         }
 
         [Test]
         public void GeneratePassword()
         {
-            var password = new TemporaryPasswordGenerator().Generate(length: 24);
+            var password = RandomNumberGenerator.GetString("abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!.,-_%&#?", 24);
             Console.WriteLine(password);
         }
     }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data;
 using System.Threading.Tasks;
 using Mensch.Id.API.AccessControl;
@@ -32,8 +32,8 @@ namespace Mensch.Id.API.Workflow
         {
             if (menschId != null)
             {
-                var existingAccount = await accountStore.GetLocalsByMenschId(menschId);
-                if (existingAccount != null)
+                var existingAccounts = await accountStore.GetLocalsByMenschId(menschId);
+                if (existingAccounts.Count > 0)
                     throw new DuplicateNameException("An account with the same mensch.ID already exists");
             }
             var accountId = Guid.NewGuid().ToString();
@@ -58,13 +58,11 @@ namespace Mensch.Id.API.Workflow
             if (existingAccount != null)
                 throw new DuplicateNameException("An account with the same email already exists");
             var accountId = Guid.NewGuid().ToString();
-            var emailVerificationAndPasswordResetSalt = Convert.ToBase64String(PasswordHasher.CreateSalt());
             var account = new LocalAccount
             {
                 Id = accountId,
                 Email = email,
                 IsEmailVerified = false,
-                EmailVerificationAndPasswordResetSalt = emailVerificationAndPasswordResetSalt,
                 PreferedLanguage = preferedLanguage,
                 PersonId = menschId
             };
@@ -86,7 +84,7 @@ namespace Mensch.Id.API.Workflow
             {
                 Id = Guid.NewGuid().ToString(),
                 LoginProvider = loginProvider,
-                ExternalId = externalLoginObscurer.Obscure(externalId),
+                ExternalId = externalLoginObscurer.Obscure(loginProvider, externalId),
                 PreferedLanguage = preferedLanguage,
                 PersonId = menschId
             };
@@ -102,7 +100,7 @@ namespace Mensch.Id.API.Workflow
         {
             var existingAccount = await accountStore.GetProfessionalByUsernameAsync(username);
             if (existingAccount != null)
-                throw new DuplicateNameException("An account with the same email already exists");
+                throw new DuplicateNameException("An account with the same username already exists");
             var accountId = Guid.NewGuid().ToString();
             var account = new AssignerAccount
             {

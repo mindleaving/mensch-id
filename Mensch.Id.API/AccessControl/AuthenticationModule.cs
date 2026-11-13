@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -123,13 +123,13 @@ namespace Mensch.Id.API.AccessControl
         public async Task<AuthenticationResult> AuthenticateExternalAsync(List<Claim> externalClaims)
         {
             var loginProvider = ClaimsHelpers.GetLoginProvider(externalClaims);
-            if (loginProvider == LoginProvider.Unknown)
-                throw new Exception("Could not determine login provider from claims");
-            if (loginProvider == LoginProvider.LocalJwt)
+            if (loginProvider == LoginProvider.Local)
                 throw new Exception("Cannot re-authenticate local account from claims. "
                                     + "The called authentication methods is intended for external login providers");
             var externalId = ClaimsHelpers.GetExternalId(externalClaims);
             var account = await accountStore.GetExternalByIdAsync(loginProvider, externalId);
+            if (account == null)
+                return AuthenticationResult.Failed(AuthenticationErrorType.InvalidUserOrPassword);
             var menschIdClaims = claimsBuilder.BuildForExternalLoginProvider(account);
             var token = securityTokenBuilder.Build(menschIdClaims);
             return AuthenticationResult.Success(menschIdClaims, token, account.AccountType);

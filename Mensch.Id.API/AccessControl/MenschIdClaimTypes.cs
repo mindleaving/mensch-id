@@ -1,4 +1,4 @@
-﻿namespace Mensch.Id.API.AccessControl;
+namespace Mensch.Id.API.AccessControl;
 
 public static class MenschIdClaimTypes
 {
@@ -6,4 +6,6 @@ public static class MenschIdClaimTypes
     public const string AccountTypeClaimName = "accountType";
     public const string CertificateTimestamp = "certificateTimestamp";
     public const string OwnershipSecret = "ownershipSecret";
+    public const string LoginProvider = "loginProvider";
+    public const string Subject = "sub";
 }

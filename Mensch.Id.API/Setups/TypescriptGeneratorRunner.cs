@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Reflection;
 using Mensch.Id.API.Models;
@@ -12,9 +12,15 @@ namespace Mensch.Id.API.Setups
         public static void Run()
         {
             var repositoryPath = Constants.GetRepositoryPath();
+            Run(repositoryPath);
+        }
+
+        public static void Run(string repositoryPath)
+        {
             TypescriptGenerator.TypescriptGenerator.Builder
                 .IncludeAllInNamespace(Assembly.GetAssembly(typeof(Person)), "Mensch.Id.API.Models")
                 .IncludeAllInNamespace(Assembly.GetAssembly(typeof(NewProfileViewModel)), "Mensch.Id.API.ViewModels")
+                .Exclude<LoginProvider>()
                 .ReactDefaults()
                 .SetDefaultFilenameForEnums("enums.ts")
                 .ConfigureNamespace("Mensch.Id.API.Models", options => options.Translation = "Models")
@@ -24,6 +30,7 @@ namespace Mensch.Id.API.Setups
                     options.Filename = "viewModels.d.ts";
                 })
                 .CustomizeType(x => x == typeof(Guid), _ => "string")
+                .CustomizeType(x => x == typeof(LoginProvider), _ => "string")
                 .CustomizeType(x => x == typeof(DateTime), _ => "string")
                 .SetOutputDirectory(Path.Combine(repositoryPath, "mensch-id-frontend", "src", "localComponents", "types"))
                 .Generate();

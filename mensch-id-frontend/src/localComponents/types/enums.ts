@@ -192,14 +192,6 @@ export enum Language {
     za = "za",
     zu = "zu"
 }
-export enum LoginProvider {
-    Unknown = "Unknown",
-    Google = "Google",
-    Twitter = "Twitter",
-    Facebook = "Facebook",
-    Microsoft = "Microsoft",
-    LocalJwt = "LocalJwt"
-}
 export enum OrderDirection {
     Ascending = "Ascending",
     Descending = "Descending"

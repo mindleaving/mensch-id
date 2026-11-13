@@ -1,4 +1,4 @@
-﻿using Mensch.Id.API.Models;
+using Mensch.Id.API.Models;
 using Mensch.Id.API.Models.AccessControl;
 using Mensch.Id.API.Models.Shop;
 using Mensch.Id.API.Storage;

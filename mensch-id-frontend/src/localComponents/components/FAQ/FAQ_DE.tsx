@@ -12,9 +12,9 @@ export const FAQ_DE = () => {
                 eventKey='faq-q1'
             >
                 <p>Wenn du ein anonymes Konto benutzt: Nur dein Geburtsdatum (das du dir mit 100-140 Tausend anderen Menschen teilst)</p>
-                <p>Wen du dich mit einem externen Anbieter (Google, Facebook, Microsoft oder Twitter) anmeldest, wird deine öffentliche Konto-ID wie ein Passwort gespeichert. Dadurch kann die Seite dich wiedererkennen wenn du dich anmeldest, die Konto-ID aber nicht wiederhergestellt werden selbst wenn die Datenbank gestohlen wird.</p>
+                <p>Wenn du dich mit einem externen Anbieter (z.B. Google oder Microsoft) anmeldest, wird vom Anbieter nur eine anonyme Konto-Kennung abgefragt - kein Name, keine Email-Adresse. Diese Kennung wird wie ein Passwort gespeichert. Dadurch kann die Seite dich wiedererkennen wenn du dich anmeldest, die Konto-ID aber nicht wiederhergestellt werden selbst wenn die Datenbank gestohlen wird.</p>
                 <p>Wenn du ein nicht-anonymes Konto benutzt wird außerdem deine Email-Adresse gespeichert die für die Passwortwiederherstellung benutzt wird, wenn du dein Passwort vergessen hast</p>
-                <p><small>Technische Details: Passwörter und externe Konto-IDs werden mit einem State-of-the-art Schlüsselerzeugungsalgorithmus (PBKDF2) gespeichert. Externe Konto-IDs werden zusätzlich mit einem Geheimwort versehen um Brute-force-Attacken (ausprobieren aller möglichen IDs) zu unterbinden. Du kannst den Code auf <a href="https://github.com/mindleaving/mensch-id" target="_blank" rel="noreferrer">Github</a> einsehen.</small></p>
+                <p><small>Technische Details: Passwörter werden mit einem State-of-the-art Schlüsselerzeugungsalgorithmus (PBKDF2) gespeichert. Externe Logins verwenden OpenID Connect ausschließlich mit dem Scope "openid". Externe Konto-IDs werden als schlüsselbasierter Hash (HMAC-SHA256) gespeichert, dessen geheimer Schlüssel nicht in der Datenbank liegt, um Brute-force-Attacken (ausprobieren aller möglichen IDs) zu unterbinden. Du kannst den Code auf <a href="https://github.com/mindleaving/mensch-id" target="_blank" rel="noreferrer">Github</a> einsehen.</small></p>
             </AccordionCard>
             <AccordionCard
                 title="Was ist eine Challenge?"
@@ -62,7 +62,7 @@ export const FAQ_DE = () => {
                 <p>웃ID wurde im September 2022 öffentlich zugänglich gemacht wird im Moment verschiedenen Projekten, Behörden und Entscheidungsträgern in Deutschland und der EU vorgestellt.</p>
                 {/* <p>Außerdem ist ein <Link to="/pilot-project-hd">Pilotprojekt in Heidelberg</Link> geplant, das Anfang 2023 beginnen soll 웃ID zu verwenden.</p> */}
                 <p>
-                    Obwohl 웃ID noch nicht breite Anwendung findet, kannst du das Projekt unterstützen indem du dir deine 웃ID erstellst 
+                    Obwohl 웃ID noch nicht breite Anwendung findet, kannst du das Projekt unterstützen indem du deine 웃ID 
                     und im Gesundheitswesen und bei Behörden angibst. Erkläre dort dass es eine eindeutige Identifikationsnummer ist und die gerne genutzt werden darf. 
                     Verweise auch gerne auf diese Internetseite.
                 </p>

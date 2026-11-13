@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq.Expressions;
 using System.Net;
@@ -176,7 +176,11 @@ public class AssignerController : ControllerBase
     public async Task<IActionResult> CreateNew(
         [FromRoute] string idCandidate)
     {
+        if (!ControllerInputSanitizer.ValidateAndSanitzeMenschId(idCandidate, out idCandidate))
+            return BadRequest("Invalid mensch.ID");
         var accountId = ControllerHelpers.GetAccountId(httpContextAccessor);
+        if (await profileStore.ExistsAsync(idCandidate))
+            return Conflict($"ID '{idCandidate}' has already been assigned");
         if (!await idStore.TryClaimId(idCandidate, accountId))
             return StatusCode((int)HttpStatusCode.InternalServerError, $"Could not claim ID '{idCandidate}'. Did you reserve it first?");
         var assignerControlledProfile = AssignerControlledProfileFactory.Create(idCandidate, accountId);

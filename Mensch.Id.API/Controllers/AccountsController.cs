@@ -1,10 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using System.Web;
 using Mensch.Id.API.AccessControl;
 using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Models;
@@ -12,11 +11,9 @@ using Mensch.Id.API.Models.AccessControl;
 using Mensch.Id.API.Storage;
 using Mensch.Id.API.Workflow;
 using Mensch.Id.API.Workflow.Email;
+using Mensch.Id.API.Workflow.Models;
+using Mensch.Id.API.Workflow.ViewModelBuilders;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Facebook;
-using Microsoft.AspNetCore.Authentication.Google;
-using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
-using Microsoft.AspNetCore.Authentication.Twitter;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -35,14 +32,26 @@ namespace Mensch.Id.API.Controllers
         private readonly IAuthenticationModule authenticationModule;
         private readonly IAccountCreator accountCreator;
         private readonly IEmailSender emailSender;
+        private readonly IAccountTokenService accountTokenService;
+        private readonly IOidcProviderRegistry oidcProviderRegistry;
+        private readonly LoginProviderViewModelBuilder loginProviderViewModelBuilder;
+        private readonly RedirectUrlValidator redirectUrlValidator;
 
         public AccountsController(
             IAccountStore store,
             IHttpContextAccessor httpContextAccessor,
             IAuthenticationModule authenticationModule,
             IAccountCreator accountCreator,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            IAccountTokenService accountTokenService,
+            IOidcProviderRegistry oidcProviderRegistry,
+            LoginProviderViewModelBuilder loginProviderViewModelBuilder,
+            RedirectUrlValidator redirectUrlValidator)
         {
+            this.accountTokenService = accountTokenService;
+            this.oidcProviderRegistry = oidcProviderRegistry;
+            this.loginProviderViewModelBuilder = loginProviderViewModelBuilder;
+            this.redirectUrlValidator = redirectUrlValidator;
             this.store = store;
             this.httpContextAccessor = httpContextAccessor;
             this.authenticationModule = authenticationModule;
@@ -91,16 +100,23 @@ namespace Mensch.Id.API.Controllers
                 return NotFound();
             if (account.IsEmailVerified)
                 return BadRequest("Email is already verified");
-            account.EmailVerificationToken = EmailVerification.GenerateToken(account.EmailVerificationAndPasswordResetSalt, out var unencryptedToken);
+            await SendVerificationEmail(account);
+            return Ok();
+        }
+
+        private async Task SendVerificationEmail(LocalAccount account)
+        {
+            var verificationToken = accountTokenService.Generate(AccountTokenPurpose.EmailVerification, account.Id);
+            account.EmailVerificationNonce = verificationToken.Nonce;
             await store.StoreAsync(account);
             var verificationEmail = new VerificationEmail
             {
                 AccountId = account.Id,
                 RecipientAddress = account.Email,
-                VerificationToken = unencryptedToken
+                VerificationToken = verificationToken.Token,
+                PreferedLanguage = account.PreferedLanguage
             };
             await emailSender.SendVerificationEmail(verificationEmail);
-            return Ok();
         }
 
 
@@ -119,11 +135,15 @@ namespace Mensch.Id.API.Controllers
                 return NotFound();
             if (localAccount.IsEmailVerified)
                 return Ok();
-            var decodedToken = HttpUtility.UrlDecode(token);
-            if (!EmailVerification.Verify(decodedToken, localAccount))
+            var isTokenValid = accountTokenService.Verify(
+                AccountTokenPurpose.EmailVerification,
+                token,
+                localAccount.Id,
+                localAccount.EmailVerificationNonce);
+            if (!isTokenValid)
                 return StatusCode((int)HttpStatusCode.Forbidden, "Invalid verification token");
             localAccount.IsEmailVerified = true;
-            localAccount.EmailVerificationToken = null;
+            localAccount.EmailVerificationNonce = null;
             await store.StoreAsync(localAccount);
             return Ok();
         }
@@ -138,13 +158,14 @@ namespace Mensch.Id.API.Controllers
                 return NotFound();
             if (account is AdminAccount)
                 return StatusCode((int)HttpStatusCode.Forbidden);
-            account.PasswordResetToken = PasswordReset.GenerateToken(account.EmailVerificationAndPasswordResetSalt, out var unencryptedToken);
+            var resetToken = accountTokenService.Generate(AccountTokenPurpose.PasswordReset, account.Id);
+            account.PasswordResetNonce = resetToken.Nonce;
             await store.StoreAsync(account);
             var passwordResetEmail = new PasswordResetEmail
             {
                 RecipientAddress = account.Email,
                 AccountId = account.Id,
-                ResetToken = unencryptedToken
+                ResetToken = resetToken.Token
             };
             await emailSender.SendPasswordResetEmail(passwordResetEmail);
             return Ok();
@@ -166,7 +187,12 @@ namespace Mensch.Id.API.Controllers
                 return NotFound();
             if (account is not LocalAccount localAccount)
                 return NotFound();
-            if (!PasswordReset.Verify(body.ResetToken, localAccount))
+            var isResetTokenValid = accountTokenService.Verify(
+                AccountTokenPurpose.PasswordReset,
+                body.ResetToken,
+                localAccount.Id,
+                localAccount.PasswordResetNonce);
+            if (!isResetTokenValid)
                 return StatusCode((int)HttpStatusCode.Forbidden, "Invalid reset token");
             if(body.Password.Length < MinimumPasswordLength)
                 return BadRequest($"Password too short. Must be at least {MinimumPasswordLength} characters long.");
@@ -217,15 +243,7 @@ namespace Mensch.Id.API.Controllers
                         body.Password,
                         body.PreferedLanguage ?? Language.en,
                         personId);
-                    account.EmailVerificationToken = EmailVerification.GenerateToken(account.EmailVerificationAndPasswordResetSalt, out var unencryptedToken);
-                    await store.StoreAsync(account);
-                    var verificationEmail = new VerificationEmail
-                    {
-                        AccountId = account.Id,
-                        RecipientAddress = account.Email,
-                        VerificationToken = unencryptedToken
-                    };
-                    await emailSender.SendVerificationEmail(verificationEmail);
+                    await SendVerificationEmail(account);
                     return Ok();
                 }
                 case AccountType.LocalAnonymous:
@@ -265,6 +283,14 @@ namespace Mensch.Id.API.Controllers
             return StatusCode((int)HttpStatusCode.Unauthorized, authenticationResult.Error);
         }
 
+        [AllowAnonymous]
+        [HttpGet("login-providers")]
+        public IActionResult GetLoginProviders()
+        {
+            var loginProviders = loginProviderViewModelBuilder.BuildAll();
+            return Ok(loginProviders);
+        }
+
         [Authorize]
         [AllowAnonymous]
         [HttpGet("login/{loginProvider}")]
@@ -273,6 +299,10 @@ namespace Mensch.Id.API.Controllers
             [FromRoute] LoginProvider loginProvider,
             [FromQuery] string redirectUrl = null)
         {
+            if (!oidcProviderRegistry.TryGetSchemeName(loginProvider, out var schemeName))
+                return BadRequest($"Invalid login provider '{loginProvider}'");
+            if (!string.IsNullOrWhiteSpace(redirectUrl) && !redirectUrlValidator.IsAllowed(redirectUrl))
+                return BadRequest("Invalid redirect URL");
             if (IsLoggedIn())
             {
                 var claims = ControllerHelpers.GetClaims(httpContextAccessor);
@@ -284,19 +314,11 @@ namespace Mensch.Id.API.Controllers
                     return Ok();
                 }
             }
-            switch (loginProvider)
+            var properties = new AuthenticationProperties
             {
-                case LoginProvider.Google:
-                    return Challenge(GoogleDefaults.AuthenticationScheme);
-                case LoginProvider.Twitter:
-                    return Challenge(TwitterDefaults.AuthenticationScheme);
-                case LoginProvider.Facebook:
-                    return Challenge(FacebookDefaults.AuthenticationScheme);
-                case LoginProvider.Microsoft:
-                    return Challenge(MicrosoftAccountDefaults.AuthenticationScheme);
-                default:
-                    return BadRequest($"Invalid login provider '{loginProvider}'");
-            }
+                RedirectUri = string.IsNullOrWhiteSpace(redirectUrl) ? "/" : redirectUrl
+            };
+            return Challenge(properties, schemeName);
         }
 
         [Authorize]
@@ -305,22 +327,15 @@ namespace Mensch.Id.API.Controllers
         {
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
             var loginProvider = ClaimsHelpers.GetLoginProvider(claims);
-            switch (loginProvider)
-            {
-                case LoginProvider.Google:
-                case LoginProvider.Twitter:
-                case LoginProvider.Facebook:
-                case LoginProvider.Microsoft:
-                    var authenticationResult = await authenticationModule.AuthenticateExternalAsync(claims);
-                    if (!authenticationResult.IsAuthenticated)
-                        return StatusCode((int)HttpStatusCode.Unauthorized, authenticationResult.Error);
-                    SetAccessTokenCookie(authenticationResult);
-                    return Ok(new IsLoggedInResponse(authenticationResult.AccountType!.Value));
-                case LoginProvider.LocalJwt:
-                    return StatusCode((int)HttpStatusCode.Forbidden, "This method cannot be used with JWT authentication");
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+            if (loginProvider == LoginProvider.Local)
+                return StatusCode((int)HttpStatusCode.Forbidden, "This method cannot be used with JWT authentication");
+            if (!oidcProviderRegistry.IsExternalProvider(loginProvider))
+                return StatusCode((int)HttpStatusCode.Unauthorized, "Unknown login provider");
+            var authenticationResult = await authenticationModule.AuthenticateExternalAsync(claims);
+            if (!authenticationResult.IsAuthenticated)
+                return StatusCode((int)HttpStatusCode.Unauthorized, authenticationResult.Error);
+            SetAccessTokenCookie(authenticationResult);
+            return Ok(new IsLoggedInResponse(authenticationResult.AccountType!.Value));
         }
 
 
@@ -349,7 +364,7 @@ namespace Mensch.Id.API.Controllers
             if (account == null)
             {
                 var externalLoginProviders = ClaimsHelpers.GetLoginProviders(loginProviderClaims)
-                    .Except(new [] { LoginProvider.LocalJwt })
+                    .Where(x => x != LoginProvider.Local)
                     .ToList();
                 if (externalLoginProviders.Count > 1)
                 {

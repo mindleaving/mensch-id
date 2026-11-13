@@ -151,24 +151,18 @@ export namespace Models {
             contact: Models.Contact;
         }
         interface ExternalAccount extends Models.AccessControl.PersonAccount {
-            loginProvider: Enums.LoginProvider;
+            loginProvider: string;
             externalId: string;
         }
         interface IAccountWithPassword {
             passwordHash: string;
         }
-        interface IExternalLogin {
-            loginProvider: Enums.LoginProvider;
-            externalId: string;
-        }
         interface LocalAccount extends Models.AccessControl.LocalAnonymousAccount {
             email: string;
-            emailVerificationAndPasswordResetSalt: string;
-            emailVerificationToken: string;
             isEmailVerified: boolean;
         }
         interface LocalAnonymousAccount extends Models.AccessControl.PersonAccount, Models.AccessControl.IAccountWithPassword {
-            passwordResetToken: string;
+            
         }
         interface ProfessionalAccount extends Models.AccessControl.Account, Models.AccessControl.IAccountWithPassword {
             username: string;

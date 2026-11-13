@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
+using MailKit;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Options;
@@ -61,7 +62,8 @@ namespace Mensch.Id.API.Workflow.Email
                     settings.UseAuthentication ? SecureSocketOptions.Auto : SecureSocketOptions.None);
                 if(settings.UseAuthentication)
                     await mailClient.AuthenticateAsync(settings.SmtpUsername, settings.SmtpPassword);
-                await mailClient.SendAsync(message);
+                var sendRequest = new SendRequest(message);
+                await mailClient.SendAsync(sendRequest);
                 await mailClient.DisconnectAsync(true);
                 Console.WriteLine("Email sent!");
             }
