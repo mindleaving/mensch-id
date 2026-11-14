@@ -3,11 +3,14 @@ using System.ComponentModel;
 using System.Text.RegularExpressions;
 using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Helpers.Converters;
+using Mensch.Id.API.Storage;
+using MongoDB.Bson.Serialization.Attributes;
 using Newtonsoft.Json;
 
 namespace Mensch.Id.API.Models;
 
 [JsonConverter(typeof(ValidatedStringValueJsonConverter<MenschId>))]
+[BsonSerializer(typeof(ValidatedStringValueBsonSerializer<MenschId>))]
 [TypeConverter(typeof(ValidatedStringValueTypeConverter<MenschId>))]
 public readonly partial struct MenschId : IEquatable<MenschId>, IValidatedStringValue<MenschId>
 {

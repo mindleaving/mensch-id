@@ -90,7 +90,6 @@
   "ServiceChallenge_Reject": "Reject",
   "ServiceChallenge_Accepted": "Request accepted",
   "ServiceChallenge_Rejected": "Request rejected",
-  "ServiceChallenge_ReturnToService": "Return to {{service}}",
   "ServiceChallenge_Done": "Done",
   "ServiceChallenge_CouldNotAnswer": "Could not send your answer. Please try again.",
   "ServiceChallenge_NoLongerAnswerable": "This request has already been answered or is no longer valid.",

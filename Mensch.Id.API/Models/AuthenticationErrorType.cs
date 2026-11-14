@@ -10,6 +10,7 @@ namespace Mensch.Id.API.Models
         InvalidUserOrPassword = 2,
         AuthenticationMethodNotAvailable = 3,
         EmailNotVerified = 4,
-        AccountLocked = 5
+        AccountLocked = 5,
+        AccountDeactivated = 6
     }
 }

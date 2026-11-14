@@ -3,7 +3,8 @@ export enum AuthenticationErrorType {
     InvalidUserOrPassword = "InvalidUserOrPassword",
     AuthenticationMethodNotAvailable = "AuthenticationMethodNotAvailable",
     EmailNotVerified = "EmailNotVerified",
-    AccountLocked = "AccountLocked"
+    AccountLocked = "AccountLocked",
+    AccountDeactivated = "AccountDeactivated"
 }
 export enum IdType {
     MenschID = "MenschID"
@@ -236,6 +237,10 @@ export enum AccountType {
     Assigner = "Assigner",
     ExternalService = "ExternalService",
     Admin = "Admin"
+}
+export enum AssignerAccountStatus {
+    Activated = "Activated",
+    Deactivated = "Deactivated"
 }
 export enum SessionType {
     App = "App",

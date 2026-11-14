@@ -15,7 +15,6 @@ using Mensch.Id.API.Workflow.ExternalServices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.WebUtilities;
 
 namespace Mensch.Id.API.Controllers;
 
@@ -202,9 +201,7 @@ public class ServiceChallengesController : ControllerBase
             ResultToken = resultToken
         };
         await notifier.NotifyServiceAboutAnswer(service.Id, result);
-        var redirectUri = BuildRedirectUri(challenge, service, answer);
-        var response = new ServiceChallengeAnswerResponse { RedirectUri = redirectUri };
-        return Ok(response);
+        return Ok();
     }
 
     private async Task<string> GetMenschIdOfCurrentUser()
@@ -274,22 +271,5 @@ public class ServiceChallengesController : ControllerBase
             CreatedTimestamp = challenge.CreatedTimestamp,
             ExpiresAt = challenge.ExpiresAt
         };
-    }
-
-    private static string BuildRedirectUri(
-        ServiceChallenge challenge,
-        ExternalService service,
-        ServiceChallengeState answer)
-    {
-        var baseUri = answer == ServiceChallengeState.Accepted
-            ? service.AcceptRedirectUri
-            : service.RejectRedirectUri;
-        var parameters = new Dictionary<string, string>
-        {
-            [ServiceChallengeResultTokenClaims.ChallengeId] = challenge.Id
-        };
-        if (!string.IsNullOrEmpty(challenge.ServiceState))
-            parameters["state"] = challenge.ServiceState;
-        return QueryHelpers.AddQueryString(baseUri, parameters);
     }
 }

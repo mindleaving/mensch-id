@@ -7,10 +7,10 @@ public static class AssignerControlledProfileFactory
 {
 
     public static AssignerControlledProfile Create(
-        string menschId,
+        MenschId menschId,
         string assignerAccountId)
     {
-        var ownershipSecret = OwnershipSecret.Generate().Value;
+        var ownershipSecret = OwnershipSecret.Generate();
         return new AssignerControlledProfile(
             menschId,
             assignerAccountId,

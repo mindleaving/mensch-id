@@ -32,9 +32,8 @@ public class AssignerController : ControllerBase
     private readonly NewProfileViewModelBuilder newProfileViewModelBuilder;
     private readonly IHttpContextAccessor httpContextAccessor;
     private readonly IStore<Person> profileStore;
-    private readonly IStore<AssignerControlledProfile> assignerControlledProfileStore;
+    private readonly IAssignerControlledProfileStore assignerControlledProfileStore;
     private readonly SignedProfileBuilder signedProfileBuilder;
-    private readonly IFilterExpressionBuilder<AssignerControlledProfile,AssignedProfilesRequestParameters> filterExpressionBuilder;
     private readonly IFilesStore fileStore;
 
     public AssignerController(
@@ -43,9 +42,8 @@ public class AssignerController : ControllerBase
         IHttpContextAccessor httpContextAccessor,
         IIdStore idStore,
         IStore<Person> profileStore,
-        IStore<AssignerControlledProfile> assignerControlledProfileStore,
+        IAssignerControlledProfileStore assignerControlledProfileStore,
         SignedProfileBuilder signedProfileBuilder,
-        IFilterExpressionBuilder<AssignerControlledProfile,AssignedProfilesRequestParameters> filterExpressionBuilder,
         IFilesStore fileStore)
     {
         this.accountStore = accountStore;
@@ -55,7 +53,6 @@ public class AssignerController : ControllerBase
         this.profileStore = profileStore;
         this.assignerControlledProfileStore = assignerControlledProfileStore;
         this.signedProfileBuilder = signedProfileBuilder;
-        this.filterExpressionBuilder = filterExpressionBuilder;
         this.fileStore = fileStore;
     }
 
@@ -182,7 +179,7 @@ public class AssignerController : ControllerBase
             return Conflict($"ID '{menschId}' has already been assigned");
         if (!await idStore.TryClaimId(menschId, accountId))
             return StatusCode((int)HttpStatusCode.InternalServerError, $"Could not claim ID '{menschId}'. Did you reserve it first?");
-        var assignerControlledProfile = AssignerControlledProfileFactory.Create(menschId, accountId);
+        var assignerControlledProfile = AssignerControlledProfileFactory.Create(idCandidate, accountId);
         await assignerControlledProfileStore.StoreAsync(assignerControlledProfile);
         var person = new Person(menschId, DateTime.UtcNow, accountId);
         await profileStore.StoreAsync(person);
@@ -195,28 +192,8 @@ public class AssignerController : ControllerBase
         [FromQuery] AssignedProfilesRequestParameters queryParameters)
     {
         var accountId = ControllerHelpers.GetAccountId(httpContextAccessor);
-        var filterExpressions = filterExpressionBuilder.Build(queryParameters);
-        filterExpressions.Add(x => x.AssignerAccountId == accountId);
-        var combinedFilter = SearchExpressionBuilder.And(filterExpressions.ToArray());
-        var orderByExpression = BuildOrderByExpression(queryParameters.OrderBy);
-        var items = assignerControlledProfileStore.SearchAsync(
-            combinedFilter,
-            queryParameters.Count,
-            queryParameters.Skip,
-            orderByExpression,
-            queryParameters.OrderDirection);
+        var items = assignerControlledProfileStore.SearchAssignedProfiles(accountId, queryParameters);
         return Ok(items);
-    }
-
-    private Expression<Func<AssignerControlledProfile, object>> BuildOrderByExpression(
-        string orderBy)
-    {
-        return orderBy?.ToLower() switch
-        {
-            "time" => x => x.CreationDate,
-            "id" => x => x.Id,
-            _ => x => x.CreationDate
-        };
     }
 
     [HttpGet("profiles/{personId}")]
@@ -224,7 +201,7 @@ public class AssignerController : ControllerBase
         [FromRoute] MenschId personId,
         [FromQuery] bool signed = false)
     {
-        var profile = await assignerControlledProfileStore.GetByIdAsync(personId.Value);
+        var profile = await assignerControlledProfileStore.GetByIdAsync(personId);
         if (profile == null)
             return NotFound();
         if(!signed)

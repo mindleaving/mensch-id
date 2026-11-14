@@ -9,9 +9,9 @@ using Mensch.Id.API.Storage;
 
 namespace Mensch.Id.API.Test.TestInfrastructure;
 
-public class InMemoryStore<T> : IStore<T> where T : IId
+public class InMemoryStore<T, TKey> : IStore<T, TKey> where T : IId<TKey>
 {
-    protected readonly ConcurrentDictionary<string, T> items = new();
+    protected readonly ConcurrentDictionary<TKey, T> items = new();
 
     public IReadOnlyCollection<T> Items => items.Values.ToList();
 
@@ -24,12 +24,12 @@ public class InMemoryStore<T> : IStore<T> where T : IId
         await Task.CompletedTask;
     }
 
-    public Task<bool> ExistsAsync(string id)
+    public Task<bool> ExistsAsync(TKey id)
     {
         return Task.FromResult(items.ContainsKey(id));
     }
 
-    public Task<T> GetByIdAsync(string id)
+    public Task<T> GetByIdAsync(TKey id)
     {
         if (id == null)
             return Task.FromResult(default(T));
@@ -78,9 +78,13 @@ public class InMemoryStore<T> : IStore<T> where T : IId
         return Task.FromResult(isNew ? StorageOperation.Created : StorageOperation.Changed);
     }
 
-    public Task DeleteAsync(string id)
+    public Task DeleteAsync(TKey id)
     {
         items.TryRemove(id, out _);
         return Task.CompletedTask;
     }
+}
+
+public class InMemoryStore<T> : InMemoryStore<T, string>, IStore<T> where T : IId
+{
 }

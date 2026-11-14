@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using Mensch.Id.API.AccessControl;
@@ -32,9 +32,9 @@ namespace Mensch.Id.API.Workflow
         {
             return new List<Claim>
             {
-                new(MenschIdClaimTypes.PersonIdClaimName, profile.Id),
+                new(MenschIdClaimTypes.PersonIdClaimName, profile.Id.Value),
                 new(MenschIdClaimTypes.CertificateTimestamp, timestamp.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")),
-                new(MenschIdClaimTypes.OwnershipSecret, profile.OwnershipSecret)
+                new(MenschIdClaimTypes.OwnershipSecret, profile.OwnershipSecret.Value)
             };
         }
     }

@@ -2,6 +2,15 @@ import { Models, System } from './models.d';
 import * as Enums from './enums';
 
 export namespace ViewModels {
+    interface AdminAssignerViewModel {
+        id: string;
+        username: string;
+        name: string;
+        contact: Models.Contact;
+        logoId: string;
+        isActivated: boolean;
+        assignedProfileCount: number;
+    }
     interface AssignerAccountViewModel extends ViewModels.IUserViewModel {
         accountId: string;
         name: string;

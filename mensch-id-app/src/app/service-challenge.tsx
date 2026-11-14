@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Linking, ScrollView, Text } from 'react-native';
+import { ActivityIndicator, ScrollView, Text } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../auth/AuthContext';
@@ -10,7 +10,6 @@ import { isValidServiceChallengeId } from '../helpers/ServiceChallengeHelpers';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { CommonStyles, Spacing } from '../styles/Theme';
 import { ServiceChallengeAnswer } from '../types/frontendTypes';
-import { Models } from '../types/models';
 import { ViewModels } from '../types/viewModels';
 
 const ServiceChallengeScreen = () => {
@@ -25,7 +24,6 @@ const ServiceChallengeScreen = () => {
     const [ isLoading, setIsLoading ] = useState<boolean>(isIdValid);
     const [ isSubmitting, setIsSubmitting ] = useState<boolean>(false);
     const [ answer, setAnswer ] = useState<ServiceChallengeAnswer>();
-    const [ redirectUri, setRedirectUri ] = useState<string>();
     const [ errorMessage, setErrorMessage ] = useState<string>();
 
     useEffect(() => {
@@ -60,9 +58,8 @@ const ServiceChallengeScreen = () => {
         setIsSubmitting(true);
         setErrorMessage(undefined);
         try {
-            const response = await auth.apiClient.post<Models.ExternalServices.ServiceChallengeAnswerResponse>(`api/service-challenges/${id}/${selectedAnswer}`);
+            await auth.apiClient.postWithoutResponse(`api/service-challenges/${id}/${selectedAnswer}`);
             setAnswer(selectedAnswer);
-            setRedirectUri(response.redirectUri);
         } catch (error) {
             const isConflictOrGone = error instanceof ApiError && (error.statusCode === 409 || error.statusCode === 410);
             setErrorMessage(t(isConflictOrGone ? 'ServiceChallenge_NoLongerAnswerable' : 'ServiceChallenge_CouldNotAnswer'));
@@ -84,14 +81,6 @@ const ServiceChallengeScreen = () => {
                 <Text testID="service-challenge-result" style={[ CommonStyles.title, { color: colors.text } ]}>
                     {t(answer === 'accept' ? 'ServiceChallenge_Accepted' : 'ServiceChallenge_Rejected')}
                 </Text>
-                {redirectUri
-                ? <AppButton
-                    title={t('ServiceChallenge_ReturnToService', { service: challenge?.serviceDisplayName })}
-                    icon="open-in-new"
-                    variant="outline"
-                    onPress={() => Linking.openURL(redirectUri)}
-                />
-                : null}
                 <AppButton title={t('ServiceChallenge_Done')} onPress={() => router.replace('/')} />
             </ScrollView>
         );

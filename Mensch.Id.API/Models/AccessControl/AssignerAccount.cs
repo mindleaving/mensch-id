@@ -1,4 +1,6 @@
-﻿namespace Mensch.Id.API.Models.AccessControl;
+using MongoDB.Bson.Serialization.Attributes;
+
+namespace Mensch.Id.API.Models.AccessControl;
 
 public class AssignerAccount : ProfessionalAccount
 {
@@ -9,4 +11,6 @@ public class AssignerAccount : ProfessionalAccount
     public string LogoImageType { get; set; }
 
     public Contact Contact { get; set; }
+    [BsonDefaultValue(true)]
+    public bool IsActivated { get; set; } = true;
 }

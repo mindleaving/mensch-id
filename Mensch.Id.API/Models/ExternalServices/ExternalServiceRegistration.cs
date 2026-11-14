@@ -9,14 +9,10 @@ public class ExternalServiceRegistration
     public string DisplayName { get; set; }
 
     [Required]
+    [EmailAddress]
+    [MaxLength(254)]
+    public string Email { get; set; }
+
     [MaxLength(1000)]
     public string ContactInformation { get; set; }
-
-    [Required]
-    [MaxLength(2000)]
-    public string AcceptRedirectUri { get; set; }
-
-    [Required]
-    [MaxLength(2000)]
-    public string RejectRedirectUri { get; set; }
 }

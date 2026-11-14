@@ -27,7 +27,7 @@ public class AssignerControllerTest
     private InMemoryAccountStore accountStore;
     private InMemoryIdStore idStore;
     private InMemoryStore<Person> personStore;
-    private InMemoryStore<AssignerControlledProfile> assignerControlledProfileStore;
+    private InMemoryAssignerControlledProfileStore assignerControlledProfileStore;
     private AssignerController controller;
 
     [SetUp]
@@ -36,7 +36,7 @@ public class AssignerControllerTest
         accountStore = new InMemoryAccountStore(TestKeys.CreateObscurer());
         idStore = new InMemoryIdStore();
         personStore = new InMemoryStore<Person>();
-        assignerControlledProfileStore = new InMemoryStore<AssignerControlledProfile>();
+        assignerControlledProfileStore = new InMemoryAssignerControlledProfileStore();
         await accountStore.StoreAsync(new AssignerAccount { Id = AssignerAccountId, Username = "clinic", Name = "Clinic" });
 
         var claims = new[]
@@ -54,7 +54,6 @@ public class AssignerControllerTest
             personStore,
             assignerControlledProfileStore,
             null,
-            Mock.Of<IFilterExpressionBuilder<AssignerControlledProfile, AssignedProfilesRequestParameters>>(),
             Mock.Of<IFilesStore>());
     }
 
@@ -85,13 +84,13 @@ public class AssignerControllerTest
         var result = await controller.CreateNew(new MenschId(idCandidate));
 
         var person = await personStore.GetByIdAsync(idCandidate);
-        var assignerControlledProfile = await assignerControlledProfileStore.GetByIdAsync(idCandidate);
+        var assignerControlledProfile = await assignerControlledProfileStore.GetByIdAsync(new MenschId(idCandidate));
         var reservation = await idStore.GetByIdAsync(idCandidate);
         Assert.That(result, Is.TypeOf<OkObjectResult>());
         Assert.That(person, Is.Not.Null);
         Assert.That(person.CreationAccountId, Is.EqualTo(AssignerAccountId));
         Assert.That(assignerControlledProfile.AssignerAccountId, Is.EqualTo(AssignerAccountId));
-        Assert.That(assignerControlledProfile.OwnershipSecret, Has.Length.EqualTo(OwnershipSecret.Length));
+        Assert.That(assignerControlledProfile.OwnershipSecret.Value, Has.Length.EqualTo(OwnershipSecret.Length));
         Assert.That(reservation.IsClaimed, Is.True);
     }
 
@@ -100,11 +99,11 @@ public class AssignerControllerTest
     {
         var idCandidate = await ReserveCandidate();
         await controller.CreateNew(new MenschId(idCandidate));
-        var originalSecret = (await assignerControlledProfileStore.GetByIdAsync(idCandidate)).OwnershipSecret;
+        var originalSecret = (await assignerControlledProfileStore.GetByIdAsync(new MenschId(idCandidate))).OwnershipSecret;
 
         var result = await controller.CreateNew(new MenschId(idCandidate));
 
-        var currentSecret = (await assignerControlledProfileStore.GetByIdAsync(idCandidate)).OwnershipSecret;
+        var currentSecret = (await assignerControlledProfileStore.GetByIdAsync(new MenschId(idCandidate))).OwnershipSecret;
         Assert.That(((IStatusCodeActionResult)result).StatusCode, Is.EqualTo(409));
         Assert.That(currentSecret, Is.EqualTo(originalSecret));
     }
@@ -114,12 +113,12 @@ public class AssignerControllerTest
     {
         var idCandidate = await ReserveCandidate();
         await controller.CreateNew(new MenschId(idCandidate));
-        await assignerControlledProfileStore.DeleteAsync(idCandidate);
+        await assignerControlledProfileStore.DeleteAsync(new MenschId(idCandidate));
 
         var result = await controller.CreateNew(new MenschId(idCandidate));
 
         Assert.That(((IStatusCodeActionResult)result).StatusCode, Is.EqualTo(409));
-        Assert.That(await assignerControlledProfileStore.ExistsAsync(idCandidate), Is.False);
+        Assert.That(await assignerControlledProfileStore.ExistsAsync(new MenschId(idCandidate)), Is.False);
     }
 
     [Test]

@@ -1,10 +1,11 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 
 namespace Mensch.Id.API.Workflow.Email
 {
     public interface IEmailSender
     {
         Task SendVerificationEmail(VerificationEmail email);
+        Task SendExternalServiceVerificationEmail(ExternalServiceVerificationEmail email);
         Task SendPasswordResetEmail(PasswordResetEmail email);
         Task SendAssignerAccountApprovedEmail(AssignerAccountRequestApprovedEmail email);
         Task SendOrderDigestEmail(OrderDigestEmail email);

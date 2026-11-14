@@ -31,8 +31,6 @@ public class ServiceChallengeIntegrationTest
 {
     private const string Password = "Password123!";
     private const string MenschId = "19900101-ACDEF";
-    private const string AcceptRedirectUri = "https://service.example.org/accepted";
-    private const string RejectRedirectUri = "https://service.example.org/rejected";
     private static readonly TimeSpan NotificationTimeout = TimeSpan.FromSeconds(10);
     private MenschIdWebApplicationFactory factory;
 
@@ -69,9 +67,6 @@ public class ServiceChallengeIntegrationTest
         var answerResponse = await userClient.PostAsync($"api/service-challenges/{challenge.ChallengeId}/accept", null);
 
         Assert.That(answerResponse.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-        var answer = JObject.Parse(await answerResponse.Content.ReadAsStringAsync());
-        Assert.That(answer["redirectUri"]!.Value<string>(), Does.StartWith(AcceptRedirectUri));
-        Assert.That(answer["redirectUri"]!.Value<string>(), Does.Contain("state=service-state"));
         var completedTask = await Task.WhenAny(creatingServiceNotification.Task, Task.Delay(NotificationTimeout));
         Assert.That(completedTask, Is.SameAs(creatingServiceNotification.Task));
         var pushedResult = await creatingServiceNotification.Task;
@@ -107,7 +102,7 @@ public class ServiceChallengeIntegrationTest
     }
 
     [Test]
-    public async Task RejectedChallengeRedirectsToRejectUriAndHasRejectedResult()
+    public async Task RejectedChallengeHasRejectedResult()
     {
         var service = await CreateActiveService();
         var userClient = await CreateLoggedInUserClient();
@@ -115,8 +110,7 @@ public class ServiceChallengeIntegrationTest
 
         var answerResponse = await userClient.PostAsync($"api/service-challenges/{challenge.ChallengeId}/reject", null);
 
-        var answer = JObject.Parse(await answerResponse.Content.ReadAsStringAsync());
-        Assert.That(answer["redirectUri"]!.Value<string>(), Does.StartWith(RejectRedirectUri));
+        Assert.That(answerResponse.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         var result = await PollResult(service, challenge.ChallengeId);
         var tokenValidation = await ValidateResultToken(result.ResultToken, service.Service.ClientId);
         Assert.That(tokenValidation.Claims[ServiceChallengeResultTokenClaims.Result], Is.EqualTo(ServiceChallengeResultTokenClaims.Rejected));
@@ -253,13 +247,14 @@ public class ServiceChallengeIntegrationTest
             Id = Guid.NewGuid(),
             ClientId = Guid.NewGuid(),
             DisplayName = "Test Service",
-            ContactInformation = "service@example.org",
-            AcceptRedirectUri = AcceptRedirectUri,
-            RejectRedirectUri = RejectRedirectUri,
+            Email = "service@example.org",
+            IsEmailVerified = true,
+            ContactInformation = "Test contact",
             Status = ExternalServiceStatus.Active,
             CreatedTimestamp = DateTime.UtcNow
         };
-        var clientSecret = await clientRegistrar.RegisterWithNewSecret(service);
+        var clientSecret = await clientRegistrar.Register(service);
+        await clientRegistrar.Enable(service);
         await serviceStore.StoreAsync(service);
         return new RegisteredService
         {

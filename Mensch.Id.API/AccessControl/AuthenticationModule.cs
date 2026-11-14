@@ -64,6 +64,8 @@ public class AuthenticationModule : IAuthenticationModule
                 continue;
             if (account is LocalAccount { IsEmailVerified: false })
                 return AuthenticationResult.Failed(AuthenticationErrorType.EmailNotVerified);
+            if (account is AssignerAccount { IsActivated: false })
+                return AuthenticationResult.Failed(AuthenticationErrorType.AccountDeactivated);
             return BuildAuthenticationResult(account);
         }
         return AuthenticationResult.Failed(isAnyAccountLocked ? AuthenticationErrorType.AccountLocked : AuthenticationErrorType.InvalidUserOrPassword);
@@ -85,6 +87,8 @@ public class AuthenticationModule : IAuthenticationModule
             return AuthenticationResult.Failed(AuthenticationErrorType.InvalidUserOrPassword);
         if (account is LocalAccount { IsEmailVerified: false })
             return AuthenticationResult.Failed(AuthenticationErrorType.EmailNotVerified);
+        if (account is AssignerAccount { IsActivated: false })
+            return AuthenticationResult.Failed(AuthenticationErrorType.AccountDeactivated);
         return BuildAuthenticationResult(account);
     }
 

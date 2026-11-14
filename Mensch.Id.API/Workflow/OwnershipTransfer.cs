@@ -12,12 +12,12 @@ public class OwnershipTransfer
 {
     private readonly IAccountStore accountStore;
     private readonly IStore<Person> personStore;
-    private readonly IStore<AssignerControlledProfile> assignerControlledProfileStore;
+    private readonly IStore<AssignerControlledProfile, MenschId> assignerControlledProfileStore;
 
     public OwnershipTransfer(
         IAccountStore accountStore,
         IStore<Person> personStore,
-        IStore<AssignerControlledProfile> assignerControlledProfileStore)
+        IStore<AssignerControlledProfile, MenschId> assignerControlledProfileStore)
     {
         this.accountStore = accountStore;
         this.personStore = personStore;
@@ -40,10 +40,10 @@ public class OwnershipTransfer
         if (personAccount.PersonId != null)
             return OwnershipTransferResult.Failed(OwnershipTransferStatus.AccountAlreadyHasProfile);
 
-        var assignerControlledProfile = await assignerControlledProfileStore.GetByIdAsync(menschId);
+        var assignerControlledProfile = await assignerControlledProfileStore.GetByIdAsync(menschIdValue);
         if (assignerControlledProfile == null)
             return OwnershipTransferResult.Failed(OwnershipTransferStatus.ProfileNotFound);
-        if (!IsOwnershipSecretValid(ownershipSecret, assignerControlledProfile.OwnershipSecret))
+        if (assignerControlledProfile.OwnershipSecret.Value == null || assignerControlledProfile.OwnershipSecret != ownershipSecret)
             return OwnershipTransferResult.Failed(OwnershipTransferStatus.InvalidOwnershipSecret);
         var owningAccounts = await accountStore.GetAllForMenschIdAsync(menschId);
         if (owningAccounts.Any())
@@ -57,17 +57,7 @@ public class OwnershipTransfer
         }
         personAccount.PersonId = menschId;
         await accountStore.StoreAsync(personAccount);
-        await assignerControlledProfileStore.DeleteAsync(menschId);
+        await assignerControlledProfileStore.DeleteAsync(menschIdValue);
         return OwnershipTransferResult.Success(profile);
-    }
-
-    private static bool IsOwnershipSecretValid(
-        OwnershipSecret providedSecret,
-        string storedSecret)
-    {
-        if (!OwnershipSecret.IsValid(storedSecret))
-            return false;
-        var expectedSecret = new OwnershipSecret(storedSecret);
-        return providedSecret == expectedSecret;
     }
 }

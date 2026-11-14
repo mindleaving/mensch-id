@@ -338,12 +338,12 @@ public class ApiIntegrationTest
         await Login(assignerClient, "clinic");
         var menschId = await CreateIdAsAssigner(assignerClient);
         var ownershipSecret = factory.AssignerControlledProfileStore.Items.Single().OwnershipSecret;
-        var body = new TakeControlBody { Id = new MenschId(menschId), OwnershipSecret = new OwnershipSecret(ownershipSecret) };
+        var body = new TakeControlBody { Id = new MenschId(menschId), OwnershipSecret = ownershipSecret };
 
         var response = await assignerClient.PostAsync("api/profiles/take-control", ToJsonContent(body));
 
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Forbidden));
-        Assert.That(await factory.AssignerControlledProfileStore.ExistsAsync(menschId), Is.True);
+        Assert.That(await factory.AssignerControlledProfileStore.ExistsAsync(new MenschId(menschId)), Is.True);
     }
 
     [Test]
@@ -371,7 +371,7 @@ public class ApiIntegrationTest
         Assert.That(wrongSecretResponse.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
         Assert.That(takeControlResponse.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         Assert.That(storedUser.PersonId, Is.EqualTo(menschId));
-        Assert.That(await factory.AssignerControlledProfileStore.ExistsAsync(menschId), Is.False);
+        Assert.That(await factory.AssignerControlledProfileStore.ExistsAsync(new MenschId(menschId)), Is.False);
         Assert.That(meResponse.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         Assert.That(meJson["id"]!.Value<string>(), Is.EqualTo(menschId));
         Assert.That(meJson["loginProviders"]!.Values<string>(), Is.EqualTo(new[] { "local" }));
@@ -391,7 +391,7 @@ public class ApiIntegrationTest
         await Login(secondUserClient, "jane@example.org");
         var menschId = await CreateIdAsAssigner(assignerClient);
         var ownershipSecret = factory.AssignerControlledProfileStore.Items.Single().OwnershipSecret;
-        var body = new TakeControlBody { Id = new MenschId(menschId), OwnershipSecret = new OwnershipSecret(ownershipSecret) };
+        var body = new TakeControlBody { Id = new MenschId(menschId), OwnershipSecret = ownershipSecret };
 
         var firstResponse = await firstUserClient.PostAsync("api/profiles/take-control", ToJsonContent(body));
         var secondResponse = await secondUserClient.PostAsync("api/profiles/take-control", ToJsonContent(body));

@@ -413,11 +413,11 @@ public class OidcFlowIntegrationTest
         var account = await CreateVerifiedUser("joe@example.org");
         var tokens = await RunAuthorizationCodeFlow("joe@example.org");
         var personIdBefore = await GetPersonIdFromAccessToken(tokens.AccessToken);
-        var assignerControlledProfile = AssignerControlledProfileFactory.Create("20000101-ACDEF", "assigner");
+        var assignerControlledProfile = AssignerControlledProfileFactory.Create(new MenschId("20000101-ACDEF"), "assigner");
         await factory.AssignerControlledProfileStore.StoreAsync(assignerControlledProfile);
         using var app = CreateClient();
         app.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokens.AccessToken);
-        var body = new TakeControlBody { Id = new MenschId("20000101-ACDEF"), OwnershipSecret = new OwnershipSecret(assignerControlledProfile.OwnershipSecret) };
+        var body = new TakeControlBody { Id = new MenschId("20000101-ACDEF"), OwnershipSecret = assignerControlledProfile.OwnershipSecret };
         var bodyContent = new StringContent(JsonConvert.SerializeObject(body), Encoding.UTF8, "application/json");
 
         var takeControlResponse = await app.PostAsync("api/profiles/take-control", bodyContent);

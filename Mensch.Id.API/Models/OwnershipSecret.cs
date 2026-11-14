@@ -5,11 +5,14 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Helpers.Converters;
+using Mensch.Id.API.Storage;
+using MongoDB.Bson.Serialization.Attributes;
 using Newtonsoft.Json;
 
 namespace Mensch.Id.API.Models;
 
 [JsonConverter(typeof(ValidatedStringValueJsonConverter<OwnershipSecret>))]
+[BsonSerializer(typeof(ValidatedStringValueBsonSerializer<OwnershipSecret>))]
 [TypeConverter(typeof(ValidatedStringValueTypeConverter<OwnershipSecret>))]
 public readonly partial struct OwnershipSecret : IEquatable<OwnershipSecret>, IValidatedStringValue<OwnershipSecret>
 {

@@ -28,6 +28,13 @@ namespace Mensch.Id.API.Workflow.Email
             await SendMessage(message);
         }
 
+        public async Task SendExternalServiceVerificationEmail(
+            ExternalServiceVerificationEmail email)
+        {
+            var message = emailComposer.Compose(email);
+            await SendMessage(message);
+        }
+
         public async Task SendPasswordResetEmail(
             PasswordResetEmail email)
         {

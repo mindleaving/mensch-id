@@ -41,7 +41,7 @@ public class MenschIdWebApplicationFactory : WebApplicationFactory<Program>
     public InMemoryAccountStore AccountStore { get; } = new(TestKeys.CreateObscurer());
     public InMemoryIdStore IdStore { get; } = new();
     public InMemoryStore<Person> PersonStore { get; } = new();
-    public InMemoryStore<AssignerControlledProfile> AssignerControlledProfileStore { get; } = new();
+    public InMemoryAssignerControlledProfileStore AssignerControlledProfileStore { get; } = new();
     public InMemoryStore<Verification> VerificationStore { get; } = new();
     public InMemoryStore<MenschIdChallenge> ChallengeStore { get; } = new();
     public CapturingEmailSender EmailSender { get; } = new();
@@ -102,7 +102,12 @@ public class MenschIdWebApplicationFactory : WebApplicationFactory<Program>
         services.AddSingleton<IIdStore>(IdStore);
         ReplaceTypeStore<MenschIdReservation>(services, IdStore);
         ReplaceTypeStore<Person>(services, PersonStore);
-        ReplaceTypeStore<AssignerControlledProfile>(services, AssignerControlledProfileStore);
+        services.RemoveAll<IAssignerControlledProfileStore>();
+        services.RemoveAll<IStore<AssignerControlledProfile, MenschId>>();
+        services.RemoveAll<IReadonlyStore<AssignerControlledProfile, MenschId>>();
+        services.AddSingleton<IAssignerControlledProfileStore>(AssignerControlledProfileStore);
+        services.AddSingleton<IStore<AssignerControlledProfile, MenschId>>(AssignerControlledProfileStore);
+        services.AddSingleton<IReadonlyStore<AssignerControlledProfile, MenschId>>(AssignerControlledProfileStore);
         ReplaceTypeStore<Verification>(services, VerificationStore);
         ReplaceTypeStore<AssignerAccountRequest>(services, new InMemoryStore<AssignerAccountRequest>());
         ReplaceTypeStore<MenschIdChallenge>(services, ChallengeStore);

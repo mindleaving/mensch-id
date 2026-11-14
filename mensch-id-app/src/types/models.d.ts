@@ -137,9 +137,9 @@ export namespace Models {
         interface ExternalService extends Models.IId<string> {
             clientId: string;
             displayName: string;
+            email: string;
+            isEmailVerified: boolean;
             contactInformation: string;
-            acceptRedirectUri: string;
-            rejectRedirectUri: string;
             status: Enums.ExternalServiceStatus;
             createdTimestamp: string;
             activatedTimestamp?: string | null;
@@ -151,9 +151,14 @@ export namespace Models {
         }
         interface ExternalServiceRegistration {
             displayName: string;
+            email: string;
             contactInformation: string;
-            acceptRedirectUri: string;
-            rejectRedirectUri: string;
+        }
+        interface ExternalServiceRegistrationResponse extends Models.ExternalServices.ExternalServiceCredentials {
+            id: string;
+        }
+        interface ExternalServiceSecretRotationResponse {
+            client_secret: string;
         }
         interface ServiceChallenge extends Models.IId<string> {
             serviceId: string;
@@ -165,9 +170,6 @@ export namespace Models {
             expiresAt: string;
             answeredTimestamp?: string | null;
             resultToken: string;
-        }
-        interface ServiceChallengeAnswerResponse {
-            redirectUri: string;
         }
         interface ServiceChallengeCreationRequest extends Models.ExternalServices.ExternalServiceCredentials {
             mensch_id: string;
@@ -204,6 +206,7 @@ export namespace Models {
             logoId: string;
             logoImageType: string;
             contact: Models.Contact;
+            isActivated: boolean;
         }
         interface ExternalAccount extends Models.AccessControl.PersonAccount {
             loginProvider: string;

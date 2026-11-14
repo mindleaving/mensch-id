@@ -46,13 +46,23 @@ export class ApiClient {
         return await this.send(path, options);
     };
 
+    postWithoutResponse = async (path: string, body?: unknown): Promise<void> => {
+        const response = await this.request(path, { method: 'POST', body: body });
+        await this.throwIfNotSuccessful(response);
+    };
+
     private requestJson = async <T>(path: string, options: ApiRequestOptions): Promise<T> => {
         const response = await this.request(path, options);
-        if(!response.ok) {
-            const errorText = await response.text();
-            throw new ApiError(response.status, errorText || response.statusText);
-        }
+        await this.throwIfNotSuccessful(response);
         return await response.json() as T;
+    };
+
+    private throwIfNotSuccessful = async (response: Response): Promise<void> => {
+        if(response.ok) {
+            return;
+        }
+        const errorText = await response.text();
+        throw new ApiError(response.status, errorText || response.statusText);
     };
 
     private send = async (path: string, options: ApiRequestOptions): Promise<Response> => {

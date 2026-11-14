@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using MimeKit;
 
@@ -16,6 +16,14 @@ namespace Mensch.Id.API.Workflow.Email
 
         public Task SendVerificationEmail(
             VerificationEmail email)
+        {
+            var message = emailComposer.Compose(email);
+            WriteToConsole(message);
+            return Task.CompletedTask;
+        }
+
+        public Task SendExternalServiceVerificationEmail(
+            ExternalServiceVerificationEmail email)
         {
             var message = emailComposer.Compose(email);
             WriteToConsole(message);

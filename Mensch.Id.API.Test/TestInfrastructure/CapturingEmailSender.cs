@@ -8,6 +8,13 @@ public class CapturingEmailSender : IEmailSender
 {
     public ConcurrentBag<VerificationEmail> VerificationEmails { get; } = new();
     public ConcurrentBag<PasswordResetEmail> PasswordResetEmails { get; } = new();
+    public ConcurrentBag<ExternalServiceVerificationEmail> ExternalServiceVerificationEmails { get; } = new();
+
+    public Task SendExternalServiceVerificationEmail(ExternalServiceVerificationEmail email)
+    {
+        ExternalServiceVerificationEmails.Add(email);
+        return Task.CompletedTask;
+    }
 
     public Task SendVerificationEmail(VerificationEmail email)
     {

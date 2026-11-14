@@ -87,6 +87,7 @@ public class AccountTokenService : IAccountTokenService
         return purpose switch
         {
             AccountTokenPurpose.EmailVerification => EmailVerificationLifetime,
+            AccountTokenPurpose.ExternalServiceEmailVerification => EmailVerificationLifetime,
             AccountTokenPurpose.PasswordReset => PasswordResetLifetime,
             _ => throw new ArgumentOutOfRangeException(nameof(purpose), purpose, null)
         };

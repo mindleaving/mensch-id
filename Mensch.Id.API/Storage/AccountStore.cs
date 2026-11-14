@@ -104,6 +104,11 @@ namespace Mensch.Id.API.Storage
                 .ToList();
         }
 
+        public Task<List<AssignerAccount>> GetAllAssignersAsync()
+        {
+            return collection.OfType<AssignerAccount>().Find(FilterDefinition<AssignerAccount>.Empty).ToListAsync();
+        }
+
         public async Task<ProfessionalAccount> GetProfessionalByUsernameAsync(
             string username)
         {

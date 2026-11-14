@@ -77,6 +77,12 @@ public class InMemoryAccountStore : InMemoryStore<Account>, IAccountStore
         return Task.FromResult(accounts);
     }
 
+    public Task<List<AssignerAccount>> GetAllAssignersAsync()
+    {
+        var assigners = items.Values.OfType<AssignerAccount>().ToList();
+        return Task.FromResult(assigners);
+    }
+
     public Task<ProfessionalAccount> GetProfessionalByUsernameAsync(string username)
     {
         var account = items.Values.OfType<ProfessionalAccount>().FirstOrDefault(x => x.Username == username);

@@ -56,7 +56,9 @@ namespace Mensch.Id.API.Setups
             SetupTypeStores<Account>(services);
             services.AddScoped<IAccountStore, AccountStore>();
             SetupTypeStores<AssignerAccountRequest>(services);
-            SetupTypeStores<AssignerControlledProfile>(services);
+            services.AddScoped<IAssignerControlledProfileStore, AssignerControlledProfileStore>();
+            services.AddScoped<IStore<AssignerControlledProfile, MenschId>>(provider => provider.GetRequiredService<IAssignerControlledProfileStore>());
+            services.AddScoped<IReadonlyStore<AssignerControlledProfile, MenschId>>(provider => provider.GetRequiredService<IAssignerControlledProfileStore>());
             services.Configure<FileStoreSettings>(configuration.GetSection(FileStoreSettings.AppSettingsSectionName));
             services.AddScoped<IFilesStore, FilesStore>();
             services.AddScoped<IIdStore, IdStore>();
