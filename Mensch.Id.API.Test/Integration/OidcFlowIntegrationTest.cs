@@ -35,6 +35,7 @@ public class OidcFlowIntegrationTest
     {
         public string AccessToken { get; init; }
         public string RefreshToken { get; init; }
+        public string IdToken { get; init; }
     }
 
     [SetUp]
@@ -130,13 +131,21 @@ public class OidcFlowIntegrationTest
         return new TokenSet
         {
             AccessToken = json["access_token"]?.Value<string>(),
-            RefreshToken = json["refresh_token"]?.Value<string>()
+            RefreshToken = json["refresh_token"]?.Value<string>(),
+            IdToken = json["id_token"]?.Value<string>()
         };
     }
 
     private async Task<TokenSet> RunAuthorizationCodeFlow(string email)
     {
         using var browser = CreateClient();
+        return await RunAuthorizationCodeFlow(email, browser);
+    }
+
+    private async Task<TokenSet> RunAuthorizationCodeFlow(
+        string email,
+        HttpClient browser)
+    {
         var (verifier, challenge) = CreatePkcePair();
         var authorizeUrl = BuildAuthorizeUrl(challenge);
 
@@ -420,6 +429,76 @@ public class OidcFlowIntegrationTest
         Assert.That(personIdBefore, Is.Null);
         Assert.That(personIdAfter, Is.EqualTo("20000101-ACDEF"));
         Assert.That(account.PersonId, Is.EqualTo("20000101-ACDEF"));
+    }
+
+    private static string BuildEndSessionUrl(string idTokenHint)
+    {
+        var parameters = new Dictionary<string, string>
+        {
+            ["client_id"] = ClientId,
+            ["post_logout_redirect_uri"] = "menschid://auth/logout"
+        };
+        if (idTokenHint != null)
+            parameters["id_token_hint"] = idTokenHint;
+        return QueryHelpers.AddQueryString("api/oidc/endsession", parameters);
+    }
+
+    [Test]
+    public async Task EndSessionWithMatchingIdTokenHintEndsBrowserSession()
+    {
+        await CreateVerifiedUser("joe@example.org");
+        using var browser = CreateClient();
+        var tokens = await RunAuthorizationCodeFlow("joe@example.org", browser);
+
+        var endSessionResponse = await browser.GetAsync(BuildEndSessionUrl(tokens.IdToken));
+        var isLoggedInResponse = await browser.GetAsync("api/accounts/is-logged-in");
+
+        Assert.That(tokens.IdToken, Is.Not.Null.And.Not.Empty);
+        Assert.That(endSessionResponse.StatusCode, Is.EqualTo(HttpStatusCode.Redirect));
+        Assert.That(endSessionResponse.Headers.Location!.ToString(), Does.StartWith("menschid://auth/logout"));
+        Assert.That(isLoggedInResponse.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized));
+    }
+
+    [Test]
+    public async Task EndSessionWithoutIdTokenHintDoesNotEndBrowserSession()
+    {
+        await CreateVerifiedUser("joe@example.org");
+        using var browser = CreateClient();
+        await Login(browser, "joe@example.org");
+
+        await browser.GetAsync(BuildEndSessionUrl(null));
+        var isLoggedInResponse = await browser.GetAsync("api/accounts/is-logged-in");
+
+        Assert.That(isLoggedInResponse.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+    }
+
+    [Test]
+    public async Task EndSessionWithIdTokenOfOtherAccountDoesNotEndBrowserSession()
+    {
+        await CreateVerifiedUser("joe@example.org");
+        await CreateVerifiedUser("eve@example.org");
+        var attackerTokens = await RunAuthorizationCodeFlow("eve@example.org");
+        using var victimBrowser = CreateClient();
+        await Login(victimBrowser, "joe@example.org");
+
+        await victimBrowser.GetAsync(BuildEndSessionUrl(attackerTokens.IdToken));
+        var isLoggedInResponse = await victimBrowser.GetAsync("api/accounts/is-logged-in");
+
+        Assert.That(isLoggedInResponse.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+    }
+
+    [Test]
+    public async Task EndSessionWithForgedIdTokenHintDoesNotEndBrowserSession()
+    {
+        await CreateVerifiedUser("joe@example.org");
+        using var browser = CreateClient();
+        await Login(browser, "joe@example.org");
+        const string ForgedToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ4In0.c2lnbmF0dXJl";
+
+        await browser.GetAsync(BuildEndSessionUrl(ForgedToken));
+        var isLoggedInResponse = await browser.GetAsync("api/accounts/is-logged-in");
+
+        Assert.That(isLoggedInResponse.StatusCode, Is.EqualTo(HttpStatusCode.OK));
     }
 
     [Test]

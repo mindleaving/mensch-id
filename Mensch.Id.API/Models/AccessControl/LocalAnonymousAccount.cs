@@ -1,3 +1,4 @@
+using System;
 using MongoDB.Bson.Serialization.Attributes;
 using Newtonsoft.Json;
 using TypescriptGenerator.Attributes;
@@ -11,4 +12,10 @@ public class LocalAnonymousAccount : PersonAccount, IAccountWithPassword
     [JsonIgnore]
     [TypescriptIsOptional]
     public string PasswordHash { get; set; }
+    [JsonIgnore]
+    [TypescriptIsOptional]
+    public int FailedLoginAttempts { get; set; }
+    [JsonIgnore]
+    [TypescriptIsOptional]
+    public DateTime? LockoutEnd { get; set; }
 }

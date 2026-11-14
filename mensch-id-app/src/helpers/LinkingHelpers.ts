@@ -1,7 +1,8 @@
-const AuthRedirectPaths = [ '/auth/callback', '/auth/logout' ];
+const AuthRedirectPaths = [ '/auth/callback', '/auth/logout', '/app/auth/callback', '/app/auth/logout' ];
 
 const extractPath = (pathOrUrl: string): string => {
-    const withoutScheme = pathOrUrl.replace(/^[a-z][a-z0-9+.-]*:\/*/i, '/');
+    const withoutHost = pathOrUrl.replace(/^https?:\/\/[^/?#]*/i, '');
+    const withoutScheme = withoutHost.replace(/^[a-z][a-z0-9+.-]*:\/*/i, '/');
     const pathEnd = withoutScheme.search(/[?#]/);
     const path = pathEnd >= 0 ? withoutScheme.substring(0, pathEnd) : withoutScheme;
     return path.startsWith('/') ? path : `/${path}`;

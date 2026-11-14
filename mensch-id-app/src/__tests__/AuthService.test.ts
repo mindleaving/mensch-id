@@ -107,4 +107,18 @@ describe('AuthService', () => {
         expect(storage.value).toBeNull();
         expect(authService.hasAccessToken()).toBe(false);
     });
+    it('stores the id token and returns it when the session ends', async () => {
+        const storage = createMemoryStorage();
+        const refreshTokens = jest.fn().mockResolvedValue({ accessToken: 'access-2', refreshToken: 'refresh-2', idToken: 'id-2' });
+        const authService = createAuthService(storage, { refreshTokens, revokeRefreshToken: jest.fn().mockResolvedValue(undefined) });
+        await authService.startSession({ accessToken: 'access-1', refreshToken: 'refresh-1', idToken: 'id-1' });
+        expect(storage.idToken).toBe('id-1');
+
+        await authService.refreshAccessToken();
+        const idToken = await authService.endSession();
+
+        expect(idToken).toBe('id-2');
+        expect(storage.idToken).toBeNull();
+        expect(storage.value).toBeNull();
+    });
 });

@@ -61,6 +61,7 @@ namespace Mensch.Id.API.Setups
             SetupTypeStores<Person>(services);
             SetupTypeStores<Product>(services);
             SetupTypeStores<Verification>(services);
+            services.AddHostedService<MongoIndexInitializer>();
         }
 
         private static void SetupTypeStores<T>(IServiceCollection services) where T: IId

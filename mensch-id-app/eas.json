@@ -8,7 +8,8 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://localhost:44321"
+        "EXPO_PUBLIC_API_URL": "https://localhost:44321",
+        "EXPO_PUBLIC_OIDC_REDIRECT_MODE": "customScheme"
       }
     },
     "preview": {

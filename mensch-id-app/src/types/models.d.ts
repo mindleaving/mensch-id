@@ -156,6 +156,8 @@ export namespace Models {
         }
         interface IAccountWithPassword {
             passwordHash: string;
+            failedLoginAttempts: number;
+            lockoutEnd?: string | null;
         }
         interface LocalAccount extends Models.AccessControl.LocalAnonymousAccount {
             email: string;

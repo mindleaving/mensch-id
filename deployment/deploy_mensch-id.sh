@@ -7,7 +7,7 @@ sudo cp /var/www/Mensch.Id.API/appsettings.json.bak /var/www/Mensch.Id.API/appse
 sudo rm -rf publish
 
 unzip -q Mensch.Id.Frontend.zip
-sudo cp -R build/* /var/www/Mensch.Id.Frontend/
+sudo cp -R build/. /var/www/Mensch.Id.Frontend/
 sudo rm -rf build
 rm -rf Mensch.Id*.zip
 sudo chmod 777 -R /var/www/Mensch.Id*

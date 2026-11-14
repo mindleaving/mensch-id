@@ -1,15 +1,23 @@
 import { AuthService } from '../auth/AuthService';
 import { RefreshTokenStorage, TokenEndpoints } from '../types/frontendTypes';
 
-export const createMemoryStorage = (initialRefreshToken: string | null = null): RefreshTokenStorage & { value: string | null } => {
+export const createMemoryStorage = (
+    initialRefreshToken: string | null = null
+): RefreshTokenStorage & { value: string | null; idToken: string | null } => {
     const storage = {
         value: initialRefreshToken,
+        idToken: null as string | null,
         load: async () => storage.value,
         save: async (refreshToken: string) => {
             storage.value = refreshToken;
         },
+        loadIdToken: async () => storage.idToken,
+        saveIdToken: async (idToken: string) => {
+            storage.idToken = idToken;
+        },
         clear: async () => {
             storage.value = null;
+            storage.idToken = null;
         }
     };
     return storage;

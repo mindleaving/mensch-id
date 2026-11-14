@@ -1,6 +1,6 @@
 import * as Crypto from 'expo-crypto';
 import * as LocalAuthentication from 'expo-local-authentication';
-import * as SecureStore from 'expo-secure-store';
+import { loadDeviceOnlyItem, saveDeviceOnlyItem } from '../helpers/SecureStorageHelpers';
 import { AppLockDependencies, AppLockSettings } from '../types/frontendTypes';
 
 const AppLockSettingsKey = 'mensch-id.app-lock';
@@ -27,14 +27,14 @@ const hashPin = async (pin: string, salt: string): Promise<string> => {
 export const nativeAppLockDependencies: AppLockDependencies = {
     storage: {
         load: async () => {
-            const json = await SecureStore.getItemAsync(AppLockSettingsKey);
+            const json = await loadDeviceOnlyItem(AppLockSettingsKey);
             if(!json) {
                 return { ...DefaultSettings };
             }
             return { ...DefaultSettings, ...JSON.parse(json) as Partial<AppLockSettings> };
         },
         save: async (settings: AppLockSettings) => {
-            await SecureStore.setItemAsync(AppLockSettingsKey, JSON.stringify(settings));
+            await saveDeviceOnlyItem(AppLockSettingsKey, JSON.stringify(settings));
         }
     },
     hashPin: hashPin,

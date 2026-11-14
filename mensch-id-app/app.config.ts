@@ -1,5 +1,9 @@
 import { ExpoConfig } from 'expo/config';
 
+const DefaultApiBaseUrl = 'https://mensch.id';
+const AppLinkPathPrefix = '/app/auth';
+const appLinkHost = new URL(process.env.EXPO_PUBLIC_API_URL ?? DefaultApiBaseUrl).host;
+
 const config: ExpoConfig = {
     name: 'mensch.ID',
     slug: 'mensch-id',
@@ -10,13 +14,33 @@ const config: ExpoConfig = {
     userInterfaceStyle: 'automatic',
     ios: {
         bundleIdentifier: 'id.mensch.app',
+        deploymentTarget: '17.4',
         supportsTablet: true,
+        associatedDomains: [
+            `applinks:${appLinkHost}`,
+            `webcredentials:${appLinkHost}`
+        ],
         infoPlist: {
             ITSAppUsesNonExemptEncryption: false
         }
     },
     android: {
         package: 'id.mensch.app',
+        allowBackup: false,
+        intentFilters: [
+            {
+                action: 'VIEW',
+                autoVerify: true,
+                data: [
+                    {
+                        scheme: 'https',
+                        host: appLinkHost,
+                        pathPrefix: AppLinkPathPrefix
+                    }
+                ],
+                category: [ 'BROWSABLE', 'DEFAULT' ]
+            }
+        ],
         adaptiveIcon: {
             backgroundColor: '#1e1e1e',
             foregroundImage: './assets/android-icon-foreground.png',

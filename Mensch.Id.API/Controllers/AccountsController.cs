@@ -17,6 +17,8 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using Mensch.Id.API.Setups;
 using IAuthenticationModule = Mensch.Id.API.AccessControl.IAuthenticationModule;
 
 namespace Mensch.Id.API.Controllers
@@ -91,6 +93,7 @@ namespace Mensch.Id.API.Controllers
 
 
         [AllowAnonymous]
+        [EnableRateLimiting(RateLimitingSetup.CredentialsPolicy)]
         [HttpPost("resend-verification-email")]
         public async Task<IActionResult> ResendVerificationEmail(
             [FromBody] ResendVerificationBody body)
@@ -149,6 +152,7 @@ namespace Mensch.Id.API.Controllers
         }
 
         [AllowAnonymous]
+        [EnableRateLimiting(RateLimitingSetup.CredentialsPolicy)]
         [HttpPost("request-password-reset")]
         public async Task<IActionResult> RequestPasswordResetEmail(
             [FromBody] ResetPasswordRequest body)
@@ -170,6 +174,7 @@ namespace Mensch.Id.API.Controllers
         }
 
         [AllowAnonymous]
+        [EnableRateLimiting(RateLimitingSetup.CredentialsPolicy)]
         [HttpPost("{accountId}/reset-password")]
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword(
@@ -209,6 +214,7 @@ namespace Mensch.Id.API.Controllers
 
         [Authorize]
         [AllowAnonymous]
+        [EnableRateLimiting(RateLimitingSetup.CredentialsPolicy)]
         [HttpPost("register-local")]
         public async Task<IActionResult> RegisterLocalAccount(
             [FromBody] RegistrationInformation body)
@@ -267,6 +273,7 @@ namespace Mensch.Id.API.Controllers
 
 
         [AllowAnonymous]
+        [EnableRateLimiting(RateLimitingSetup.CredentialsPolicy)]
         [HttpPost("login")]
         public async Task<IActionResult> LocalLogin(
             [FromBody] LoginInformation loginInformation)
@@ -388,6 +395,7 @@ namespace Mensch.Id.API.Controllers
 
 
         [Authorize]
+        [EnableRateLimiting(RateLimitingSetup.CredentialsPolicy)]
         [HttpPost("link/local")]
         public async Task<IActionResult> LinkToLocalAccount(LoginInformation loginInformation)
         {
@@ -433,6 +441,7 @@ namespace Mensch.Id.API.Controllers
         }
 
         [Authorize]
+        [EnableRateLimiting(RateLimitingSetup.CredentialsPolicy)]
         [HttpPost("{accountId}/change-password")]
         public async Task<IActionResult> ChangePassword(
             [FromRoute] string accountId,
@@ -449,6 +458,8 @@ namespace Mensch.Id.API.Controllers
             {
                 switch (authenticationResult.Error)
                 {
+                    case AuthenticationErrorType.AccountLocked:
+                        return StatusCode((int)HttpStatusCode.Locked, authenticationResult.Error);
                     case AuthenticationErrorType.AuthenticationMethodNotAvailable:
                         return StatusCode((int)HttpStatusCode.ServiceUnavailable);
                     case AuthenticationErrorType.InvalidUserOrPassword:
