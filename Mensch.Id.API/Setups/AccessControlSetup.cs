@@ -47,6 +47,7 @@ public class AccessControlSetup : ISetup
         services.AddSingleton<IPasswordHasher<IAccountWithPassword>, PasswordHasher<IAccountWithPassword>>();
         services.AddSingleton<IAccountTokenService, AccountTokenService>();
         services.AddScoped<OidcAuthenticationEvents>();
+        services.AddScoped<ActiveSessionManager>();
 
         var oidcProviders = configuration.GetSection(OidcProviderSettings.AppSettingsSectionName).Get<List<OidcProviderSettings>>() ?? [];
         var oidcProviderRegistry = new OidcProviderRegistry(oidcProviders);
@@ -101,6 +102,7 @@ public class AccessControlSetup : ISetup
         options.Cookie.SameSite = SameSiteMode.Lax;
         options.ExpireTimeSpan = SessionLifetime;
         options.SlidingExpiration = true;
+        options.SessionStore = new MongoTicketStore(SessionLifetime);
         options.Events.OnRedirectToLogin = context =>
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
@@ -168,6 +170,8 @@ public class AccessControlSetup : ISetup
                 {
                     options.UseLocalServer();
                     options.UseAspNetCore();
+                    options.EnableAuthorizationEntryValidation();
+                    options.EnableTokenEntryValidation();
                 });
         services.AddHostedService<OpenIddictClientSeeder>();
     }

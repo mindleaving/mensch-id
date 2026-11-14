@@ -224,5 +224,129 @@ export namespace Models {
         interface ProfessionalAccount extends Models.AccessControl.Account, Models.AccessControl.IAccountWithPassword {
             username: string;
         }
+        interface WebSession extends Models.IId<string> {
+            accountId: string;
+            serializedTicket: System.Byte[];
+            userAgent: string;
+            createdTimestamp: string;
+            lastActivityTimestamp: string;
+            expiresAt: string;
+        }
+    }
+}
+export namespace System {
+    interface Byte extends System.ValueType, System.IConvertible, System.Numerics.IUnsignedNumber<System.Byte>, System.IUtfChar<System.Byte>, System.IBinaryIntegerParseAndFormatInfo<System.Byte> {
+        
+    }
+    interface ValueType {
+        
+    }
+    interface IConvertible {
+        
+    }
+    interface IUtfChar<TSelf> extends System.Numerics.IBinaryInteger<TSelf> {
+        
+    }
+    interface IBinaryIntegerParseAndFormatInfo<TSelf> extends System.Numerics.IBinaryInteger<TSelf>, System.Numerics.IMinMaxValue<TSelf> {
+        isSigned: boolean;
+        maxDigitCount: number;
+        maxHexDigitCount: number;
+        maxValueDiv10: TSelf;
+        overflowMessage: string;
+    }
+    interface IEquatable<T> {
+        
+    }
+    interface ISpanFormattable extends System.IFormattable {
+        
+    }
+    interface ISpanParsable<TSelf> extends System.IParsable<TSelf> {
+        
+    }
+    interface IUtf8SpanFormattable {
+        
+    }
+    interface IUtf8SpanParsable<TSelf> {
+        
+    }
+    interface IFormattable {
+        
+    }
+    interface IParsable<TSelf> {
+        
+    }
+    interface IComparable {
+        
+    }
+    interface IComparable<T> {
+        
+    }
+    export namespace Numerics {
+        interface IUnsignedNumber<TSelf> extends System.Numerics.INumberBase<TSelf> {
+            
+        }
+        interface INumberBase<TSelf> extends System.Numerics.IAdditionOperators<TSelf,TSelf,TSelf>, System.Numerics.IAdditiveIdentity<TSelf,TSelf>, System.Numerics.IDecrementOperators<TSelf>, System.Numerics.IDivisionOperators<TSelf,TSelf,TSelf>, System.IEquatable<TSelf>, System.Numerics.IEqualityOperators<TSelf,TSelf,boolean>, System.Numerics.IIncrementOperators<TSelf>, System.Numerics.IMultiplicativeIdentity<TSelf,TSelf>, System.Numerics.IMultiplyOperators<TSelf,TSelf,TSelf>, System.ISpanFormattable, System.ISpanParsable<TSelf>, System.Numerics.ISubtractionOperators<TSelf,TSelf,TSelf>, System.Numerics.IUnaryPlusOperators<TSelf,TSelf>, System.Numerics.IUnaryNegationOperators<TSelf,TSelf>, System.IUtf8SpanFormattable, System.IUtf8SpanParsable<TSelf> {
+            one: TSelf;
+            radix: number;
+            zero: TSelf;
+        }
+        interface IBinaryInteger<TSelf> extends System.Numerics.IBinaryNumber<TSelf>, System.Numerics.IShiftOperators<TSelf,number,TSelf> {
+            
+        }
+        interface IMinMaxValue<TSelf> {
+            minValue: TSelf;
+            maxValue: TSelf;
+        }
+        interface IAdditionOperators<TSelf,TOther,TResult> {
+            
+        }
+        interface IAdditiveIdentity<TSelf,TResult> {
+            additiveIdentity: TResult;
+        }
+        interface IDecrementOperators<TSelf> {
+            
+        }
+        interface IDivisionOperators<TSelf,TOther,TResult> {
+            
+        }
+        interface IEqualityOperators<TSelf,TOther,TResult> {
+            
+        }
+        interface IIncrementOperators<TSelf> {
+            
+        }
+        interface IMultiplicativeIdentity<TSelf,TResult> {
+            multiplicativeIdentity: TResult;
+        }
+        interface IMultiplyOperators<TSelf,TOther,TResult> {
+            
+        }
+        interface ISubtractionOperators<TSelf,TOther,TResult> {
+            
+        }
+        interface IUnaryPlusOperators<TSelf,TResult> {
+            
+        }
+        interface IUnaryNegationOperators<TSelf,TResult> {
+            
+        }
+        interface IBinaryNumber<TSelf> extends System.Numerics.IBitwiseOperators<TSelf,TSelf,TSelf>, System.Numerics.INumber<TSelf> {
+            allBitsSet: TSelf;
+        }
+        interface IShiftOperators<TSelf,TOther,TResult> {
+            
+        }
+        interface IBitwiseOperators<TSelf,TOther,TResult> {
+            
+        }
+        interface INumber<TSelf> extends System.IComparable, System.IComparable<TSelf>, System.Numerics.IComparisonOperators<TSelf,TSelf,boolean>, System.Numerics.IModulusOperators<TSelf,TSelf,TSelf>, System.Numerics.INumberBase<TSelf> {
+            
+        }
+        interface IComparisonOperators<TSelf,TOther,TResult> extends System.Numerics.IEqualityOperators<TSelf,TOther,TResult> {
+            
+        }
+        interface IModulusOperators<TSelf,TOther,TResult> {
+            
+        }
     }
 }

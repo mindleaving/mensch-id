@@ -67,6 +67,7 @@ namespace Mensch.Id.API.Setups
             SetupTypeStores<Product>(services);
             SetupTypeStores<Verification>(services);
             SetupTypeStores<ExternalService, Guid>(services);
+            SetupTypeStores<WebSession, Guid>(services);
             services.AddScoped<IServiceChallengeStore, ServiceChallengeStore>();
             services.AddScoped<IStore<ServiceChallenge>>(provider => provider.GetRequiredService<IServiceChallengeStore>());
             services.AddScoped<IReadonlyStore<ServiceChallenge>>(provider => provider.GetRequiredService<IServiceChallengeStore>());

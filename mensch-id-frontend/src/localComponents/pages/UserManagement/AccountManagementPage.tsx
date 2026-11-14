@@ -8,6 +8,7 @@ import { buildLoadObjectFunc } from '../../../sharedCommonComponents/helpers/Loa
 import { getLoginProviderDisplayName } from '../../helpers/LoginProviderHelpers';
 import { ViewModels } from '../../types/viewModels';
 import { ChangePasswordForm } from '../../components/ChangePasswordForm';
+import { ActiveSessions } from '../../components/ActiveSessions';
 import { AccountType } from '../../types/enums';
 import { Models } from '../../types/models';
 
@@ -147,6 +148,8 @@ export const AccountManagementPage = (props: AccountManagementPageProps) => {
                 />
             </>
             : null}
+
+            <ActiveSessions />
         </>
     );
 

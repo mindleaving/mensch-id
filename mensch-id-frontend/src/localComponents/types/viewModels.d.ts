@@ -1,4 +1,4 @@
-import { Models } from './models.d';
+import { Models, System } from './models.d';
 import * as Enums from './enums';
 
 export namespace ViewModels {
@@ -33,6 +33,15 @@ export namespace ViewModels {
         state: Enums.ServiceChallengeState;
         createdTimestamp: string;
         expiresAt: string;
+    }
+    interface SessionViewModel {
+        id: string;
+        type: Enums.SessionType;
+        clientName: string;
+        userAgent: string;
+        createdTimestamp?: string | null;
+        lastActivityTimestamp?: string | null;
+        isCurrent: boolean;
     }
     interface SignedAssignerControlledProfile extends Models.AssignerControlledProfile {
         timestamp: string;

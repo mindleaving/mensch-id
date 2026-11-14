@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Mensch.Id.API.Models;
+using Mensch.Id.API.Models.AccessControl;
 using Mensch.Id.API.Models.ExternalServices;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -16,6 +17,7 @@ public class MongoIndexInitializer : IHostedService
     public static readonly TimeSpan ChallengeLifetime = TimeSpan.FromMinutes(5);
     public const string ChallengeExpiryIndexName = "ChallengeExpiry";
     public const string ServiceChallengeExpiryIndexName = "ServiceChallengeExpiry";
+    public const string WebSessionExpiryIndexName = "WebSessionExpiry";
     public static readonly TimeSpan ServiceChallengeRetentionAfterExpiry = TimeSpan.FromHours(1);
     private readonly IMongoDatabase database;
     private readonly ILogger<MongoIndexInitializer> logger;
@@ -34,6 +36,7 @@ public class MongoIndexInitializer : IHostedService
         {
             await EnsureChallengeExpiryIndex(cancellationToken);
             await EnsureServiceChallengeExpiryIndex(cancellationToken);
+            await EnsureWebSessionExpiryIndex(cancellationToken);
         }
         catch (MongoException exception)
         {
@@ -81,6 +84,19 @@ public class MongoIndexInitializer : IHostedService
             ExpireAfter = ServiceChallengeRetentionAfterExpiry
         };
         var indexModel = new CreateIndexModel<ServiceChallenge>(indexKeys, indexOptions);
+        await collection.Indexes.CreateOneAsync(indexModel, cancellationToken: cancellationToken);
+    }
+
+    private async Task EnsureWebSessionExpiryIndex(CancellationToken cancellationToken)
+    {
+        var collection = database.GetCollection<WebSession>(nameof(WebSession));
+        var indexKeys = Builders<WebSession>.IndexKeys.Ascending(x => x.ExpiresAt);
+        var indexOptions = new CreateIndexOptions
+        {
+            Name = WebSessionExpiryIndexName,
+            ExpireAfter = TimeSpan.Zero
+        };
+        var indexModel = new CreateIndexModel<WebSession>(indexKeys, indexOptions);
         await collection.Indexes.CreateOneAsync(indexModel, cancellationToken: cancellationToken);
     }
 

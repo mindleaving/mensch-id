@@ -2,12 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Mensch.Id.API.AccessControl;
 using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Models;
 using Mensch.Id.API.Models.AccessControl;
 using Mensch.Id.API.Storage;
+using Mensch.Id.API.Workflow;
 using Mensch.Id.API.Workflow.ExternalServices;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
@@ -29,6 +31,8 @@ public class AuthorizationController : ControllerBase
     private readonly IClaimBuilder claimBuilder;
     private readonly IOidcProviderRegistry oidcProviderRegistry;
     private readonly ExternalServiceAuthenticator serviceAuthenticator;
+    private readonly IOpenIddictAuthorizationManager authorizationManager;
+    private readonly IOpenIddictApplicationManager applicationManager;
     private readonly string websiteBaseUrl;
 
     public AuthorizationController(
@@ -36,12 +40,16 @@ public class AuthorizationController : ControllerBase
         IClaimBuilder claimBuilder,
         IOidcProviderRegistry oidcProviderRegistry,
         ExternalServiceAuthenticator serviceAuthenticator,
+        IOpenIddictAuthorizationManager authorizationManager,
+        IOpenIddictApplicationManager applicationManager,
         IConfiguration configuration)
     {
         this.accountStore = accountStore;
         this.claimBuilder = claimBuilder;
         this.oidcProviderRegistry = oidcProviderRegistry;
         this.serviceAuthenticator = serviceAuthenticator;
+        this.authorizationManager = authorizationManager;
+        this.applicationManager = applicationManager;
         websiteBaseUrl = (configuration["Email:WebsiteBaseUrl"] ?? string.Empty).TrimEnd('/');
     }
 
@@ -60,7 +68,34 @@ public class AuthorizationController : ControllerBase
             return RedirectToLogin(request);
 
         var principal = BuildOpenIddictPrincipal(account, request.GetScopes());
+        var authorizationId = await CreateAuthorization(principal, account, request);
+        principal.SetAuthorizationId(authorizationId);
         return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+    }
+
+    private async Task<string> CreateAuthorization(
+        ClaimsPrincipal principal,
+        Account account,
+        OpenIddictRequest request)
+    {
+        var application = await applicationManager.FindByClientIdAsync(request.ClientId!)
+                          ?? throw new InvalidOperationException("The client application cannot be found");
+        var applicationId = await applicationManager.GetIdAsync(application);
+        var descriptor = new OpenIddictAuthorizationDescriptor
+        {
+            Principal = principal,
+            Subject = account.Id,
+            ApplicationId = applicationId,
+            Type = AuthorizationTypes.AdHoc,
+            Status = Statuses.Valid,
+            CreationDate = DateTimeOffset.UtcNow
+        };
+        descriptor.Scopes.UnionWith(principal.GetScopes());
+        var userAgent = Request.Headers.UserAgent.ToString();
+        if (!string.IsNullOrEmpty(userAgent))
+            descriptor.Properties[ActiveSessionManager.UserAgentPropertyName] = JsonSerializer.SerializeToElement(userAgent);
+        var authorization = await authorizationManager.CreateAsync(descriptor);
+        return await authorizationManager.GetIdAsync(authorization);
     }
 
     [HttpPost("~/api/oidc/token")]

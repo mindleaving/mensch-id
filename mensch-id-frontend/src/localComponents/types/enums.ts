@@ -237,6 +237,10 @@ export enum AccountType {
     ExternalService = "ExternalService",
     Admin = "Admin"
 }
+export enum SessionType {
+    App = "App",
+    Web = "Web"
+}
 export enum UserType {
     Person = "Person",
     Assigner = "Assigner"
