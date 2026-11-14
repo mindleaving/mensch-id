@@ -37,10 +37,7 @@
   "CreateChallenge_InvalidMenschId": "Bitte gib eine gültige 웃ID ein",
   "CreateChallenge_Submit": "Challenge erstellen",
   "Challenge_CouldNotSend": "Konnte Challenge nicht senden",
-  "CreateChallenge_ResultInstruction": "Gib die Challenge-ID an die andere Person weiter oder lass sie den QR-Code mit der mensch.ID-App scannen. Sie muss dir das Geheimwort nennen, um zu beweisen, dass sie die 웃ID besitzt.",
-  "SendChallenge_ID_Description": "Gebe diese ID an die Person weiter die beweisen soll dass sie die 웃ID besitzt",
   "SendChallenge_Secret_KeepSecret": "Halte dieses Wort geheim",
-  "SendChallenge_Secret_Description": "Wenn die andere Person dieses Geheimwort nennen kann ist sie Eigentümer der 웃ID",
   "NewChallenge": "Neue Challenge",
   "Cancel": "Abbrechen",
   "Menu_Settings": "Einstellungen",
@@ -78,5 +75,10 @@
   "Settings_Pin": "PIN",
   "Settings_PinDescription": "Die PIN wird beim Start der App abgefragt.",
   "Settings_ChangePin": "PIN ändern",
-  "Settings_PinChanged": "Die PIN wurde geändert."
+  "Settings_PinChanged": "Die PIN wurde geändert.",
+  "CreateChallenge_IdInstruction": "Nenne der anderen Person diese Challenge-ID oder lass sie den QR-Code mit ihrer mensch.ID-App scannen. Sie sieht dann das Geheimwort in ihrer App.",
+  "CreateChallenge_IdDone": "Erledigt! Weiter...",
+  "CreateChallenge_SecretInstruction": "Bitte die andere Person, dir das Geheimwort aus ihrer App vorzulesen. Nur wenn es mit dem Geheimwort unten übereinstimmt, besitzt sie die 웃ID.",
+  "CreateChallenge_ShowSecret": "Geheimwort anzeigen",
+  "CreateChallenge_QrCodeHint": "Oder lass die andere Person diesen QR-Code mit ihrer mensch.ID-App scannen:"
 }

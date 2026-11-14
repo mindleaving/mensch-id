@@ -37,10 +37,7 @@
   "CreateChallenge_InvalidMenschId": "Please enter a valid 웃ID",
   "CreateChallenge_Submit": "Create challenge",
   "Challenge_CouldNotSend": "Could not send challenge",
-  "CreateChallenge_ResultInstruction": "Give the challenge ID to the other person or let them scan the QR code with the mensch.ID app. They need to read back the secret to prove that they own the 웃ID.",
-  "SendChallenge_ID_Description": "Give this ID to the other person",
   "SendChallenge_Secret_KeepSecret": "Keep this secret to yourself!",
-  "SendChallenge_Secret_Description": "The other person needs to repeat this secret to you to prove that they own the 웃ID",
   "NewChallenge": "New challenge",
   "Cancel": "Cancel",
   "Menu_Settings": "Settings",
@@ -78,5 +75,10 @@
   "Settings_Pin": "PIN",
   "Settings_PinDescription": "The PIN is required when the app starts.",
   "Settings_ChangePin": "Change PIN",
-  "Settings_PinChanged": "The PIN was changed."
+  "Settings_PinChanged": "The PIN was changed.",
+  "CreateChallenge_IdInstruction": "Tell the other person this challenge ID, or let them scan the QR code with their mensch.ID app. They will then see the secret in their app.",
+  "CreateChallenge_IdDone": "Done! Next...",
+  "CreateChallenge_SecretInstruction": "Ask the other person to read the secret shown in their app back to you. Only if it matches the secret below do they own the 웃ID.",
+  "CreateChallenge_ShowSecret": "Show secret",
+  "CreateChallenge_QrCodeHint": "Or let the other person scan this QR code with their mensch.ID app:"
 }
