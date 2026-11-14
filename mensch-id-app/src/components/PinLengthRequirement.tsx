@@ -16,7 +16,7 @@ export const PinLengthRequirement = (props: PinLengthRequirementProps) => {
 
     const { t } = useTranslation();
     const colors = useThemeColors();
-    const color = props.isMet ? colors.mutedText : colors.danger;
+    const color = props.isMet ? colors.mutedText : colors.warning;
 
     return (
         <View
@@ -26,7 +26,7 @@ export const PinLengthRequirement = (props: PinLengthRequirementProps) => {
         >
             <View style={{ width: IconSize, height: IconSize }}>
                 {!props.isMet
-                ? <MaterialCommunityIcons testID="pin-length-warning" name="alert" size={IconSize} color={colors.danger} />
+                ? <MaterialCommunityIcons testID="pin-length-warning" name="alert" size={IconSize} color={colors.warning} />
                 : null}
             </View>
             <Text

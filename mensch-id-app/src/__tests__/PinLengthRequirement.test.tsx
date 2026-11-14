@@ -21,11 +21,11 @@ const getRowHeight = () => {
 };
 
 describe('PIN length requirement', () => {
-    it('is shown in red with a warning sign before any digit is entered', async () => {
+    it('is shown in yellow with a warning sign before any digit is entered', async () => {
         await render(<NewPinEntry title="Choose a PIN" onPinChosen={jest.fn()} />);
 
         expect(screen.getByTestId('pin-length-warning')).toBeTruthy();
-        expect([ LightColors.danger, DarkColors.danger ]).toContain(getHintColor());
+        expect([ LightColors.warning, DarkColors.warning ]).toContain(getHintColor());
     });
 
     it('switches to the default color without icon once met, keeping the same height', async () => {

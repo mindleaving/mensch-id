@@ -97,7 +97,11 @@ namespace Mensch.Id.API.Storage
             var localAccounts = await collection.OfType<LocalAccount>().Find(x => x.PersonId == menschId).ToListAsync();
             var localAnonymousAccounts = await collection.OfType<LocalAnonymousAccount>().Find(x => x.PersonId == menschId).ToListAsync();
             var externalAccounts = await collection.OfType<ExternalAccount>().Find(x => x.PersonId == menschId).ToListAsync();
-            return localAccounts.Cast<PersonAccount>().Concat(localAnonymousAccounts).Concat(externalAccounts).ToList();
+            return localAccounts.Cast<PersonAccount>()
+                .Concat(localAnonymousAccounts)
+                .Concat(externalAccounts)
+                .DistinctBy(x => x.Id)
+                .ToList();
         }
 
         public async Task<ProfessionalAccount> GetProfessionalByUsernameAsync(

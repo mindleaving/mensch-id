@@ -60,6 +60,7 @@ export const AccountManagementPage = (props: AccountManagementPageProps) => {
                 showSuccessAlert(resolveText("Account_SuccessfullyDeleted"));
                 setAccounts(state => state.filter(x => x.id !== accountId));
             },
+            undefined,
             () => setIsDeleting(false)
         );
     }

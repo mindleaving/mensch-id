@@ -154,6 +154,7 @@ export const AppLockProvider = (props: PropsWithChildren<AppLockProviderProps>) 
         isBiometricsAvailable: isBiometricsHardwareAvailable,
         isBiometricsEnabled: isBiometricsEnabled && isBiometricsHardwareAvailable,
         remainingPinAttempts: remainingPinAttempts,
+        isPinResetRequested: isPinResetRequested,
         setInitialPin: setInitialPin,
         unlockWithPin: unlockWithPin,
         unlockWithBiometrics: unlockWithBiometrics,

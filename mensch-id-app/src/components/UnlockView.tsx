@@ -60,6 +60,11 @@ export const UnlockView = (props: UnlockViewProps) => {
         ? t('Lock_PinRequiredAfterBiometrics')
         : t('Lock_Description');
 
+    const logOutForPinReset = async () => {
+        appLock.setPinResetRequested(true);
+        await auth.logout();
+    };
+
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
             <PinEntry
@@ -75,7 +80,7 @@ export const UnlockView = (props: UnlockViewProps) => {
                     <Pressable
                         accessibilityRole="button"
                         testID="forgot-pin"
-                        onPress={auth.logout}
+                        onPress={logOutForPinReset}
                         style={{ padding: Spacing.small }}
                     >
                         <Text style={[ CommonStyles.instruction, { color: colors.primary } ]}>{t('Lock_ForgotPin')}</Text>

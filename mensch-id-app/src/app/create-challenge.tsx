@@ -5,7 +5,7 @@ import { useAuth } from '../auth/AuthContext';
 import { AppButton } from '../components/AppButton';
 import { CreatedChallengeView } from '../components/CreatedChallengeView';
 import { DefaultChallengeLength } from '../helpers/ConfigurationHelpers';
-import { isMenschId, normalizeMenschId } from '../helpers/MenschIdHelpers';
+import { isMenschId, normalizeMenschId, formatMenschIdInput } from '../helpers/MenschIdHelpers';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { CommonStyles, Spacing } from '../styles/Theme';
 import { Models } from '../types/models';
@@ -66,7 +66,7 @@ const CreateChallengeScreen = () => {
                         accessibilityLabelledBy="mensch-id-label"
                         accessibilityLabel={t('CreateChallenge_MenschId')}
                         value={menschId}
-                        onChangeText={text => setMenschId(text.toUpperCase())}
+                        onChangeText={text => setMenschId(previousValue => formatMenschIdInput(text, previousValue))}
                         placeholder={t('MenschIDFormatPlaceholder')}
                         placeholderTextColor={colors.mutedText}
                         autoCapitalize="characters"

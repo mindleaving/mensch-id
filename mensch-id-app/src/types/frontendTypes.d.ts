@@ -70,6 +70,7 @@ export interface AppLockContextValue {
     isBiometricsAvailable: boolean;
     isBiometricsEnabled: boolean;
     remainingPinAttempts: number;
+    isPinResetRequested: boolean;
     setInitialPin: (pin: string) => Promise<void>;
     unlockWithPin: (pin: string) => Promise<PinVerificationResult>;
     unlockWithBiometrics: () => Promise<'unlocked' | 'pinRequired' | 'failed'>;

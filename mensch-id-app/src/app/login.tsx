@@ -18,7 +18,6 @@ const LoginScreen = () => {
     const colors = useThemeColors();
     const auth = useAuth();
     const appLock = useAppLock();
-    const [ isPinResetRequested, setIsPinResetRequested ] = useState<boolean>(false);
     const [ loginProviders, setLoginProviders ] = useState<ViewModels.LoginProviderViewModel[]>([]);
     const [ hasProviderError, setHasProviderError ] = useState<boolean>(false);
     const [ activeLogin, setActiveLogin ] = useState<string>();
@@ -29,11 +28,6 @@ const LoginScreen = () => {
             .then(setLoginProviders)
             .catch(() => setHasProviderError(true));
     }, []);
-
-    const changePinResetRequest = (isRequested: boolean) => {
-        setIsPinResetRequested(isRequested);
-        appLock.setPinResetRequested(isRequested);
-    };
 
     const login = async (loginKey: string, loginProviderId?: string) => {
         setActiveLogin(loginKey);
@@ -82,8 +76,8 @@ const LoginScreen = () => {
                 </View>
                 <Checkbox
                     label={t('Login_ResetPin')}
-                    isChecked={isPinResetRequested}
-                    onChange={changePinResetRequest}
+                    isChecked={appLock.isPinResetRequested}
+                    onChange={appLock.setPinResetRequested}
                     testID="reset-pin"
                 />
                 {hasProviderError
