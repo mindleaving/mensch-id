@@ -137,7 +137,10 @@ public class AccessControlSetup : ISetup
             .AddServer(
                 options =>
                 {
-                    options.SetAuthorizationEndpointUris("api/oidc/authorize")
+                    options.SetIssuer(BuildIssuer(configuration))
+                        .SetConfigurationEndpointUris("api/oidc/.well-known/openid-configuration")
+                        .SetJsonWebKeySetEndpointUris("api/oidc/.well-known/jwks")
+                        .SetAuthorizationEndpointUris("api/oidc/authorize")
                         .SetTokenEndpointUris("api/oidc/token")
                         .SetEndSessionEndpointUris("api/oidc/endsession")
                         .SetRevocationEndpointUris("api/oidc/revoke");
@@ -163,6 +166,14 @@ public class AccessControlSetup : ISetup
                     options.UseAspNetCore();
                 });
         services.AddHostedService<OpenIddictClientSeeder>();
+    }
+
+    private static Uri BuildIssuer(IConfiguration configuration)
+    {
+        var apiBaseUrl = configuration["Authentication:ApiBaseUrl"];
+        if (string.IsNullOrWhiteSpace(apiBaseUrl))
+            throw new SecurityException("No API base URL configured (Authentication:ApiBaseUrl)");
+        return new Uri($"{apiBaseUrl.TrimEnd('/')}/api/oidc/");
     }
 
     private static string ResolveKeyPath(

@@ -1,6 +1,7 @@
 const DefaultApiBaseUrl = 'https://mensch.id';
 
 export const ApiBaseUrl = (process.env.EXPO_PUBLIC_API_URL ?? DefaultApiBaseUrl).replace(/\/+$/, '');
+export const OidcIssuer = `${ApiBaseUrl}/api/oidc`;
 export const OidcClientId = 'mensch-id-app';
 export const OidcRedirectUri = 'menschid://auth/callback';
 export const OidcPostLogoutRedirectUri = 'menschid://auth/logout';
