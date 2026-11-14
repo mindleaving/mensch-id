@@ -14,7 +14,9 @@ using Mensch.Id.API.Models.AccessControl;
 using Mensch.Id.API.Storage;
 using Mensch.Id.API.Workflow;
 using Mensch.Id.API.Workflow.Email;
+using Mensch.Id.API.Setups;
 using Mensch.Id.API.ViewModels;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Mensch.Id.API.Controllers;
 
@@ -23,7 +25,7 @@ namespace Mensch.Id.API.Controllers;
 [Route("api/[controller]")]
 public class AdminController : ControllerBase
 {
-    private readonly IStore<AssignerAccountRequest> accountRequestStore;
+    private readonly IStore<AssignerAccountRequest, Guid> accountRequestStore;
     private readonly IAccountCreator accountCreator;
     private readonly IEmailSender emailSender;
     private readonly IAccountStore accountStore;
@@ -31,7 +33,7 @@ public class AdminController : ControllerBase
     private readonly ActiveSessionManager sessionManager;
 
     public AdminController(
-        IStore<AssignerAccountRequest> accountRequestStore,
+        IStore<AssignerAccountRequest, Guid> accountRequestStore,
         IAccountCreator accountCreator,
         IEmailSender emailSender,
         IAccountStore accountStore,
@@ -47,17 +49,24 @@ public class AdminController : ControllerBase
     }
 
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimitingSetup.CredentialsPolicy)]
     [HttpPost("assigner-requests")]
     public async Task<IActionResult> RequestAssignerAccount(
         [FromBody] AssignerAccountRequest body)
     {
-        if (await accountRequestStore.ExistsAsync(body.Id))
-            return StatusCode((int)HttpStatusCode.Conflict, "A request with the same ID already exists");
         var isEmailInUse = (await accountStore.GetLocalByEmailAsync(body.Email)) != null;
         if (isEmailInUse)
             return BadRequest("Email is already in use for another account");
-        await accountRequestStore.StoreAsync(body);
-        return Ok();
+        var request = new AssignerAccountRequest
+        {
+            Id = Guid.NewGuid(),
+            ContactPersonName = body.ContactPersonName,
+            Email = body.Email,
+            ExpectedAssignmentsPerYear = body.ExpectedAssignmentsPerYear,
+            Note = body.Note
+        };
+        await accountRequestStore.StoreAsync(request);
+        return Ok(request.Id);
     }
 
     [HttpGet("assigner-requests")]
@@ -170,12 +179,10 @@ public class AdminController : ControllerBase
         return values.Any(x => x != null && x.Contains(trimmedSearchText, StringComparison.OrdinalIgnoreCase));
     }
 
-    [HttpPost("assigner-requests/{id}/approve")]
+    [HttpPost("assigner-requests/{id:guid}/approve")]
     public async Task<IActionResult> ApproveAssignerRequest(
-        [FromRoute] string id)
+        [FromRoute] Guid id)
     {
-        if (!ControllerInputSanitizer.ValidateAndSanitizeMandatoryId(id, out id))
-            return BadRequest("Invalid request-ID");
         var request = await accountRequestStore.GetByIdAsync(id);
         if (request == null)
             return NotFound();
@@ -219,12 +226,10 @@ public class AdminController : ControllerBase
         //}
     }
 
-    [HttpDelete("assigner-requests/{id}")]
+    [HttpDelete("assigner-requests/{id:guid}")]
     public async Task<IActionResult> DeleteAssignerRequest(
-        [FromRoute] string id)
+        [FromRoute] Guid id)
     {
-        if (!ControllerInputSanitizer.ValidateAndSanitizeMandatoryId(id, out id))
-            return BadRequest("Invalid request-ID");
         await accountRequestStore.DeleteAsync(id);
         return Ok();
     }

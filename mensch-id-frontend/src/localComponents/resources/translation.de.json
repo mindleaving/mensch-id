@@ -331,6 +331,8 @@
   "LinkAccount_CouldNotSetupLink": "Konnte den Verbindungsprozess nicht starten",
   "LinkAccount_SuccessfullyLinked": "Konto erfolgreich verknüpft",
   "LinkAnotherAccount": "Füge ein weiteres Konto hinzu",
+  "Reauthentication_Required": "Bitte melde dich zu deiner Sicherheit erneut an, bevor du ein weiteres Konto hinzufügst.",
+  "Reauthentication_CouldNotCheck": "Konnte nicht prüfen, ob du dich erneut anmelden musst",
   "LinkingAccounts...": "Füge Konto hinzu...",
   "Loading...": "Lädt...",
   "LoadMore": "Weitere laden",

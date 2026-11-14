@@ -6,6 +6,7 @@ using System.Security;
 using System.Threading.Tasks;
 using Mensch.Id.API.AccessControl;
 using Mensch.Id.API.AccessControl.Policies;
+using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Models;
 using Mensch.Id.API.Models.AccessControl;
 using Mensch.Id.API.Storage;
@@ -48,6 +49,7 @@ public class AccessControlSetup : ISetup
         services.AddSingleton<IAccountTokenService, AccountTokenService>();
         services.AddScoped<OidcAuthenticationEvents>();
         services.AddScoped<ActiveSessionManager>();
+        services.AddScoped<ISessionRevoker>(provider => provider.GetRequiredService<ActiveSessionManager>());
 
         var oidcProviders = configuration.GetSection(OidcProviderSettings.AppSettingsSectionName).Get<List<OidcProviderSettings>>() ?? [];
         var oidcProviderRegistry = new OidcProviderRegistry(oidcProviders);
@@ -103,6 +105,7 @@ public class AccessControlSetup : ISetup
         options.ExpireTimeSpan = SessionLifetime;
         options.SlidingExpiration = true;
         options.SessionStore = new MongoTicketStore(SessionLifetime);
+        options.Events.OnValidatePrincipal = RejectPrincipalOfDeletedAccount;
         options.Events.OnRedirectToLogin = context =>
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
@@ -113,6 +116,20 @@ public class AccessControlSetup : ISetup
             context.Response.StatusCode = StatusCodes.Status403Forbidden;
             return Task.CompletedTask;
         };
+    }
+
+    private static async Task RejectPrincipalOfDeletedAccount(CookieValidatePrincipalContext context)
+    {
+        var accountId = ClaimsHelpers.GetAccountId(context.Principal!.Claims);
+        if (accountId != null)
+        {
+            var accountStore = context.HttpContext.RequestServices.GetRequiredService<IAccountStore>();
+            var account = await accountStore.GetByIdAsync(accountId);
+            if (account != null)
+                return;
+        }
+        context.RejectPrincipal();
+        await context.HttpContext.SignOutAsync(MenschIdAuthenticationSchemes.Session);
     }
 
     private static void ConfigureExternalCookie(CookieAuthenticationOptions options)

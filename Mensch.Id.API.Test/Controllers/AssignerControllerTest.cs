@@ -152,4 +152,28 @@ public class AssignerControllerTest
 
         Assert.That(await idStore.ExistsAsync(idCandidate), Is.False);
     }
+
+    [Test]
+    public async Task OwnAssignerControlledProfileIsReturned()
+    {
+        var menschId = new MenschId("20000101-AAAAA");
+        var profile = AssignerControlledProfileFactory.Create(menschId, AssignerAccountId);
+        await assignerControlledProfileStore.StoreAsync(profile);
+
+        var result = await controller.GetAssignerControlledProfile(menschId);
+
+        Assert.That(result, Is.TypeOf<OkObjectResult>());
+    }
+
+    [Test]
+    public async Task AssignerControlledProfileOfOtherAssignerIsNotReturned()
+    {
+        var menschId = new MenschId("20000101-AAAAA");
+        var profile = AssignerControlledProfileFactory.Create(menschId, "other-assigner");
+        await assignerControlledProfileStore.StoreAsync(profile);
+
+        var result = await controller.GetAssignerControlledProfile(menschId);
+
+        Assert.That(result, Is.TypeOf<NotFoundResult>());
+    }
 }

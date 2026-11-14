@@ -55,17 +55,10 @@ namespace Mensch.Id.API.Controllers
         public async Task<IActionResult> MyProfile()
         {
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
-            var personId = ClaimsHelpers.GetPersonId(claims);
-            if (personId == null)
-            {
-                var account = await accountStore.GetFromClaimsAsync(claims);
-                if (account is not PersonAccount personAccount)
-                    return NotFound();
-                if (personAccount.PersonId == null)
-                    return NotFound();
-                personId = personAccount.PersonId;
-            }
-            var profileData = await personStore.GetByIdAsync(personId);
+            var account = await accountStore.GetFromClaimsAsync(claims);
+            if (account is not PersonAccount { PersonId: not null } personAccount)
+                return NotFound();
+            var profileData = await personStore.GetByIdAsync(personAccount.PersonId);
             if (profileData == null)
                 return NotFound();
             var vm = await profileViewModelBuilder.Build(profileData);
@@ -105,7 +98,11 @@ namespace Mensch.Id.API.Controllers
             if (!isSessionAuthenticated)
                 return;
             var authenticationResult = authenticationModule.BuildAuthenticationResult(account);
-            await HttpContext.SignInAsync(MenschIdAuthenticationSchemes.Session, authenticationResult.Principal);
+            var properties = await RecentAuthentication.GetCurrentSessionProperties(HttpContext);
+            await HttpContext.SignInAsync(
+                MenschIdAuthenticationSchemes.Session,
+                authenticationResult.Principal,
+                properties);
         }
 
         [HttpPost("{id}/verify")]

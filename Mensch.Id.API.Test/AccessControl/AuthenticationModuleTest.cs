@@ -36,7 +36,8 @@ public class AuthenticationModuleTest
 
     private async Task<LocalAccount> CreateVerifiedLocalAccount(string personId = null)
     {
-        var account = await accountCreator.CreateLocal("joe@example.org", Password, Language.en, personId);
+        var account = await accountCreator.CreateLocal("joe@example.org", Password, Language.en);
+        account.PersonId = personId;
         account.IsEmailVerified = true;
         await accountStore.StoreAsync(account);
         return account;

@@ -39,6 +39,11 @@ public class RedirectUrlValidatorTest
     [TestCase("https://localhost:3302/login/redirect")]
     [TestCase("javascript:alert(1)")]
     [TestCase("login/redirect")]
+    [TestCase("/\t/evil.example.org")]
+    [TestCase("/\n/evil.example.org")]
+    [TestCase("/ /evil.example.org")]
+    [TestCase("/path\\to")]
+    [TestCase("https://mensch.id/\\evil.example.org")]
     public void DisallowedUrlsAreRejected(string redirectUrl)
     {
         Assert.That(validator.IsAllowed(redirectUrl), Is.False);

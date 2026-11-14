@@ -16,6 +16,7 @@ namespace Mensch.Id.API.Storage
         Task<Account> GetFromClaimsAsync(List<Claim> claims);
         Task<List<PersonAccount>> GetAllForMenschIdAsync(string menschId);
         Task<ProfessionalAccount> GetProfessionalByUsernameAsync(string username);
+        Task<bool> IsProfessionalUsernameInUse(string username);
         Task<List<AssignerAccount>> GetAllAssignersAsync();
         Task<StorageResult> ChangePasswordAsync(string accountId, string passwordHash);
         Task DeleteAllForPerson(string personId);

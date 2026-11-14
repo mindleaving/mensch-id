@@ -16,4 +16,7 @@ public class LocalAccount : LocalAnonymousAccount
     [JsonIgnore]
     [TypescriptIsOptional]
     public string PasswordResetNonce { get; set; }
+    [JsonIgnore]
+    [TypescriptIsOptional]
+    public string PendingPersonId { get; set; }
 }

@@ -52,7 +52,7 @@ namespace Mensch.Id.API.Workflow
             string email,
             string password,
             Language preferedLanguage = Language.en,
-            string menschId = null)
+            string pendingMenschId = null)
         {
             var existingAccount = await accountStore.GetLocalByEmailAsync(email);
             if (existingAccount != null)
@@ -61,10 +61,10 @@ namespace Mensch.Id.API.Workflow
             var account = new LocalAccount
             {
                 Id = accountId,
-                Email = email,
+                Email = email.Trim(),
                 IsEmailVerified = false,
                 PreferedLanguage = preferedLanguage,
-                PersonId = menschId
+                PendingPersonId = pendingMenschId
             };
             account.PasswordHash = passwordHasher.HashPassword(account, password);
             await accountStore.StoreAsync(account);

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../../../sharedCommonComponents/communication/ApiClient';
 import { showSuccessAlert, showErrorAlert } from '../../../sharedCommonComponents/helpers/AlertHelpers';
 import { resolveText } from '../../../sharedCommonComponents/helpers/Globalizer';
+import { isReauthenticationRequired } from '../../helpers/LoginHelpers';
 
 interface LinkAccountRedirectPageProps {
     onLogOut: () => void;
@@ -19,6 +20,9 @@ export const LinkAccountRedirectPage = (props: LinkAccountRedirectPageProps) => 
                 if(response.ok) {
                     showSuccessAlert(resolveText("LinkAccount_SuccessfullyLinked"));
                     navigate("/me");
+                } else if(await isReauthenticationRequired(response)) {
+                    showErrorAlert(resolveText("LinkAccount_CouldNotLink"), resolveText("Reauthentication_Required"));
+                    navigate("/linkaccount");
                 } else {
                     const errorText = await response.text();
                     showErrorAlert(resolveText("LinkAccount_CouldNotLink"), errorText);

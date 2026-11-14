@@ -55,7 +55,7 @@ namespace Mensch.Id.API.Setups
         {
             SetupTypeStores<Account>(services);
             services.AddScoped<IAccountStore, AccountStore>();
-            SetupTypeStores<AssignerAccountRequest>(services);
+            SetupTypeStores<AssignerAccountRequest, Guid>(services);
             services.AddScoped<IAssignerControlledProfileStore, AssignerControlledProfileStore>();
             services.AddScoped<IStore<AssignerControlledProfile, MenschId>>(provider => provider.GetRequiredService<IAssignerControlledProfileStore>());
             services.AddScoped<IReadonlyStore<AssignerControlledProfile, MenschId>>(provider => provider.GetRequiredService<IAssignerControlledProfileStore>());

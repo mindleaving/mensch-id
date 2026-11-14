@@ -25,14 +25,30 @@ namespace Mensch.Id.API.Storage
             this.externalLoginObscurer = externalLoginObscurer;
         }
 
+        public static readonly Collation EmailCollation = new("en", strength: CollationStrength.Secondary);
+
         public async Task<LocalAccount> GetLocalByEmailAsync(string email)
         {
             if (email == null) throw new ArgumentNullException(nameof(email));
+            var trimmedEmail = email.Trim();
             var filterBuilder = Builders<Account>.Filter;
             var filter = filterBuilder.And(
                 filterBuilder.Ne("_t", nameof(ExternalAccount)),
-                filterBuilder.Eq(nameof(LocalAccount.Email), email));
-            return await collection.Find(filter).FirstOrDefaultAsync() as LocalAccount;
+                filterBuilder.Eq(nameof(LocalAccount.Email), trimmedEmail));
+            var findOptions = new FindOptions { Collation = EmailCollation };
+            return await collection.Find(filter, findOptions).FirstOrDefaultAsync() as LocalAccount;
+        }
+
+        public async Task<bool> IsProfessionalUsernameInUse(string username)
+        {
+            if (username == null) throw new ArgumentNullException(nameof(username));
+            var trimmedUsername = username.Trim();
+            var filterBuilder = Builders<Account>.Filter;
+            var filter = filterBuilder.And(
+                filterBuilder.In("_t", [nameof(AssignerAccount), nameof(AdminAccount)]),
+                filterBuilder.Eq(nameof(ProfessionalAccount.Username), trimmedUsername));
+            var findOptions = new FindOptions { Collation = EmailCollation };
+            return await collection.Find(filter, findOptions).AnyAsync();
         }
 
         public async Task<List<LocalAnonymousAccount>> GetLocalsByMenschId(

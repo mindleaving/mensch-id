@@ -38,6 +38,7 @@ namespace Mensch.Id.API.Controllers
         private readonly IOidcProviderRegistry oidcProviderRegistry;
         private readonly LoginProviderViewModelBuilder loginProviderViewModelBuilder;
         private readonly RedirectUrlValidator redirectUrlValidator;
+        private readonly ISessionRevoker sessionRevoker;
 
         public AccountsController(
             IAccountStore store,
@@ -48,8 +49,10 @@ namespace Mensch.Id.API.Controllers
             IAccountTokenService accountTokenService,
             IOidcProviderRegistry oidcProviderRegistry,
             LoginProviderViewModelBuilder loginProviderViewModelBuilder,
-            RedirectUrlValidator redirectUrlValidator)
+            RedirectUrlValidator redirectUrlValidator,
+            ISessionRevoker sessionRevoker)
         {
+            this.sessionRevoker = sessionRevoker;
             this.accountTokenService = accountTokenService;
             this.oidcProviderRegistry = oidcProviderRegistry;
             this.loginProviderViewModelBuilder = loginProviderViewModelBuilder;
@@ -75,19 +78,22 @@ namespace Mensch.Id.API.Controllers
         }
 
         [Authorize]
+        [HttpGet("is-recently-authenticated")]
+        public async Task<IActionResult> GetIsRecentlyAuthenticated()
+        {
+            var isRecentlyAuthenticated = await RecentAuthentication.IsSessionRecentlyAuthenticated(HttpContext);
+            return Ok(isRecentlyAuthenticated);
+        }
+
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetMyAccounts()
         {
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
-            var personId = ClaimsHelpers.GetPersonId(claims);
-            if (personId == null)
-            {
-                var currentAccount = await store.GetFromClaimsAsync(claims);
-                if(currentAccount is not PersonAccount personAccount || personAccount.PersonId == null)
-                    return Ok(new List<Account>());
-                personId = personAccount.PersonId;
-            }
-            var myAccounts = await store.GetAllForMenschIdAsync(personId);
+            var currentAccount = await store.GetFromClaimsAsync(claims);
+            if (currentAccount is not PersonAccount { PersonId: not null } personAccount)
+                return Ok(new List<Account>());
+            var myAccounts = await store.GetAllForMenschIdAsync(personAccount.PersonId);
             return Ok(myAccounts);
         }
 
@@ -99,10 +105,8 @@ namespace Mensch.Id.API.Controllers
             [FromBody] ResendVerificationBody body)
         {
             var account = await store.GetLocalByEmailAsync(body.Email);
-            if (account == null)
-                return NotFound();
-            if (account.IsEmailVerified)
-                return BadRequest("Email is already verified");
+            if (account == null || account.IsEmailVerified)
+                return Ok();
             await SendVerificationEmail(account);
             return Ok();
         }
@@ -147,6 +151,9 @@ namespace Mensch.Id.API.Controllers
                 return StatusCode((int)HttpStatusCode.Forbidden, "Invalid verification token");
             localAccount.IsEmailVerified = true;
             localAccount.EmailVerificationNonce = null;
+            if (localAccount.PersonId == null && localAccount.PendingPersonId != null)
+                localAccount.PersonId = localAccount.PendingPersonId;
+            localAccount.PendingPersonId = null;
             await store.StoreAsync(localAccount);
             return Ok();
         }
@@ -159,7 +166,7 @@ namespace Mensch.Id.API.Controllers
         {
             var account = await store.GetLocalByEmailAsync(body.Email);
             if (account == null)
-                return NotFound();
+                return Ok();
             var resetToken = accountTokenService.Generate(AccountTokenPurpose.PasswordReset, account.Id);
             account.PasswordResetNonce = resetToken.Nonce;
             await store.StoreAsync(account);
@@ -199,8 +206,14 @@ namespace Mensch.Id.API.Controllers
                 return StatusCode((int)HttpStatusCode.Forbidden, "Invalid reset token");
             if(body.Password.Length < MinimumPasswordLength)
                 return BadRequest($"Password too short. Must be at least {MinimumPasswordLength} characters long.");
+            if (localAccount.PendingPersonId != null)
+            {
+                localAccount.PendingPersonId = null;
+                await store.StoreAsync(localAccount);
+            }
             if (!await authenticationModule.ChangePasswordAsync(localAccount.Id, body.Password))
                 return StatusCode((int)HttpStatusCode.InternalServerError, "An unknown error occured");
+            await sessionRevoker.RevokeAll([localAccount.Id]);
             var loginInformation = new LoginInformation(localAccount.Email, body.Password);
             var authenticationResult = await authenticationModule.AuthenticateLocalByEmailMenschIdOrUsernameAsync(loginInformation);
             if (!authenticationResult.IsAuthenticated)
@@ -227,21 +240,20 @@ namespace Mensch.Id.API.Controllers
             string personId = null;
             if (claims.Any())
             {
-                personId = ClaimsHelpers.GetPersonId(claims);
-                if (personId == null)
-                {
-                    var currentAccount = await store.GetFromClaimsAsync(claims);
-                    personId = (currentAccount as PersonAccount)?.PersonId;
-                }
+                var currentAccount = await store.GetFromClaimsAsync(claims);
+                personId = (currentAccount as PersonAccount)?.PersonId;
             }
+            if (personId != null && !await RecentAuthentication.IsSessionRecentlyAuthenticated(HttpContext))
+                return StatusCode((int)HttpStatusCode.Forbidden, RecentAuthentication.ReauthenticationRequiredMessage);
             switch (body.AccountType)
             {
                 case AccountType.Local:
                 {
-                    if (!EmailValidator.IsValidEmailFormat(body.Email))
+                    if (body.Email == null || !EmailValidator.IsValidEmailFormat(body.Email))
                         return BadRequest("Invalid email format");
                     var existingAccount = await store.GetLocalByEmailAsync(body.Email);
-                    if (existingAccount != null)
+                    var isProfessionalUsername = await store.IsProfessionalUsernameInUse(body.Email);
+                    if (existingAccount != null || isProfessionalUsername)
                         return Conflict("You already have an account with this email. Use password reset to gain access if you have forgotten your password.");
                     var account = await accountCreator.CreateLocal(
                         body.Email,
@@ -358,6 +370,8 @@ namespace Mensch.Id.API.Controllers
         [HttpPost("link/external")]
         public async Task<IActionResult> LinkToExternalAccount()
         {
+            if (!await RecentAuthentication.IsSessionRecentlyAuthenticated(HttpContext))
+                return StatusCode((int)HttpStatusCode.Forbidden, RecentAuthentication.ReauthenticationRequiredMessage);
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
             var currentAccount = await store.GetFromClaimsAsync(claims);
             if (currentAccount is not PersonAccount { PersonId: not null } currentPersonAccount)
@@ -401,6 +415,8 @@ namespace Mensch.Id.API.Controllers
         {
             if (loginInformation == null)
                 return BadRequest("No login information provided");
+            if (!await RecentAuthentication.IsSessionRecentlyAuthenticated(HttpContext))
+                return StatusCode((int)HttpStatusCode.Forbidden, RecentAuthentication.ReauthenticationRequiredMessage);
             var authenticationResult = await authenticationModule.AuthenticateLocalByEmailMenschIdOrUsernameAsync(loginInformation);
             if (!authenticationResult.IsAuthenticated)
                 return StatusCode((int)HttpStatusCode.Unauthorized, authenticationResult.Error);
@@ -474,9 +490,13 @@ namespace Mensch.Id.API.Controllers
 
             if (authenticationResult.AccountType == AccountType.External)
                 return BadRequest("Cannot change password for external account");
-            if(await authenticationModule.ChangePasswordAsync(accountId, body.NewPassword))
-                return Ok();
-            return StatusCode((int)HttpStatusCode.InternalServerError);
+            if (!await authenticationModule.ChangePasswordAsync(accountId, body.NewPassword))
+                return StatusCode((int)HttpStatusCode.InternalServerError);
+            await sessionRevoker.RevokeAll([accountId]);
+            var currentAccountId = ControllerHelpers.GetAccountId(httpContextAccessor);
+            if (currentAccountId == accountId && IsSessionAuthenticated())
+                await SignInSession(authenticationResult);
+            return Ok();
         }
 
         [Authorize]
@@ -502,6 +522,7 @@ namespace Mensch.Id.API.Controllers
                     + "If this is your account, please login using credentials corresponding to the mensch.ID associated with that account");
             }
             await store.DeleteAsync(accountId);
+            await sessionRevoker.RevokeAll([accountId]);
             return Ok();
         }
 
@@ -511,11 +532,20 @@ namespace Mensch.Id.API.Controllers
             return httpContextAccessor.HttpContext?.User.Identities.Any(x => x.IsAuthenticated) ?? false;
         }
 
+        private bool IsSessionAuthenticated()
+        {
+            return User.Identities.Any(x => x.IsAuthenticated && x.AuthenticationType == MenschIdAuthenticationSchemes.Session);
+        }
+
         private async Task SignInSession(AuthenticationResult authenticationResult)
         {
             if (!authenticationResult.IsAuthenticated)
                 throw new InvalidOperationException("Cannot sign in, because authentication failed");
-            await HttpContext.SignInAsync(MenschIdAuthenticationSchemes.Session, authenticationResult.Principal);
+            var properties = RecentAuthentication.CreateProperties(DateTimeOffset.UtcNow);
+            await HttpContext.SignInAsync(
+                MenschIdAuthenticationSchemes.Session,
+                authenticationResult.Principal,
+                properties);
         }
     }
 }

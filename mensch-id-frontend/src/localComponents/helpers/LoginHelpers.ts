@@ -19,6 +19,16 @@ export const getValidAuthorizeReturnUrl = (returnUrl: string | null): string | u
     return parsedReturnUrl.toString();
 };
 
+export const ReauthenticationRequiredMessage = 'ReauthenticationRequired';
+
+export const isReauthenticationRequired = async (response: Response | undefined): Promise<boolean> => {
+    if(!response || response.status !== 403) {
+        return false;
+    }
+    const responseText = await response.clone().text();
+    return responseText.includes(ReauthenticationRequiredMessage);
+};
+
 export const buildExternalLoginUrl = (
     loginProviderId: string,
     redirectUrl: string,

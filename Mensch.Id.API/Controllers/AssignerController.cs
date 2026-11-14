@@ -98,8 +98,14 @@ public class AssignerController : ControllerBase
         [FromRoute] string accountId,
         [FromRoute] string logoId)
     {
+        if (!ControllerInputSanitizer.ValidateAndSanitizeMandatoryId(accountId, out accountId))
+            return BadRequest("Invalid account-ID");
         var acount = await accountStore.GetByIdAsync(accountId);
         if (acount is not AssignerAccount assignerAccount)
+            return NotFound();
+        if (assignerAccount.LogoId == null || logoId != assignerAccount.LogoId)
+            return NotFound();
+        if (!IsAllowedLogoContentType(assignerAccount.LogoImageType))
             return NotFound();
         var stream = fileStore.GetById(logoId);
         return File(stream, contentType: assignerAccount.LogoImageType);
@@ -111,7 +117,7 @@ public class AssignerController : ControllerBase
     {
         if (Request.ContentType == null)
             return BadRequest("No content type specified");
-        if (!Regex.IsMatch(Request.ContentType, "^image/(png|gif|jpeg|svg\\+xml)$"))
+        if (!IsAllowedLogoContentType(Request.ContentType))
             return BadRequest("Unsupported image file type");
         var accountId = ControllerHelpers.GetAccountId(httpContextAccessor);
         var acount = await accountStore.GetByIdAsync(accountId);
@@ -201,13 +207,19 @@ public class AssignerController : ControllerBase
         [FromRoute] MenschId personId,
         [FromQuery] bool signed = false)
     {
+        var accountId = ControllerHelpers.GetAccountId(httpContextAccessor);
         var profile = await assignerControlledProfileStore.GetByIdAsync(personId);
-        if (profile == null)
+        if (profile == null || profile.AssignerAccountId != accountId)
             return NotFound();
         if(!signed)
             return Ok(profile);
         var signedProfile = signedProfileBuilder.Build(profile);
         return Ok(signedProfile);
+    }
+
+    private static bool IsAllowedLogoContentType(string contentType)
+    {
+        return contentType != null && Regex.IsMatch(contentType, "^image/(png|gif|jpeg)$");
     }
 
 }

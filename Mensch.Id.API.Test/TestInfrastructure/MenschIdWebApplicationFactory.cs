@@ -109,7 +109,11 @@ public class MenschIdWebApplicationFactory : WebApplicationFactory<Program>
         services.AddSingleton<IStore<AssignerControlledProfile, MenschId>>(AssignerControlledProfileStore);
         services.AddSingleton<IReadonlyStore<AssignerControlledProfile, MenschId>>(AssignerControlledProfileStore);
         ReplaceTypeStore<Verification>(services, VerificationStore);
-        ReplaceTypeStore<AssignerAccountRequest>(services, new InMemoryStore<AssignerAccountRequest>());
+        var assignerAccountRequestStore = new InMemoryStore<AssignerAccountRequest, Guid>();
+        services.RemoveAll<IStore<AssignerAccountRequest, Guid>>();
+        services.RemoveAll<IReadonlyStore<AssignerAccountRequest, Guid>>();
+        services.AddSingleton<IStore<AssignerAccountRequest, Guid>>(assignerAccountRequestStore);
+        services.AddSingleton<IReadonlyStore<AssignerAccountRequest, Guid>>(assignerAccountRequestStore);
         ReplaceTypeStore<MenschIdChallenge>(services, ChallengeStore);
         ReplaceTypeStore<Order>(services, new InMemoryStore<Order>());
         ReplaceTypeStore<Product>(services, new InMemoryStore<Product>());

@@ -22,7 +22,7 @@ namespace Mensch.Id.API.Controllers;
 [Route("api/service-challenges")]
 public class ServiceChallengesController : ControllerBase
 {
-    public const int MaxPendingChallengesPerPerson = 10;
+    public const int MaxPendingChallengesPerServiceAndPerson = 10;
     private const string ProfileIncompleteMessage = "You cannot answer challenges yet because you haven't finished your profile yet";
     private readonly IServiceChallengeStore challengeStore;
     private readonly IReadonlyStore<ExternalService, Guid> serviceStore;
@@ -64,8 +64,11 @@ public class ServiceChallengesController : ControllerBase
             return BadRequest("Description is missing");
         var menschId = MenschId.Parse(body.MenschId);
         var now = DateTime.UtcNow;
-        var pendingChallengeCount = await CountPendingChallenges(menschId.Value, now);
-        if (pendingChallengeCount >= MaxPendingChallengesPerPerson)
+        var pendingChallengeCount = await CountPendingChallenges(
+            service.Id,
+            menschId.Value,
+            now);
+        if (pendingChallengeCount >= MaxPendingChallengesPerServiceAndPerson)
             return StatusCode((int)HttpStatusCode.TooManyRequests, "Too many pending challenges for this mensch.ID");
         var challenge = ServiceChallengeFactory.Create(
             service.Id,
@@ -212,11 +215,16 @@ public class ServiceChallengesController : ControllerBase
     }
 
     private async Task<int> CountPendingChallenges(
+        Guid serviceId,
         string menschId,
         DateTime now)
     {
         var pendingChallenges = await challengeStore
-            .SearchAsync(x => x.MenschId == menschId && x.State == ServiceChallengeState.Pending && x.ExpiresAt > now)
+            .SearchAsync(
+                x => x.ServiceId == serviceId
+                     && x.MenschId == menschId
+                     && x.State == ServiceChallengeState.Pending
+                     && x.ExpiresAt > now)
             .ToListAsync();
         return pendingChallenges.Count;
     }

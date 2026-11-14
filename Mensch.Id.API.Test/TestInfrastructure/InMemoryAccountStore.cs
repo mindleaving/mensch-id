@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
@@ -22,8 +23,20 @@ public class InMemoryAccountStore : InMemoryStore<Account>, IAccountStore
 
     public Task<LocalAccount> GetLocalByEmailAsync(string email)
     {
-        var account = items.Values.OfType<LocalAccount>().FirstOrDefault(x => x.Email == email);
+        var trimmedEmail = email.Trim();
+        var account = items.Values
+            .OfType<LocalAccount>()
+            .FirstOrDefault(x => string.Equals(x.Email, trimmedEmail, StringComparison.OrdinalIgnoreCase));
         return Task.FromResult(account);
+    }
+
+    public Task<bool> IsProfessionalUsernameInUse(string username)
+    {
+        var trimmedUsername = username.Trim();
+        var isInUse = items.Values
+            .OfType<ProfessionalAccount>()
+            .Any(x => string.Equals(x.Username, trimmedUsername, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(isInUse);
     }
 
     public Task<List<LocalAnonymousAccount>> GetLocalsByMenschId(string menschId)

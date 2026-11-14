@@ -328,6 +328,8 @@
   "LinkAccount_CouldNotSetupLink": "Could not setup account link process",
   "LinkAccount_SuccessfullyLinked": "Successfully linked accounts",
   "LinkAnotherAccount": "Link to another account",
+  "Reauthentication_Required": "For your security, please log in again before linking another account.",
+  "Reauthentication_CouldNotCheck": "Could not check whether you need to log in again",
   "LinkingAccounts...": "Linking accounts...",
   "Loading...": "Loading...",
   "LoadMore": "Load more",

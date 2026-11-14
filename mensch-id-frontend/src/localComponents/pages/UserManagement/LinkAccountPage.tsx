@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { showSuccessAlert } from '../../../sharedCommonComponents/helpers/AlertHelpers';
+import { showErrorAlert, showSuccessAlert } from '../../../sharedCommonComponents/helpers/AlertHelpers';
 import { resolveText } from '../../../sharedCommonComponents/helpers/Globalizer';
 import { buildLoadObjectFunc } from '../../../sharedCommonComponents/helpers/LoadingHelpers';
 import { sendPostRequest } from '../../../sharedCommonComponents/helpers/StoringHelpers';
 import { LoginForm } from '../../components/LoginForm';
-import { buildExternalLoginUrl } from '../../helpers/LoginHelpers';
+import { ReauthenticationPrompt } from '../../components/ReauthenticationPrompt';
+import { buildExternalLoginUrl, isReauthenticationRequired } from '../../helpers/LoginHelpers';
 import { Models } from '../../types/models';
 import { ViewModels } from '../../types/viewModels';
 
@@ -18,6 +19,8 @@ export const LinkAccountPage = (props: LinkAccountPageProps) => {
     const [ existingLoginProviders, setExistingLoginProviders ] = useState<string[]>([]);
     const [ isLoadingAvailableLoginProviders, setIsLoadingAvailableLoginProviders ] = useState<boolean>(true);
     const [ loginProviders, setLoginProviders ] = useState<ViewModels.LoginProviderViewModel[]>([]);
+    const [ isCheckingRecentAuthentication, setIsCheckingRecentAuthentication ] = useState<boolean>(true);
+    const [ isRecentlyAuthenticated, setIsRecentlyAuthenticated ] = useState<boolean>(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -37,6 +40,14 @@ export const LinkAccountPage = (props: LinkAccountPageProps) => {
             () => setIsLoadingAvailableLoginProviders(false)
         );
         loadLoginProviders();
+        const checkRecentAuthentication = buildLoadObjectFunc<boolean>(
+            'api/accounts/is-recently-authenticated', {},
+            resolveText("Reauthentication_CouldNotCheck"),
+            setIsRecentlyAuthenticated,
+            undefined,
+            () => setIsCheckingRecentAuthentication(false)
+        );
+        checkRecentAuthentication();
     }, []);
 
     const linkExternalAccount = async (loginProviderId: string) => {
@@ -52,12 +63,32 @@ export const LinkAccountPage = (props: LinkAccountPageProps) => {
             async () => {
                 showSuccessAlert(resolveText("LinkAccount_SuccessfullyLinked"));
                 navigate("/me");
+            },
+            async response => {
+                if(await isReauthenticationRequired(response)) {
+                    setIsRecentlyAuthenticated(false);
+                    return;
+                }
+                showErrorAlert(resolveText("LinkAccount_CouldNotLink"), await response?.text());
             }
         );
     }
 
-    if(isLoadingLoginProviders || isLoadingAvailableLoginProviders) {
+    if(isLoadingLoginProviders || isLoadingAvailableLoginProviders || isCheckingRecentAuthentication) {
         return (<h3>{resolveText("Loading...")}</h3>);
+    }
+
+    if(!isRecentlyAuthenticated) {
+        return (
+            <>
+                <h1>{resolveText("LinkAnotherAccount")}</h1>
+                <ReauthenticationPrompt
+                    availableExternalProviders={loginProviders}
+                    returnPath="/linkaccount"
+                    onReauthenticated={() => setIsRecentlyAuthenticated(true)}
+                />
+            </>
+        );
     }
 
     const availableExternalProviders = loginProviders.filter(x => !existingLoginProviders.includes(x.id));

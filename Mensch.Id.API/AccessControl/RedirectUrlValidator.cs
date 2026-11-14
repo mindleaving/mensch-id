@@ -25,6 +25,8 @@ public class RedirectUrlValidator
     {
         if (string.IsNullOrWhiteSpace(redirectUrl))
             return false;
+        if (redirectUrl.Any(IsForbiddenCharacter))
+            return false;
         if (IsLocalPath(redirectUrl))
             return true;
         if (!Uri.TryCreate(redirectUrl, UriKind.Absolute, out var redirectUri))
@@ -35,12 +37,17 @@ public class RedirectUrlValidator
         return allowedOrigins.Contains(redirectOrigin);
     }
 
+    private static bool IsForbiddenCharacter(char character)
+    {
+        return char.IsControl(character) || char.IsWhiteSpace(character) || character == '\\';
+    }
+
     private static bool IsLocalPath(string redirectUrl)
     {
         if (redirectUrl[0] != '/')
             return false;
         if (redirectUrl.Length == 1)
             return true;
-        return redirectUrl[1] != '/' && redirectUrl[1] != '\\';
+        return redirectUrl[1] != '/';
     }
 }

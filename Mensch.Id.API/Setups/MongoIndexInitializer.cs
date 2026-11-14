@@ -18,6 +18,7 @@ public class MongoIndexInitializer : IHostedService
     public const string ChallengeExpiryIndexName = "ChallengeExpiry";
     public const string ServiceChallengeExpiryIndexName = "ServiceChallengeExpiry";
     public const string WebSessionExpiryIndexName = "WebSessionExpiry";
+    public const string UniqueEmailIndexName = "UniqueEmail";
     public static readonly TimeSpan ServiceChallengeRetentionAfterExpiry = TimeSpan.FromHours(1);
     private readonly IMongoDatabase database;
     private readonly ILogger<MongoIndexInitializer> logger;
@@ -42,6 +43,31 @@ public class MongoIndexInitializer : IHostedService
         {
             logger.LogError(exception, "Could not create the expiry index for challenges. Challenges will not expire automatically");
         }
+        try
+        {
+            await EnsureUniqueEmailIndex(cancellationToken);
+        }
+        catch (MongoException exception)
+        {
+            logger.LogError(exception, "Could not create the unique index on account e-mails. Check for duplicate e-mail addresses");
+        }
+    }
+
+    private async Task EnsureUniqueEmailIndex(CancellationToken cancellationToken)
+    {
+        var collection = database.GetCollection<BsonDocument>(nameof(Account));
+        var emailField = nameof(LocalAccount.Email);
+        var indexKeys = Builders<BsonDocument>.IndexKeys.Ascending(emailField);
+        var partialFilter = new BsonDocument(emailField, new BsonDocument("$type", "string"));
+        var indexOptions = new CreateIndexOptions<BsonDocument>
+        {
+            Name = UniqueEmailIndexName,
+            Unique = true,
+            Collation = Storage.AccountStore.EmailCollation,
+            PartialFilterExpression = partialFilter
+        };
+        var indexModel = new CreateIndexModel<BsonDocument>(indexKeys, indexOptions);
+        await collection.Indexes.CreateOneAsync(indexModel, cancellationToken: cancellationToken);
     }
 
     public Task StopAsync(CancellationToken cancellationToken)

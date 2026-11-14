@@ -11,7 +11,7 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace Mensch.Id.API.Workflow;
 
-public class ActiveSessionManager
+public class ActiveSessionManager : ISessionRevoker
 {
     public const string UserAgentPropertyName = "user_agent";
     private readonly IOpenIddictAuthorizationManager authorizationManager;

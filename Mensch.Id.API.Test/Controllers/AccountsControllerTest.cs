@@ -36,6 +36,8 @@ public class AccountsControllerTest
     private DefaultHttpContext httpContext;
     private VerificationEmail sentVerificationEmail;
     private PasswordResetEmail sentPasswordResetEmail;
+    private Mock<ISessionRevoker> sessionRevoker;
+    private Mock<IAuthenticationService> authenticationService;
 
     [SetUp]
     public void Setup()
@@ -54,7 +56,12 @@ public class AccountsControllerTest
         var providerRegistry = new OidcProviderRegistry(LoginProviderViewModelBuilderTest.CreateProviders());
         var redirectUrlValidator = new RedirectUrlValidator(new RedirectUrlValidatorOptions { AllowedOrigins = ["https://mensch.id"] });
         var services = new ServiceCollection();
-        services.AddSingleton(Mock.Of<IAuthenticationService>());
+        authenticationService = new Mock<IAuthenticationService>();
+        authenticationService
+            .Setup(x => x.AuthenticateAsync(It.IsAny<HttpContext>(), It.IsAny<string>()))
+            .ReturnsAsync(AuthenticateResult.NoResult());
+        services.AddSingleton(authenticationService.Object);
+        sessionRevoker = new Mock<ISessionRevoker>();
         httpContext = new DefaultHttpContext { RequestServices = services.BuildServiceProvider() };
         var httpContextAccessor = new HttpContextAccessor { HttpContext = httpContext };
         controller = new AccountsController(
@@ -66,7 +73,8 @@ public class AccountsControllerTest
             new AccountTokenService(new EphemeralDataProtectionProvider()),
             providerRegistry,
             new LoginProviderViewModelBuilder(providerRegistry),
-            redirectUrlValidator)
+            redirectUrlValidator,
+            sessionRevoker.Object)
         {
             ControllerContext = new ControllerContext { HttpContext = httpContext }
         };
@@ -117,29 +125,117 @@ public class AccountsControllerTest
         Assert.That(accountStore.Items, Is.Empty);
     }
 
-    [Test]
-    public async Task CreatingAccountWhileSignedInLinksAccount()
+    private const string SignedInPersonId = "20220609-XUTH9";
+
+    private async Task SignInPersonAccount(DateTimeOffset authenticationTime)
     {
-        var body = new RegistrationInformation
+        var currentAccount = new LocalAnonymousAccount { Id = "current-account", PersonId = SignedInPersonId };
+        await accountStore.StoreAsync(currentAccount);
+        var principal = new ClaimBuilder().BuildPrincipal(currentAccount, MenschIdAuthenticationSchemes.Session);
+        httpContext.User = principal;
+        var properties = RecentAuthentication.CreateProperties(authenticationTime);
+        var ticket = new AuthenticationTicket(
+            principal,
+            properties,
+            MenschIdAuthenticationSchemes.Session);
+        authenticationService
+            .Setup(x => x.AuthenticateAsync(It.IsAny<HttpContext>(), MenschIdAuthenticationSchemes.Session))
+            .ReturnsAsync(AuthenticateResult.Success(ticket));
+    }
+
+    private static RegistrationInformation CreateLocalRegistration(string email)
+    {
+        return new RegistrationInformation
         {
             AccountType = AccountType.Local,
-            Email = "joe@example.org",
-            Password = Password,
-            PreferedLanguage = Language.es
+            Email = email,
+            Password = Password
         };
-        const string PersonId = "20220609-XUTH9";
-        var claims = new List<Claim>
-        {
-            new(MenschIdClaimTypes.PersonIdClaimName, PersonId)
-        };
-        httpContext.User = new ClaimsPrincipal(new ClaimsIdentity(claims));
+    }
+
+    [Test]
+    public async Task CreatingAccountWhileRecentlySignedInLinksAccountOnlyAfterEmailVerification()
+    {
+        await SignInPersonAccount(DateTimeOffset.UtcNow);
+        var body = CreateLocalRegistration("joe@example.org");
+
+        var result = await controller.RegisterLocalAccount(body);
+        var accountId = sentVerificationEmail.AccountId;
+        var unverifiedAccount = (LocalAccount)await accountStore.GetByIdAsync(accountId);
+        var unverifiedPersonId = unverifiedAccount.PersonId;
+        await controller.VerifyEmail(accountId, sentVerificationEmail.VerificationToken);
+        var verifiedAccount = (LocalAccount)await accountStore.GetByIdAsync(accountId);
+
+        Assert.That(result, Is.TypeOf<OkResult>());
+        Assert.That(unverifiedPersonId, Is.Null);
+        Assert.That(verifiedAccount.PersonId, Is.EqualTo(SignedInPersonId));
+        Assert.That(verifiedAccount.PendingPersonId, Is.Null);
+    }
+
+    [Test]
+    public async Task CreatingAccountWithStaleSessionIsRejected()
+    {
+        var staleAuthenticationTime = DateTimeOffset.UtcNow - RecentAuthentication.MaximumAge - TimeSpan.FromMinutes(1);
+        await SignInPersonAccount(staleAuthenticationTime);
+        var body = CreateLocalRegistration("joe@example.org");
 
         var result = await controller.RegisterLocalAccount(body);
 
-        var account = accountStore.Items.Single();
-        Assert.That(result, Is.TypeOf<OkResult>());
-        Assert.That(account, Is.TypeOf<LocalAccount>());
-        Assert.That(((LocalAccount)account).PersonId, Is.EqualTo(PersonId));
+        Assert.That(GetStatusCode(result), Is.EqualTo(403));
+        Assert.That(accountStore.Items.OfType<LocalAccount>(), Is.Empty);
+    }
+
+    [Test]
+    public async Task PersonIdClaimWithoutMatchingAccountIsNotTrusted()
+    {
+        var claims = new List<Claim>
+        {
+            new(MenschIdClaimTypes.PersonIdClaimName, SignedInPersonId)
+        };
+        httpContext.User = new ClaimsPrincipal(new ClaimsIdentity(claims));
+        var body = CreateLocalRegistration("joe@example.org");
+
+        await controller.RegisterLocalAccount(body);
+
+        var account = (LocalAccount)accountStore.Items.Single();
+        Assert.That(account.PersonId, Is.Null);
+        Assert.That(account.PendingPersonId, Is.Null);
+    }
+
+    [Test]
+    public async Task RegisteringWithEmailOfAssignerIsRejected()
+    {
+        await accountStore.StoreAsync(new AssignerAccount { Id = "assigner-1", Username = "Assigner@Example.org" });
+        var body = CreateLocalRegistration("assigner@example.org");
+
+        var result = await controller.RegisterLocalAccount(body);
+
+        Assert.That(GetStatusCode(result), Is.EqualTo(409));
+        Assert.That(accountStore.Items.OfType<LocalAccount>(), Is.Empty);
+    }
+
+    [Test]
+    public async Task UnknownEmailGetsSameResponseAsKnownEmail()
+    {
+        var passwordResetResult = await controller.RequestPasswordResetEmail(new ResetPasswordRequest { Email = "unknown@example.org" });
+        var resendResult = await controller.ResendVerificationEmail(new ResendVerificationBody { Email = "unknown@example.org" });
+
+        Assert.That(passwordResetResult, Is.TypeOf<OkResult>());
+        Assert.That(resendResult, Is.TypeOf<OkResult>());
+        emailSender.Verify(x => x.SendPasswordResetEmail(It.IsAny<PasswordResetEmail>()), Times.Never);
+        emailSender.Verify(x => x.SendVerificationEmail(It.IsAny<VerificationEmail>()), Times.Never);
+    }
+
+    [Test]
+    public async Task DeletingAccountRevokesItsSessions()
+    {
+        await SignInPersonAccount(DateTimeOffset.UtcNow);
+        var otherAccount = new LocalAnonymousAccount { Id = "other-account", PersonId = SignedInPersonId };
+        await accountStore.StoreAsync(otherAccount);
+
+        await controller.DeleteAccount("other-account");
+
+        sessionRevoker.Verify(x => x.RevokeAll(It.Is<IReadOnlyCollection<string>>(ids => ids.Single() == "other-account")), Times.Once);
     }
 
     [Test]
@@ -224,6 +320,7 @@ public class AccountsControllerTest
 
         Assert.That(GetStatusCode(firstResult), Is.EqualTo(200));
         Assert.That(GetStatusCode(secondResult), Is.EqualTo(403));
+        sessionRevoker.Verify(x => x.RevokeAll(It.Is<IReadOnlyCollection<string>>(ids => ids.Single() == "account-1")), Times.Once);
     }
 
     [Test]
