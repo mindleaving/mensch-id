@@ -48,6 +48,14 @@ public static class ClaimsHelpers
         return claims.FirstOrDefault(x => x.Type == MenschIdClaimTypes.PersonIdClaimName)?.Value;
     }
 
+    public static Guid? GetServiceId(IEnumerable<Claim> claims)
+    {
+        var serviceIdString = claims.FirstOrDefault(x => x.Type == MenschIdClaimTypes.ServiceId)?.Value;
+        if (!Guid.TryParse(serviceIdString, out var serviceId))
+            return null;
+        return serviceId;
+    }
+
     public static AccountType? GetAccountType(IEnumerable<Claim> claims)
     {
         var accountTypeString = claims.FirstOrDefault(x => x.Type == MenschIdClaimTypes.AccountTypeClaimName)?.Value;

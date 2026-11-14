@@ -37,6 +37,7 @@ namespace Mensch.Id.API.Setups
                 .Exclude<LoginProvider>()
                 .Exclude<MenschId>()
                 .Exclude<OwnershipSecret>()
+                .Exclude<IId>()
                 .ReactDefaults()
                 .SetDefaultFilenameForEnums("enums.ts")
                 .ConfigureNamespace("Mensch.Id.API.Models", options => options.Translation = "Models")
@@ -46,6 +47,7 @@ namespace Mensch.Id.API.Setups
                     options.Filename = "viewModels.d.ts";
                 })
                 .CustomizeType(x => x == typeof(Guid), _ => "string")
+                .CustomizeType(x => x == typeof(IId), _ => "Models.IId<string>")
                 .CustomizeType(x => x == typeof(LoginProvider), _ => "string")
                 .CustomizeType(x => x == typeof(MenschId) || x == typeof(MenschId?), _ => "string")
                 .CustomizeType(x => x == typeof(OwnershipSecret) || x == typeof(OwnershipSecret?), _ => "string")

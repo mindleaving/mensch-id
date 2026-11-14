@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import * as ScreenCapture from 'expo-screen-capture';
 import { StatusBar } from 'expo-status-bar';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from '../auth/AuthProvider';
 import { AppNavigator } from '../components/AppNavigator';
@@ -20,14 +21,16 @@ const RootLayout = () => {
     }, []);
 
     return (
-        <SafeAreaProvider>
-            <AuthProvider>
-                <AppLockProvider>
-                    <StatusBar style="auto" />
-                    <AppNavigator />
-                </AppLockProvider>
-            </AuthProvider>
-        </SafeAreaProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <SafeAreaProvider>
+                <AuthProvider>
+                    <AppLockProvider>
+                        <StatusBar style="auto" />
+                        <AppNavigator />
+                    </AppLockProvider>
+                </AuthProvider>
+            </SafeAreaProvider>
+        </GestureHandlerRootView>
     );
 };
 

@@ -80,5 +80,19 @@
   "CreateChallenge_IdDone": "Erledigt! Weiter...",
   "CreateChallenge_SecretInstruction": "Bitte die andere Person, dir das Geheimwort aus ihrer App vorzulesen. Nur wenn es mit dem Geheimwort unten übereinstimmt, besitzt sie die 웃ID.",
   "CreateChallenge_ShowSecret": "Geheimwort anzeigen",
-  "CreateChallenge_QrCodeHint": "Oder lass die andere Person diesen QR-Code mit ihrer mensch.ID-App scannen:"
+  "CreateChallenge_QrCodeHint": "Oder lass die andere Person diesen QR-Code mit ihrer mensch.ID-App scannen:",
+  "ServiceChallenge_Title": "Anmeldeanfrage",
+  "ServiceChallenge_ContactInformation": "Kontaktinformationen",
+  "ServiceChallenge_Request": "Dieser Dienst fragt an:",
+  "ServiceChallenge_ExpiresIn": "Läuft ab in {{time}}",
+  "ServiceChallenge_Expired": "Diese Anfrage ist abgelaufen.",
+  "ServiceChallenge_SlideToAccept": "Zum Bestätigen schieben",
+  "ServiceChallenge_Reject": "Ablehnen",
+  "ServiceChallenge_Accepted": "Anfrage bestätigt",
+  "ServiceChallenge_Rejected": "Anfrage abgelehnt",
+  "ServiceChallenge_ReturnToService": "Zurück zu {{service}}",
+  "ServiceChallenge_Done": "Fertig",
+  "ServiceChallenge_CouldNotAnswer": "Deine Antwort konnte nicht gesendet werden. Bitte versuche es erneut.",
+  "ServiceChallenge_NoLongerAnswerable": "Diese Anfrage wurde bereits beantwortet oder ist nicht mehr gültig.",
+  "ServiceChallenge_PendingTitle": "Offene Anfragen"
 }

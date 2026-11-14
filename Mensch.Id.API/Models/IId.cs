@@ -1,12 +1,15 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace Mensch.Id.API.Models
+namespace Mensch.Id.API.Models;
+
+public interface IId<out TKey>
 {
-    public interface IId
-    {
-        [BsonId]
-        [Required]
-        string Id { get; }
-    }
+    [BsonId]
+    [Required]
+    TKey Id { get; }
+}
+
+public interface IId : IId<string>
+{
 }

@@ -1,4 +1,5 @@
 using Mensch.Id.API.AccessControl;
+using Mensch.Id.API.Hubs;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -32,7 +33,8 @@ namespace Mensch.Id.API
                 new OpenApiSetup(),
                 new ViewModelSetup(),
                 new MiscSetup(),
-                new RateLimitingSetup()
+                new RateLimitingSetup(),
+                new ExternalServiceSetup()
             };
             foreach (var setup in setups)
             {
@@ -65,6 +67,7 @@ namespace Mensch.Id.API
             {
                 app.UseCors();
             }
+            app.UseMiddleware<HubAccessTokenMiddleware>();
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseRateLimiter();
@@ -72,6 +75,8 @@ namespace Mensch.Id.API
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<ServiceChallengeHub>(ServiceChallengeHub.Route);
+                endpoints.MapHub<UserChallengeHub>(UserChallengeHub.Route);
             });
         }
     }

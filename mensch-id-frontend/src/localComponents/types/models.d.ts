@@ -7,13 +7,13 @@ export namespace Models {
         city: string;
         country: string;
     }
-    interface AssignerAccountRequest extends Models.IId {
+    interface AssignerAccountRequest extends Models.IId<string> {
         contactPersonName: string;
         email: string;
         expectedAssignmentsPerYear: number;
         note: string;
     }
-    interface AssignerControlledProfile extends Models.IId {
+    interface AssignerControlledProfile extends Models.IId<string> {
         assignerAccountId: string;
         creationDate: string;
         ownershipSecret: string;
@@ -29,8 +29,8 @@ export namespace Models {
         phoneNumber: string;
         email: string;
     }
-    interface IId {
-        id: string;
+    interface IId<TKey> {
+        id: TKey;
     }
     interface IsLoggedInResponse {
         accountType: Enums.AccountType;
@@ -39,17 +39,17 @@ export namespace Models {
         emailMenschIdOrUsername: string;
         password: string;
     }
-    interface MenschIdChallenge extends Models.IId {
+    interface MenschIdChallenge extends Models.IId<string> {
         menschId: string;
         challengeShortId: string;
         challengeSecret: string;
         createdTimestamp: string;
     }
-    interface MenschIdReservation extends Models.IId {
+    interface MenschIdReservation extends Models.IId<string> {
         type: Enums.IdType;
         isClaimed: boolean;
     }
-    interface Person extends Models.IId {
+    interface Person extends Models.IId<string> {
         creationDate: string;
         creationAccountId: string;
     }
@@ -74,7 +74,7 @@ export namespace Models {
         id?: string;
         ownershipSecret?: string;
     }
-    interface Verification extends Models.IId {
+    interface Verification extends Models.IId<string> {
         personId: string;
         verifierId: string;
         timestamp: string;
@@ -84,7 +84,7 @@ export namespace Models {
             currency: Enums.Currency;
             value: number;
         }
-        interface Order extends Models.IId {
+        interface Order extends Models.IId<string> {
             orderedByAccountId: string;
             paymentMethod: Enums.PaymentMethod;
             isPaymentReceived: boolean;
@@ -104,7 +104,7 @@ export namespace Models {
             product: Models.Shop.Product;
             amount: number;
         }
-        interface Product extends Models.IId {
+        interface Product extends Models.IId<string> {
             name: string;
             price: Models.Shop.Money;
             imageUrl?: string;
@@ -133,8 +133,63 @@ export namespace Models {
             category: string;
         }
     }
+    export namespace ExternalServices {
+        interface ExternalService extends Models.IId<string> {
+            clientId: string;
+            displayName: string;
+            contactInformation: string;
+            acceptRedirectUri: string;
+            rejectRedirectUri: string;
+            status: Enums.ExternalServiceStatus;
+            createdTimestamp: string;
+            activatedTimestamp?: string | null;
+            activatedBy: string;
+        }
+        interface ExternalServiceCredentials {
+            client_id: string;
+            client_secret: string;
+        }
+        interface ExternalServiceRegistration {
+            displayName: string;
+            contactInformation: string;
+            acceptRedirectUri: string;
+            rejectRedirectUri: string;
+        }
+        interface ServiceChallenge extends Models.IId<string> {
+            serviceId: string;
+            menschId: string;
+            description: string;
+            serviceState: string;
+            state: Enums.ServiceChallengeState;
+            createdTimestamp: string;
+            expiresAt: string;
+            answeredTimestamp?: string | null;
+            resultToken: string;
+        }
+        interface ServiceChallengeAnswerResponse {
+            redirectUri: string;
+        }
+        interface ServiceChallengeCreationRequest extends Models.ExternalServices.ExternalServiceCredentials {
+            mensch_id: string;
+            description: string;
+            state: string;
+        }
+        interface ServiceChallengeCreationResponse {
+            challenge_id: string;
+            expires_at: string;
+            app_link: string;
+        }
+        interface ServiceChallengeResult {
+            challenge_id: string;
+            status: Enums.ServiceChallengeResultStatus;
+            result_token: string;
+        }
+        interface ServiceChallengeResultTokenClaims {
+            
+        }
+    }
     export namespace AccessControl {
-        interface Account extends Models.IId {
+        interface Account extends Models.IId<string> {
             accountType: Enums.AccountType;
             preferedLanguage: Enums.Language;
         }

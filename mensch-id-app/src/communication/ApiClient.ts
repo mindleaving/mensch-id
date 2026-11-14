@@ -23,6 +23,17 @@ export class ApiClient {
         return await this.requestJson<T>(path, { method: 'POST', body: body });
     };
 
+    getAccessToken = async (): Promise<string> => {
+        if(!this.authService.hasAccessToken()) {
+            return await this.authService.refreshAccessToken();
+        }
+        return this.authService.getAccessToken() ?? await this.authService.refreshAccessToken();
+    };
+
+    getUrl = (path: string): string => {
+        return `${this.baseUrl}/${path.replace(/^\/+/, '')}`;
+    };
+
     request = async (path: string, options: ApiRequestOptions = {}): Promise<Response> => {
         if(!this.authService.hasAccessToken()) {
             await this.authService.refreshAccessToken();
@@ -57,7 +68,7 @@ export class ApiClient {
             headers['Content-Type'] = 'application/json';
             body = JSON.stringify(options.body);
         }
-        const url = `${this.baseUrl}/${path.replace(/^\/+/, '')}`;
+        const url = this.getUrl(path);
         return await this.fetchFunction(url, {
             method: options.method ?? 'GET',
             headers: headers,

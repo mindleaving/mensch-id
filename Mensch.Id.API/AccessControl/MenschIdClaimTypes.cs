@@ -8,4 +8,5 @@ public static class MenschIdClaimTypes
     public const string OwnershipSecret = "ownershipSecret";
     public const string LoginProvider = "loginProvider";
     public const string Subject = "sub";
+    public const string ServiceId = "serviceId";
 }

@@ -25,6 +25,15 @@ export namespace ViewModels {
         loginProviders: string[];
         verifications: Models.Verification[];
     }
+    interface ServiceChallengeViewModel {
+        id: string;
+        serviceDisplayName: string;
+        serviceContactInformation: string;
+        description: string;
+        state: Enums.ServiceChallengeState;
+        createdTimestamp: string;
+        expiresAt: string;
+    }
     interface SignedAssignerControlledProfile extends Models.AssignerControlledProfile {
         timestamp: string;
         signature: string;

@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Threading.Tasks;
 using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Models.AccessControl;
@@ -28,6 +28,7 @@ public class AccountTypeRequirement : IAuthorizationRequirement
 {
     public const string AdminPolicyName = nameof(AdminPolicyName);
     public const string AssignerPolicyName = nameof(AssignerPolicyName);
+    public const string ExternalServicePolicyName = nameof(ExternalServicePolicyName);
 
     public AccountTypeRequirement(
         AccountType accountType)

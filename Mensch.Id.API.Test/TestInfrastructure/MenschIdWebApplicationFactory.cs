@@ -31,6 +31,9 @@ public class MenschIdWebApplicationFactory : WebApplicationFactory<Program>
     public const string WebsiteBaseUrl = "https://mensch.example.org";
 
     public const string ApiBaseUrl = "https://localhost";
+    public const string AppClientId = "mensch-id-app";
+    public const string AppRedirectUri = "menschid://auth/callback";
+    public const string AppPostLogoutRedirectUri = "menschid://auth/logout";
     public const string MongoServer = "localhost:27017";
     private readonly string fileStoreDirectory = Path.Combine(Path.GetTempPath(), "mensch-id-tests", Guid.NewGuid().ToString());
     private readonly string databaseName = $"menschid-test-{Guid.NewGuid():N}";
@@ -68,6 +71,12 @@ public class MenschIdWebApplicationFactory : WebApplicationFactory<Program>
                     ["MongoDB:ReplicaSetName"] = "",
                     ["MongoDB:DatabaseName"] = databaseName,
                     ["Authentication:ApiBaseUrl"] = ApiBaseUrl,
+                    ["OpenIddict:Clients:0:ClientId"] = AppClientId,
+                    ["OpenIddict:Clients:0:DisplayName"] = "mensch.ID App",
+                    ["OpenIddict:Clients:0:RedirectUris:0"] = AppRedirectUri,
+                    ["OpenIddict:Clients:0:RedirectUris:1"] = $"{ApiBaseUrl}/app/auth/callback",
+                    ["OpenIddict:Clients:0:PostLogoutRedirectUris:0"] = AppPostLogoutRedirectUri,
+                    ["OpenIddict:Clients:0:PostLogoutRedirectUris:1"] = $"{ApiBaseUrl}/app/auth/logout",
                     ["FileStore:Directory"] = fileStoreDirectory,
                     ["CORS:Origins"] = WebsiteBaseUrl,
                     ["Email:WebsiteBaseUrl"] = WebsiteBaseUrl,

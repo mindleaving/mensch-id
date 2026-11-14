@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { BarcodeScanningResult, CameraView, useCameraPermissions } from 'expo-camera';
+import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../auth/AuthContext';
 import { useAppLock } from '../lock/AppLockContext';
@@ -9,6 +10,7 @@ import { AppButton } from '../components/AppButton';
 import { ChallengeSecretView } from '../components/ChallengeSecretView';
 import { StatusScreen } from '../components/StatusScreen';
 import { parseChallengeQrCode } from '../helpers/ChallengeHelpers';
+import { buildServiceChallengeRoute, parseServiceChallengeLink } from '../helpers/ServiceChallengeHelpers';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { CommonStyles, Spacing } from '../styles/Theme';
 import { Models } from '../types/models';
@@ -18,6 +20,7 @@ const ScanScreen = () => {
     const { t } = useTranslation();
     const colors = useThemeColors();
     const auth = useAuth();
+    const router = useRouter();
     const appLock = useAppLock();
     const [ permission, requestPermission ] = useCameraPermissions();
     const [ isScanning, setIsScanning ] = useState<boolean>(true);
@@ -41,6 +44,12 @@ const ScanScreen = () => {
 
     const onBarcodeScanned = (result: BarcodeScanningResult) => {
         if(isHandlingScan.current) {
+            return;
+        }
+        const serviceChallengeId = parseServiceChallengeLink(result.data);
+        if(serviceChallengeId) {
+            isHandlingScan.current = true;
+            router.replace(buildServiceChallengeRoute(serviceChallengeId));
             return;
         }
         const challengeId = parseChallengeQrCode(result.data);

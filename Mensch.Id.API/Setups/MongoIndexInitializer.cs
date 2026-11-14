@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Mensch.Id.API.Models;
+using Mensch.Id.API.Models.ExternalServices;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
@@ -14,6 +15,8 @@ public class MongoIndexInitializer : IHostedService
 {
     public static readonly TimeSpan ChallengeLifetime = TimeSpan.FromMinutes(5);
     public const string ChallengeExpiryIndexName = "ChallengeExpiry";
+    public const string ServiceChallengeExpiryIndexName = "ServiceChallengeExpiry";
+    public static readonly TimeSpan ServiceChallengeRetentionAfterExpiry = TimeSpan.FromHours(1);
     private readonly IMongoDatabase database;
     private readonly ILogger<MongoIndexInitializer> logger;
 
@@ -30,6 +33,7 @@ public class MongoIndexInitializer : IHostedService
         try
         {
             await EnsureChallengeExpiryIndex(cancellationToken);
+            await EnsureServiceChallengeExpiryIndex(cancellationToken);
         }
         catch (MongoException exception)
         {
@@ -64,6 +68,19 @@ public class MongoIndexInitializer : IHostedService
             ExpireAfter = ChallengeLifetime
         };
         var indexModel = new CreateIndexModel<MenschIdChallenge>(indexKeys, indexOptions);
+        await collection.Indexes.CreateOneAsync(indexModel, cancellationToken: cancellationToken);
+    }
+
+    private async Task EnsureServiceChallengeExpiryIndex(CancellationToken cancellationToken)
+    {
+        var collection = database.GetCollection<ServiceChallenge>(nameof(ServiceChallenge));
+        var indexKeys = Builders<ServiceChallenge>.IndexKeys.Ascending(x => x.ExpiresAt);
+        var indexOptions = new CreateIndexOptions
+        {
+            Name = ServiceChallengeExpiryIndexName,
+            ExpireAfter = ServiceChallengeRetentionAfterExpiry
+        };
+        var indexModel = new CreateIndexModel<ServiceChallenge>(indexKeys, indexOptions);
         await collection.Indexes.CreateOneAsync(indexModel, cancellationToken: cancellationToken);
     }
 

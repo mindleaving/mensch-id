@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Security.Cryptography;
 
 namespace Mensch.Id.API.Workflow;
@@ -12,5 +13,14 @@ public static class ChallengeSecretGenerator
         if (challengeLength <= 0)
             throw new ArgumentOutOfRangeException(nameof(challengeLength));
         return RandomNumberGenerator.GetString(AllowedCharacters, challengeLength);
+    }
+
+    public static bool IsValid(
+        string value,
+        int expectedLength)
+    {
+        if (value == null || value.Length != expectedLength)
+            return false;
+        return value.All(AllowedCharacters.Contains);
     }
 }

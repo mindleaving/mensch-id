@@ -214,11 +214,27 @@ export enum PaymentMethod {
 export enum ShippingMethod {
     Standard = "Standard"
 }
+export enum ExternalServiceStatus {
+    Pending = "Pending",
+    Active = "Active",
+    Deactivated = "Deactivated"
+}
+export enum ServiceChallengeResultStatus {
+    Pending = "Pending",
+    Answered = "Answered",
+    Expired = "Expired"
+}
+export enum ServiceChallengeState {
+    Pending = "Pending",
+    Accepted = "Accepted",
+    Rejected = "Rejected"
+}
 export enum AccountType {
     Local = "Local",
     LocalAnonymous = "LocalAnonymous",
     External = "External",
     Assigner = "Assigner",
+    ExternalService = "ExternalService",
     Admin = "Admin"
 }
 export enum UserType {

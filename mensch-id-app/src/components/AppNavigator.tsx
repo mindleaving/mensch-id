@@ -49,6 +49,7 @@ export const AppNavigator = () => {
                 <Stack.Screen name="scan" options={{ title: t('Scan_Title') }} />
                 <Stack.Screen name="create-challenge" options={{ title: t('CreateChallenge_Title') }} />
                 <Stack.Screen name="settings" options={{ title: t('Settings_Title') }} />
+                <Stack.Screen name="service-challenge" options={{ title: t('ServiceChallenge_Title') }} />
             </Stack.Protected>
             <Stack.Protected guard={!isLoggedIn}>
                 <Stack.Screen name="login" options={{ headerShown: false }} />

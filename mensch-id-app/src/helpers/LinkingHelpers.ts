@@ -1,3 +1,5 @@
+import { buildServiceChallengeRoute, parseServiceChallengeLink, parseServiceChallengePath } from './ServiceChallengeHelpers';
+
 const AuthRedirectPaths = [ '/auth/callback', '/auth/logout', '/app/auth/callback', '/app/auth/logout' ];
 
 const extractPath = (pathOrUrl: string): string => {
@@ -13,10 +15,19 @@ export const isAuthRedirect = (pathOrUrl: string): boolean => {
     return AuthRedirectPaths.includes(path);
 };
 
+const resolveServiceChallengePath = (pathOrUrl: string): string | undefined => {
+    const challengeId = parseServiceChallengeLink(pathOrUrl) ?? parseServiceChallengePath(pathOrUrl);
+    return challengeId ? buildServiceChallengeRoute(challengeId) : undefined;
+};
+
 export const resolveSystemPath = (
     pathOrUrl: string,
     isInitial: boolean
 ): string | null => {
+    const serviceChallengePath = resolveServiceChallengePath(pathOrUrl);
+    if(serviceChallengePath) {
+        return serviceChallengePath;
+    }
     if(!isAuthRedirect(pathOrUrl)) {
         return pathOrUrl;
     }

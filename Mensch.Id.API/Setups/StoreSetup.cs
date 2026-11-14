@@ -1,10 +1,14 @@
+using System;
 using Mensch.Id.API.Models;
+using Mensch.Id.API.Models.ExternalServices;
 using Mensch.Id.API.Models.AccessControl;
 using Mensch.Id.API.Models.Shop;
 using Mensch.Id.API.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Driver;
 
@@ -24,6 +28,7 @@ namespace Mensch.Id.API.Setups
             {
                 new EnumRepresentationConvention(BsonType.String)
             }, type => true);
+            BsonSerializer.TryRegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
             //BsonSerializer.RegisterSerializer(new DateOnlySerializer()); // Necessary, now that MongoDB supports DateOnly?
             var mongoSettings = new MongoClientSettings
             {
@@ -61,7 +66,17 @@ namespace Mensch.Id.API.Setups
             SetupTypeStores<Person>(services);
             SetupTypeStores<Product>(services);
             SetupTypeStores<Verification>(services);
+            SetupTypeStores<ExternalService, Guid>(services);
+            services.AddScoped<IServiceChallengeStore, ServiceChallengeStore>();
+            services.AddScoped<IStore<ServiceChallenge>>(provider => provider.GetRequiredService<IServiceChallengeStore>());
+            services.AddScoped<IReadonlyStore<ServiceChallenge>>(provider => provider.GetRequiredService<IServiceChallengeStore>());
             services.AddHostedService<MongoIndexInitializer>();
+        }
+
+        private static void SetupTypeStores<T, TKey>(IServiceCollection services) where T : IId<TKey>
+        {
+            services.AddScoped<IReadonlyStore<T, TKey>, GenericReadonlyStore<T, TKey>>();
+            services.AddScoped<IStore<T, TKey>, GenericStore<T, TKey>>();
         }
 
         private static void SetupTypeStores<T>(IServiceCollection services) where T: IId

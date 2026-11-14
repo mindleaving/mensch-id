@@ -8,6 +8,7 @@ using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Models;
 using Mensch.Id.API.Models.AccessControl;
 using Mensch.Id.API.Storage;
+using Mensch.Id.API.Workflow.ExternalServices;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
@@ -27,17 +28,20 @@ public class AuthorizationController : ControllerBase
     private readonly IAccountStore accountStore;
     private readonly IClaimBuilder claimBuilder;
     private readonly IOidcProviderRegistry oidcProviderRegistry;
+    private readonly ExternalServiceAuthenticator serviceAuthenticator;
     private readonly string websiteBaseUrl;
 
     public AuthorizationController(
         IAccountStore accountStore,
         IClaimBuilder claimBuilder,
         IOidcProviderRegistry oidcProviderRegistry,
+        ExternalServiceAuthenticator serviceAuthenticator,
         IConfiguration configuration)
     {
         this.accountStore = accountStore;
         this.claimBuilder = claimBuilder;
         this.oidcProviderRegistry = oidcProviderRegistry;
+        this.serviceAuthenticator = serviceAuthenticator;
         websiteBaseUrl = (configuration["Email:WebsiteBaseUrl"] ?? string.Empty).TrimEnd('/');
     }
 
@@ -65,6 +69,8 @@ public class AuthorizationController : ControllerBase
     {
         var request = HttpContext.GetOpenIddictServerRequest()
                       ?? throw new InvalidOperationException("The OpenID Connect request cannot be retrieved");
+        if (request.IsClientCredentialsGrantType())
+            return await ExchangeClientCredentials(request);
         if (!request.IsAuthorizationCodeGrantType() && !request.IsRefreshTokenGrantType())
             return ForbidWithError(Errors.UnsupportedGrantType, "The specified grant type is not supported");
 
@@ -76,6 +82,25 @@ public class AuthorizationController : ControllerBase
             return ForbidWithError(Errors.InvalidGrant, "The account no longer exists");
 
         var principal = BuildOpenIddictPrincipal(account, result.Principal!.GetScopes());
+        return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+    }
+
+    private async Task<IActionResult> ExchangeClientCredentials(OpenIddictRequest request)
+    {
+        if (!Guid.TryParse(request.ClientId, out var clientId))
+            return ForbidWithError(Errors.InvalidClient, "Unknown client");
+        var service = await serviceAuthenticator.GetActiveServiceByClientId(clientId);
+        if (service == null)
+            return ForbidWithError(Errors.InvalidClient, "The service is not active");
+        var identity = new ClaimsIdentity(
+            OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
+            Claims.Name,
+            Claims.Role);
+        identity.SetClaim(Claims.Subject, service.Id.ToString());
+        identity.SetClaim(MenschIdClaimTypes.AccountTypeClaimName, AccountType.ExternalService.ToString());
+        identity.SetClaim(MenschIdClaimTypes.ServiceId, service.Id.ToString());
+        var principal = new ClaimsPrincipal(identity);
+        principal.SetDestinations(GetDestinations);
         return SignIn(principal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
     }
 
@@ -161,7 +186,9 @@ public class AuthorizationController : ControllerBase
     {
         if (claim.Type == Claims.Subject)
             return [Destinations.AccessToken, Destinations.IdentityToken];
-        if (claim.Type == MenschIdClaimTypes.AccountTypeClaimName || claim.Type == MenschIdClaimTypes.PersonIdClaimName)
+        if (claim.Type == MenschIdClaimTypes.AccountTypeClaimName
+            || claim.Type == MenschIdClaimTypes.PersonIdClaimName
+            || claim.Type == MenschIdClaimTypes.ServiceId)
             return [Destinations.AccessToken];
         return [];
     }

@@ -80,5 +80,19 @@
   "CreateChallenge_IdDone": "Done! Next...",
   "CreateChallenge_SecretInstruction": "Ask the other person to read the secret shown in their app back to you. Only if it matches the secret below do they own the 웃ID.",
   "CreateChallenge_ShowSecret": "Show secret",
-  "CreateChallenge_QrCodeHint": "Or let the other person scan this QR code with their mensch.ID app:"
+  "CreateChallenge_QrCodeHint": "Or let the other person scan this QR code with their mensch.ID app:",
+  "ServiceChallenge_Title": "Sign-in request",
+  "ServiceChallenge_ContactInformation": "Contact information",
+  "ServiceChallenge_Request": "This service requests:",
+  "ServiceChallenge_ExpiresIn": "Expires in {{time}}",
+  "ServiceChallenge_Expired": "This request has expired.",
+  "ServiceChallenge_SlideToAccept": "Slide to accept",
+  "ServiceChallenge_Reject": "Reject",
+  "ServiceChallenge_Accepted": "Request accepted",
+  "ServiceChallenge_Rejected": "Request rejected",
+  "ServiceChallenge_ReturnToService": "Return to {{service}}",
+  "ServiceChallenge_Done": "Done",
+  "ServiceChallenge_CouldNotAnswer": "Could not send your answer. Please try again.",
+  "ServiceChallenge_NoLongerAnswerable": "This request has already been answered or is no longer valid.",
+  "ServiceChallenge_PendingTitle": "Open requests"
 }

@@ -78,6 +78,9 @@ public class AccessControlSetup : ISetup
             {
                 options.AddPolicy(AccountTypeRequirement.AssignerPolicyName, policy => policy.AddRequirements(new AccountTypeRequirement(AccountType.Assigner)));
                 options.AddPolicy(AccountTypeRequirement.AdminPolicyName, policy => policy.AddRequirements(new AccountTypeRequirement(AccountType.Admin)));
+                options.AddPolicy(
+                    AccountTypeRequirement.ExternalServicePolicyName,
+                    policy => policy.AddRequirements(new AccountTypeRequirement(AccountType.ExternalService)));
                 options.AddPolicy(RegularUserPolicy.PolicyName, policy => policy.AddRequirements(new RegularUserRequirement()));
             });
     }
@@ -146,6 +149,7 @@ public class AccessControlSetup : ISetup
                         .SetRevocationEndpointUris("api/oidc/revoke");
                     options.AllowAuthorizationCodeFlow()
                         .AllowRefreshTokenFlow()
+                        .AllowClientCredentialsFlow()
                         .RequireProofKeyForCodeExchange();
                     options.RegisterScopes(Scopes.OpenId, Scopes.OfflineAccess, OpenIddictClientSeeder.ApiScope);
                     options.SetAccessTokenLifetime(AccessTokenLifetime)
