@@ -26,7 +26,7 @@ export const AuthProvider = (props: PropsWithChildren<AuthProviderProps>) => {
         let isCancelled = false;
         const connect = async () => {
             try {
-                const loadedDiscovery = await AuthSession.fetchDiscoveryAsync(ApiBaseUrl);
+                const loadedDiscovery = await AuthSession.fetchDiscoveryAsync(ApiBaseUrl + '/api/oidc');
                 if(isCancelled) {
                     return;
                 }

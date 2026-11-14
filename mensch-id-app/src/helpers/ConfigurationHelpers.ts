@@ -1,4 +1,4 @@
-const DefaultApiBaseUrl = 'https://mensch.id';
+const DefaultApiBaseUrl = 'https://test.mensch.id';
 
 export const ApiBaseUrl = (process.env.EXPO_PUBLIC_API_URL ?? DefaultApiBaseUrl).replace(/\/+$/, '');
 export const OidcClientId = 'mensch-id-app';

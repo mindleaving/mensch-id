@@ -21,6 +21,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using OpenIddict.Abstractions;
 using OpenIddict.Validation.AspNetCore;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
@@ -124,6 +125,7 @@ public class AccessControlSetup : ISetup
         IServiceCollection services,
         IConfiguration configuration)
     {
+        const string OidcBasePath = "api/oidc/";
         var settingsSection = configuration.GetSection(OpenIddictSettings.AppSettingsSectionName);
         services.Configure<OpenIddictSettings>(settingsSection);
         var settings = settingsSection.Get<OpenIddictSettings>() ?? new OpenIddictSettings();
@@ -137,13 +139,17 @@ public class AccessControlSetup : ISetup
             .AddServer(
                 options =>
                 {
-                    options.SetAuthorizationEndpointUris("api/oidc/authorize")
-                        .SetTokenEndpointUris("api/oidc/token")
-                        .SetEndSessionEndpointUris("api/oidc/endsession")
-                        .SetRevocationEndpointUris("api/oidc/revoke");
+                    options
+                        .SetConfigurationEndpointUris(OidcBasePath + ".well-known/openid-configuration")
+                        .SetJsonWebKeySetEndpointUris(OidcBasePath + ".well-known/jwks")
+                    	.SetAuthorizationEndpointUris(OidcBasePath + "authorize")
+                        .SetTokenEndpointUris(OidcBasePath + "token")
+                        .SetEndSessionEndpointUris(OidcBasePath + "endsession")
+                        .SetRevocationEndpointUris(OidcBasePath + "revoke");
                     options.AllowAuthorizationCodeFlow()
                         .AllowRefreshTokenFlow()
                         .RequireProofKeyForCodeExchange();
+                	    options.Configure(o => o.CodeChallengeMethods.Remove(OpenIddictConstants.CodeChallengeMethods.Plain));
                     options.RegisterScopes(Scopes.OpenId, Scopes.OfflineAccess, OpenIddictClientSeeder.ApiScope);
                     options.SetAccessTokenLifetime(AccessTokenLifetime)
                         .SetRefreshTokenLifetime(RefreshTokenLifetime);
