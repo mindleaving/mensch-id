@@ -77,14 +77,12 @@ namespace Mensch.Id.API.Controllers
         public async Task<IActionResult> TakeControlOfId(
             [FromBody] TakeControlBody body)
         {
-            if (!ControllerInputSanitizer.ValidateAndSanitzeMenschId(body.Id, out var personId))
-                return BadRequest("Invalid mensch.ID");
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
             var account = await accountStore.GetFromClaimsAsync(claims);
             var result = await ownershipTransfer.TakeControl(
                 account,
-                personId,
-                body.OwnershipSecret);
+                body.Id!.Value,
+                body.OwnershipSecret!.Value);
             if (result.IsSuccess)
                 await RefreshSessionClaims(account);
             return result.Status switch
@@ -111,23 +109,22 @@ namespace Mensch.Id.API.Controllers
         }
 
         [HttpPost("{id}/verify")]
-        public async Task<IActionResult> VerifyPerson([FromRoute] string id)
+        public async Task<IActionResult> VerifyPerson([FromRoute] MenschId id)
         {
-            if (!ControllerInputSanitizer.ValidateAndSanitzeMenschId(id, out id))
-                return BadRequest("Invalid mensch.ID");
-            var targetProfile = await personStore.GetByIdAsync(id);
+            var personId = id.Value;
+            var targetProfile = await personStore.GetByIdAsync(personId);
             if (targetProfile == null)
                 return NotFound();
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
             var myAccount = await accountStore.GetFromClaimsAsync(claims);
             if (!await CanVerifyOthers(myAccount))
                 return StatusCode((int)HttpStatusCode.Forbidden, "You must have a profile and be verified yourself to verify other profiles");
-            if (myAccount is PersonAccount personAccount && personAccount.PersonId == id)
+            if (myAccount is PersonAccount personAccount && personAccount.PersonId == personId)
                 return StatusCode((int)HttpStatusCode.Forbidden, "You cannot verify yourself :D");
             var verification = new Verification
             {
                 Id = Guid.NewGuid().ToString(),
-                PersonId = id,
+                PersonId = personId,
                 VerifierId = myAccount.Id,
                 Timestamp = DateTime.UtcNow
             };

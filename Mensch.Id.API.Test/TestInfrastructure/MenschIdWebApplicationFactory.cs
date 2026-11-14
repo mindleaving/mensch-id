@@ -91,7 +91,7 @@ public class MenschIdWebApplicationFactory : WebApplicationFactory<Program>
         ReplaceTypeStore<Account>(services, AccountStore);
         services.RemoveAll<IIdStore>();
         services.AddSingleton<IIdStore>(IdStore);
-        ReplaceTypeStore<MenschId>(services, IdStore);
+        ReplaceTypeStore<MenschIdReservation>(services, IdStore);
         ReplaceTypeStore<Person>(services, PersonStore);
         ReplaceTypeStore<AssignerControlledProfile>(services, AssignerControlledProfileStore);
         ReplaceTypeStore<Verification>(services, VerificationStore);

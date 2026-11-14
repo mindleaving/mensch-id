@@ -39,15 +39,15 @@ export namespace Models {
         emailMenschIdOrUsername: string;
         password: string;
     }
-    interface MenschId extends Models.IId {
-        type: Enums.IdType;
-        isClaimed: boolean;
-    }
     interface MenschIdChallenge extends Models.IId {
         menschId: string;
         challengeShortId: string;
         challengeSecret: string;
         createdTimestamp: string;
+    }
+    interface MenschIdReservation extends Models.IId {
+        type: Enums.IdType;
+        isClaimed: boolean;
     }
     interface Person extends Models.IId {
         creationDate: string;
@@ -71,8 +71,8 @@ export namespace Models {
         email: string;
     }
     interface TakeControlBody {
-        id: string;
-        ownershipSecret: string;
+        id?: string;
+        ownershipSecret?: string;
     }
     interface Verification extends Models.IId {
         personId: string;

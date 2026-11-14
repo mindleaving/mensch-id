@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Mensch.Id.API.Models;
 
 namespace Mensch.Id.API.Storage
 {
-    public interface IIdStore : IStore<MenschId>
+    public interface IIdStore : IStore<MenschIdReservation>
     {
         Task<bool> TryReserveCandidate(string idCandidate, IdType idType, string accountId);
         Task<bool> TryClaimId(string id, string accountId);

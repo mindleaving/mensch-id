@@ -1,7 +1,5 @@
 using System;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using Mensch.Id.API.Models;
 using Mensch.Id.API.Models.AccessControl;
@@ -28,9 +26,10 @@ public class OwnershipTransfer
 
     public async Task<OwnershipTransferResult> TakeControl(
         Account account,
-        string menschId,
-        string ownershipSecret)
+        MenschId menschIdValue,
+        OwnershipSecret ownershipSecret)
     {
+        var menschId = menschIdValue.Value;
         if (account is not PersonAccount personAccount)
             return OwnershipTransferResult.Failed(OwnershipTransferStatus.AccountNotEligible);
         if (personAccount.PersonId == menschId)
@@ -63,13 +62,12 @@ public class OwnershipTransfer
     }
 
     private static bool IsOwnershipSecretValid(
-        string providedSecret,
+        OwnershipSecret providedSecret,
         string storedSecret)
     {
-        if (string.IsNullOrEmpty(providedSecret) || string.IsNullOrEmpty(storedSecret))
+        if (!OwnershipSecret.IsValid(storedSecret))
             return false;
-        var providedSecretBytes = Encoding.UTF8.GetBytes(providedSecret);
-        var storedSecretBytes = Encoding.UTF8.GetBytes(storedSecret);
-        return CryptographicOperations.FixedTimeEquals(providedSecretBytes, storedSecretBytes);
+        var expectedSecret = new OwnershipSecret(storedSecret);
+        return providedSecret == expectedSecret;
     }
 }
