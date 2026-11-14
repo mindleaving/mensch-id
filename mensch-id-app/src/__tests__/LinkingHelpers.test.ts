@@ -7,7 +7,10 @@ describe('isAuthRedirect', () => {
         '/auth/callback?code=abc',
         'auth/callback',
         'menschid://auth/logout',
-        '/auth/logout/'
+        '/auth/logout/',
+        'https://mensch.id/app/auth/callback?code=abc&state=xyz',
+        'https://test.mensch.id/app/auth/logout',
+        '/app/auth/callback?code=abc'
     ])('recognizes %p', (pathOrUrl) => {
         expect(isAuthRedirect(pathOrUrl)).toBe(true);
     });
@@ -17,7 +20,9 @@ describe('isAuthRedirect', () => {
         '/scan',
         'menschid://create-challenge',
         '/auth/callbacks',
-        '/other/auth/callback'
+        '/other/auth/callback',
+        'https://mensch.id/app/other',
+        'https://mensch.id/auth'
     ])('ignores %p', (pathOrUrl) => {
         expect(isAuthRedirect(pathOrUrl)).toBe(false);
     });

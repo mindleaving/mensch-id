@@ -31,7 +31,7 @@
   "Scan_GrantPermission": "Kamerazugriff erlauben",
   "Scan_Again": "Erneut scannen",
   "CreateChallenge_Title": "Challenge erstellen",
-  "SendChallenge_Text": "Du kannst verifizieren dass eine Person eine bestimmte 웃ID besitzt. Gebe hierzu die ID unten an und schicke die Challenge ab. Wenn die Person das Geheimwort nennen kann besitzt sie die angegebene 웃ID.",
+  "SendChallenge_Text": "Du kannst verifizieren dass eine Person eine bestimmte 웃ID besitzt. Gib hierzu oben ihre ID an und schicke die Challenge ab. Wenn die Person das Geheimwort nennen kann besitzt sie die angegebene 웃ID.",
   "CreateChallenge_MenschId": "Ihre 웃ID",
   "MenschIDFormatPlaceholder": "Format: yyyyMMdd-XXXXX",
   "CreateChallenge_InvalidMenschId": "Bitte gib eine gültige 웃ID ein",

@@ -82,7 +82,7 @@ public class AssignerControllerTest
     {
         var idCandidate = await ReserveCandidate();
 
-        var result = await controller.CreateNew(idCandidate);
+        var result = await controller.CreateNew(new MenschId(idCandidate));
 
         var person = await personStore.GetByIdAsync(idCandidate);
         var assignerControlledProfile = await assignerControlledProfileStore.GetByIdAsync(idCandidate);
@@ -91,7 +91,7 @@ public class AssignerControllerTest
         Assert.That(person, Is.Not.Null);
         Assert.That(person.CreationAccountId, Is.EqualTo(AssignerAccountId));
         Assert.That(assignerControlledProfile.AssignerAccountId, Is.EqualTo(AssignerAccountId));
-        Assert.That(assignerControlledProfile.OwnershipSecret, Has.Length.EqualTo(AssignerControlledProfileFactory.OwnershipSecretLength));
+        Assert.That(assignerControlledProfile.OwnershipSecret, Has.Length.EqualTo(OwnershipSecret.Length));
         Assert.That(reservation.IsClaimed, Is.True);
     }
 
@@ -99,10 +99,10 @@ public class AssignerControllerTest
     public async Task ClaimingCandidateTwiceDoesNotReplaceOwnershipSecret()
     {
         var idCandidate = await ReserveCandidate();
-        await controller.CreateNew(idCandidate);
+        await controller.CreateNew(new MenschId(idCandidate));
         var originalSecret = (await assignerControlledProfileStore.GetByIdAsync(idCandidate)).OwnershipSecret;
 
-        var result = await controller.CreateNew(idCandidate);
+        var result = await controller.CreateNew(new MenschId(idCandidate));
 
         var currentSecret = (await assignerControlledProfileStore.GetByIdAsync(idCandidate)).OwnershipSecret;
         Assert.That(((IStatusCodeActionResult)result).StatusCode, Is.EqualTo(409));
@@ -113,10 +113,10 @@ public class AssignerControllerTest
     public async Task ClaimingCandidateAfterOwnershipTransferDoesNotRecreateAssignerProfile()
     {
         var idCandidate = await ReserveCandidate();
-        await controller.CreateNew(idCandidate);
+        await controller.CreateNew(new MenschId(idCandidate));
         await assignerControlledProfileStore.DeleteAsync(idCandidate);
 
-        var result = await controller.CreateNew(idCandidate);
+        var result = await controller.CreateNew(new MenschId(idCandidate));
 
         Assert.That(((IStatusCodeActionResult)result).StatusCode, Is.EqualTo(409));
         Assert.That(await assignerControlledProfileStore.ExistsAsync(idCandidate), Is.False);
@@ -125,7 +125,7 @@ public class AssignerControllerTest
     [Test]
     public async Task ClaimingUnreservedCandidateFails()
     {
-        var result = await controller.CreateNew("20000101-ACDEF");
+        var result = await controller.CreateNew(new MenschId("20000101-ACDEF"));
 
         Assert.That(result, Is.InstanceOf<IStatusCodeActionResult>());
         Assert.That(((IStatusCodeActionResult)result).StatusCode, Is.EqualTo(500));
@@ -138,20 +138,10 @@ public class AssignerControllerTest
     {
         await idStore.TryReserveCandidate("20000101-ACDEF", IdType.MenschID, "other-assigner");
 
-        var result = await controller.CreateNew("20000101-ACDEF");
+        var result = await controller.CreateNew(new MenschId("20000101-ACDEF"));
 
         Assert.That(((IStatusCodeActionResult)result).StatusCode, Is.EqualTo(500));
         Assert.That(personStore.Items, Is.Empty);
-    }
-
-    [Test]
-    [TestCase("not-an-id")]
-    [TestCase("x20000101-ACDEF")]
-    public async Task InvalidCandidateIsRejected(string idCandidate)
-    {
-        var result = await controller.CreateNew(idCandidate);
-
-        Assert.That(((IStatusCodeActionResult)result).StatusCode, Is.EqualTo(400));
     }
 
     [Test]
@@ -159,7 +149,7 @@ public class AssignerControllerTest
     {
         var idCandidate = await ReserveCandidate();
 
-        await controller.RejectIdCandidate(idCandidate);
+        await controller.RejectIdCandidate(new MenschId(idCandidate));
 
         Assert.That(await idStore.ExistsAsync(idCandidate), Is.False);
     }

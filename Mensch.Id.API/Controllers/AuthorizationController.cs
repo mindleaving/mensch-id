@@ -84,10 +84,29 @@ public class AuthorizationController : ControllerBase
     [IgnoreAntiforgeryToken]
     public async Task<IActionResult> EndSession()
     {
-        await HttpContext.SignOutAsync(MenschIdAuthenticationSchemes.Session);
-        await HttpContext.SignOutAsync(MenschIdAuthenticationSchemes.External);
+        var isSignOutConfirmed = await IsEndSessionRequestFromSessionOwner();
+        if (isSignOutConfirmed)
+        {
+            await HttpContext.SignOutAsync(MenschIdAuthenticationSchemes.Session);
+            await HttpContext.SignOutAsync(MenschIdAuthenticationSchemes.External);
+        }
         var properties = new AuthenticationProperties { RedirectUri = "/" };
         return SignOut(properties, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+    }
+
+    private async Task<bool> IsEndSessionRequestFromSessionOwner()
+    {
+        var identityTokenHintResult = await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+        var hintedAccountId = identityTokenHintResult.Succeeded
+            ? identityTokenHintResult.Principal?.GetClaim(Claims.Subject)
+            : null;
+        if (string.IsNullOrEmpty(hintedAccountId))
+            return false;
+        var sessionResult = await HttpContext.AuthenticateAsync(MenschIdAuthenticationSchemes.Session);
+        if (!sessionResult.Succeeded)
+            return false;
+        var sessionAccountId = ClaimsHelpers.GetAccountId(sessionResult.Principal!.Claims);
+        return string.Equals(hintedAccountId, sessionAccountId, StringComparison.Ordinal);
     }
 
     private async Task<Account> GetAccount(ClaimsPrincipal principal)

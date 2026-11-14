@@ -165,27 +165,26 @@ public class AssignerController : ControllerBase
 
     [HttpPost("reject/{idCandidate}")]
     public async Task<IActionResult> RejectIdCandidate(
-        [FromRoute] string idCandidate)
+        [FromRoute] MenschId idCandidate)
     {
         var accountId = ControllerHelpers.GetAccountId(httpContextAccessor);
-        await idStore.ReleaseSpecificReservation(accountId, idCandidate);
+        await idStore.ReleaseSpecificReservation(accountId, idCandidate.Value);
         return Ok();
     }
 
     [HttpPost("claim/{idCandidate}")]
     public async Task<IActionResult> CreateNew(
-        [FromRoute] string idCandidate)
+        [FromRoute] MenschId idCandidate)
     {
-        if (!ControllerInputSanitizer.ValidateAndSanitzeMenschId(idCandidate, out idCandidate))
-            return BadRequest("Invalid mensch.ID");
+        var menschId = idCandidate.Value;
         var accountId = ControllerHelpers.GetAccountId(httpContextAccessor);
-        if (await profileStore.ExistsAsync(idCandidate))
-            return Conflict($"ID '{idCandidate}' has already been assigned");
-        if (!await idStore.TryClaimId(idCandidate, accountId))
-            return StatusCode((int)HttpStatusCode.InternalServerError, $"Could not claim ID '{idCandidate}'. Did you reserve it first?");
-        var assignerControlledProfile = AssignerControlledProfileFactory.Create(idCandidate, accountId);
+        if (await profileStore.ExistsAsync(menschId))
+            return Conflict($"ID '{menschId}' has already been assigned");
+        if (!await idStore.TryClaimId(menschId, accountId))
+            return StatusCode((int)HttpStatusCode.InternalServerError, $"Could not claim ID '{menschId}'. Did you reserve it first?");
+        var assignerControlledProfile = AssignerControlledProfileFactory.Create(menschId, accountId);
         await assignerControlledProfileStore.StoreAsync(assignerControlledProfile);
-        var person = new Person(idCandidate, DateTime.UtcNow, accountId);
+        var person = new Person(menschId, DateTime.UtcNow, accountId);
         await profileStore.StoreAsync(person);
         return Ok(person);
     }
@@ -222,12 +221,10 @@ public class AssignerController : ControllerBase
 
     [HttpGet("profiles/{personId}")]
     public async Task<IActionResult> GetAssignerControlledProfile(
-        [FromRoute] string personId,
+        [FromRoute] MenschId personId,
         [FromQuery] bool signed = false)
     {
-        if (!ControllerInputSanitizer.ValidateAndSanitzeMenschId(personId, out personId))
-            return BadRequest("Invalid person-ID");
-        var profile = await assignerControlledProfileStore.GetByIdAsync(personId);
+        var profile = await assignerControlledProfileStore.GetByIdAsync(personId.Value);
         if (profile == null)
             return NotFound();
         if(!signed)

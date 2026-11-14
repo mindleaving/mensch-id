@@ -3,11 +3,14 @@ export type AuthStatus = 'loading' | 'unavailable' | 'loggedOut' | 'loggedIn';
 export interface TokenSet {
     accessToken: string;
     refreshToken?: string;
+    idToken?: string;
 }
 
 export interface RefreshTokenStorage {
     load: () => Promise<string | null>;
     save: (refreshToken: string) => Promise<void>;
+    loadIdToken: () => Promise<string | null>;
+    saveIdToken: (idToken: string) => Promise<void>;
     clear: () => Promise<void>;
 }
 

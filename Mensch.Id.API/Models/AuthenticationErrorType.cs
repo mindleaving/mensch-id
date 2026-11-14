@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 namespace Mensch.Id.API.Models
@@ -9,6 +9,7 @@ namespace Mensch.Id.API.Models
         Unknown = 0,
         InvalidUserOrPassword = 2,
         AuthenticationMethodNotAvailable = 3,
-        EmailNotVerified = 4
+        EmailNotVerified = 4,
+        AccountLocked = 5
     }
 }

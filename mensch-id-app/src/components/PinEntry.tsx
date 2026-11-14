@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppButton } from './AppButton';
 import { PinPad } from './PinPad';
+import { PinLengthRequirement } from './PinLengthRequirement';
 import { CommonStyles, Spacing } from '../styles/Theme';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { MinimumPinLength } from '../lock/AppLockService';
@@ -18,6 +19,7 @@ interface PinEntryProps {
     extraKeyLabel?: string;
     onExtraKeyPressed?: () => void;
     footer?: ReactNode;
+    showLengthRequirement?: boolean;
 }
 
 export const PinEntry = (props: PinEntryProps) => {
@@ -51,6 +53,9 @@ export const PinEntry = (props: PinEntryProps) => {
                 ? <Text testID="pin-error" style={[ CommonStyles.instruction, { color: colors.danger } ]}>{props.errorMessage}</Text>
                 : null}
             </View>
+            {props.showLengthRequirement
+            ? <PinLengthRequirement isMet={pin.length >= MinimumPinLength} />
+            : null}
             <PinPad
                 value={pin}
                 onChange={setPin}
@@ -66,9 +71,6 @@ export const PinEntry = (props: PinEntryProps) => {
                 isLoading={isSubmitting}
                 onPress={submit}
             />
-            {pin.length > 0 && pin.length < MinimumPinLength
-            ? <Text style={[ CommonStyles.instruction, { color: colors.mutedText } ]}>{t('Pin_MinimumLength', { count: MinimumPinLength })}</Text>
-            : null}
             {props.footer}
         </ScrollView>
     );

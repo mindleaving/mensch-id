@@ -2,7 +2,8 @@ export enum AuthenticationErrorType {
     Unknown = "Unknown",
     InvalidUserOrPassword = "InvalidUserOrPassword",
     AuthenticationMethodNotAvailable = "AuthenticationMethodNotAvailable",
-    EmailNotVerified = "EmailNotVerified"
+    EmailNotVerified = "EmailNotVerified",
+    AccountLocked = "AccountLocked"
 }
 export enum IdType {
     MenschID = "MenschID"

@@ -71,7 +71,7 @@ namespace Mensch.Id.API
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapControllers().RequireRateLimiting(RateLimitingSetup.DefaultPolicy);
+                endpoints.MapControllers();
             });
         }
     }

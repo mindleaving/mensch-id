@@ -66,10 +66,11 @@ export const AuthProvider = (props: PropsWithChildren<AuthProviderProps>) => {
     };
 
     const logout = async () => {
-        await authService.endSession();
+        await authService.refreshAccessToken().catch(() => undefined);
+        const idToken = await authService.endSession();
         setStatus('loggedOut');
         if(discovery) {
-            await endBrowserSession(discovery).catch(() => undefined);
+            await endBrowserSession(discovery, idToken).catch(() => undefined);
         }
     };
 

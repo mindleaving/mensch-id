@@ -183,4 +183,40 @@ public class AuthenticationModuleTest
 
         Assert.That(result.IsAuthenticated, Is.False);
     }
+
+    [Test]
+    public async Task TooManyWrongPasswordsLockTheAccountUntilPasswordIsReset()
+    {
+        var account = await CreateVerifiedLocalAccount();
+        for (var attempt = 0; attempt < AuthenticationModule.MaximumFailedLoginAttempts; attempt++)
+        {
+            await authenticationModule.AuthenticateLocalByEmailMenschIdOrUsernameAsync(new LoginInformation("joe@example.org", "wrong-password"));
+        }
+
+        var lockedResult = await authenticationModule.AuthenticateLocalByEmailMenschIdOrUsernameAsync(new LoginInformation("joe@example.org", Password));
+        await authenticationModule.ChangePasswordAsync(account.Id, "NewPassword456!");
+        var resultAfterReset = await authenticationModule.AuthenticateLocalByEmailMenschIdOrUsernameAsync(new LoginInformation("joe@example.org", "NewPassword456!"));
+
+        Assert.That(lockedResult.Error, Is.EqualTo(AuthenticationErrorType.AccountLocked));
+        Assert.That(resultAfterReset.IsAuthenticated, Is.True);
+    }
+
+    [Test]
+    public async Task SuccessfulLoginResetsFailedAttempts()
+    {
+        var account = await CreateVerifiedLocalAccount();
+        for (var attempt = 0; attempt < AuthenticationModule.MaximumFailedLoginAttempts - 1; attempt++)
+        {
+            await authenticationModule.AuthenticateLocalByEmailMenschIdOrUsernameAsync(new LoginInformation("joe@example.org", "wrong-password"));
+        }
+
+        await authenticationModule.AuthenticateLocalByEmailMenschIdOrUsernameAsync(new LoginInformation("joe@example.org", Password));
+        await authenticationModule.AuthenticateLocalByEmailMenschIdOrUsernameAsync(new LoginInformation("joe@example.org", "wrong-password"));
+        var result = await authenticationModule.AuthenticateLocalByEmailMenschIdOrUsernameAsync(new LoginInformation("joe@example.org", Password));
+
+        var storedAccount = (LocalAccount)await accountStore.GetByIdAsync(account.Id);
+        Assert.That(result.IsAuthenticated, Is.True);
+        Assert.That(storedAccount.LockoutEnd, Is.Null);
+        Assert.That(storedAccount.FailedLoginAttempts, Is.EqualTo(0));
+    }
 }

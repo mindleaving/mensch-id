@@ -8,7 +8,8 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://test.mensch.id"
+        "EXPO_PUBLIC_API_URL": "https://test.mensch.id",
+        "EXPO_PUBLIC_OIDC_REDIRECT_MODE": "customScheme"
       }
     },
     "preview": {
@@ -29,7 +30,7 @@
         "distribution": "store"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://test.mensch.id"
+        "EXPO_PUBLIC_API_URL": "https://mensch.id"
       }
     }
   },

@@ -43,9 +43,7 @@ export class AuthService {
 
     startSession = async (tokens: TokenSet): Promise<void> => {
         this.accessToken = tokens.accessToken;
-        if(tokens.refreshToken) {
-            await this.storage.save(tokens.refreshToken);
-        }
+        await this.storeTokens(tokens);
     };
 
     restoreSession = async (): Promise<boolean> => {
@@ -73,14 +71,25 @@ export class AuthService {
         return this.refreshPromise;
     };
 
-    endSession = async (): Promise<void> => {
+    endSession = async (): Promise<string | undefined> => {
         const refreshToken = await this.storage.load();
+        const idToken = await this.storage.loadIdToken();
         this.accessToken = undefined;
         await this.storage.clear();
         if(refreshToken) {
             await this.tokenEndpoints?.revokeRefreshToken(refreshToken).catch(() => undefined);
         }
         this.notifySessionEnded();
+        return idToken ?? undefined;
+    };
+
+    private storeTokens = async (tokens: TokenSet): Promise<void> => {
+        if(tokens.refreshToken) {
+            await this.storage.save(tokens.refreshToken);
+        }
+        if(tokens.idToken) {
+            await this.storage.saveIdToken(tokens.idToken);
+        }
     };
 
     private executeRefresh = async (): Promise<string> => {
@@ -100,9 +109,7 @@ export class AuthService {
             throw new SessionExpiredError();
         }
         this.accessToken = tokens.accessToken;
-        if(tokens.refreshToken) {
-            await this.storage.save(tokens.refreshToken);
-        }
+        await this.storeTokens(tokens);
         return tokens.accessToken;
     };
 

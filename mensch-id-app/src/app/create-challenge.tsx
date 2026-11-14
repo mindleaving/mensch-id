@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, ScrollView, Text, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../auth/AuthContext';
 import { AppButton } from '../components/AppButton';
@@ -53,12 +53,12 @@ const CreateChallengeScreen = () => {
         );
     }
     return (
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
             <ScrollView
                 keyboardShouldPersistTaps="handled"
-                contentContainerStyle={[ CommonStyles.screen, { gap: Spacing.large, justifyContent: 'center', flexGrow: 1 } ]}
+                automaticallyAdjustKeyboardInsets
+                contentContainerStyle={[ CommonStyles.screen, { gap: Spacing.large, flexGrow: 1, paddingTop: Spacing.large } ]}
             >
-                <Text style={[ CommonStyles.instruction, { color: colors.text } ]}>{t('SendChallenge_Text')}</Text>
                 <View style={{ alignItems: 'center' }}>
                     <Text nativeID="mensch-id-label" style={[ CommonStyles.label, { color: colors.text } ]}>{t('CreateChallenge_MenschId')}</Text>
                     <TextInput
@@ -92,6 +92,7 @@ const CreateChallengeScreen = () => {
                 {hasError
                 ? <Text style={[ CommonStyles.instruction, { color: colors.danger } ]}>{t('Challenge_CouldNotSend')}</Text>
                 : null}
+                <Text style={[ CommonStyles.instruction, { color: colors.mutedText } ]}>{t('SendChallenge_Text')}</Text>
             </ScrollView>
         </KeyboardAvoidingView>
     );

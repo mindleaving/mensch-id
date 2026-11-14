@@ -1,6 +1,7 @@
 import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import {
+    IsCustomSchemeRedirectEnabled,
     OidcClientId,
     OidcPostLogoutRedirectUri,
     OidcRedirectUri,
@@ -18,7 +19,8 @@ export class LoginCancelledError extends Error {
 
 const toTokenSet = (tokenResponse: AuthSession.TokenResponse): TokenSet => ({
     accessToken: tokenResponse.accessToken,
-    refreshToken: tokenResponse.refreshToken
+    refreshToken: tokenResponse.refreshToken,
+    idToken: tokenResponse.idToken
 });
 
 export const loginWithBrowser = async (
@@ -34,7 +36,7 @@ export const loginWithBrowser = async (
         usePKCE: true,
         extraParams: extraParams
     });
-    const result = await request.promptAsync(discovery);
+    const result = await request.promptAsync(discovery, { preferUniversalLinks: !IsCustomSchemeRedirectEnabled });
     if(result.type !== 'success') {
         throw new LoginCancelledError();
     }
@@ -85,11 +87,15 @@ export const revokeRefreshToken = async (
     );
 };
 
-export const endBrowserSession = async (discovery: AuthSession.DiscoveryDocument): Promise<void> => {
-    if(!discovery.endSessionEndpoint) {
+export const endBrowserSession = async (
+    discovery: AuthSession.DiscoveryDocument,
+    idToken: string | undefined
+): Promise<void> => {
+    if(!discovery.endSessionEndpoint || !idToken) {
         return;
     }
     const endSessionUrl = `${discovery.endSessionEndpoint}?client_id=${encodeURIComponent(OidcClientId)}`
+        + `&id_token_hint=${encodeURIComponent(idToken)}`
         + `&post_logout_redirect_uri=${encodeURIComponent(OidcPostLogoutRedirectUri)}`;
-    await WebBrowser.openAuthSessionAsync(endSessionUrl, OidcPostLogoutRedirectUri);
+    await WebBrowser.openAuthSessionAsync(endSessionUrl, OidcPostLogoutRedirectUri, { preferUniversalLinks: !IsCustomSchemeRedirectEnabled });
 };

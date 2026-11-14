@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.Text.RegularExpressions;
+using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Helpers.Converters;
 using Mensch.Id.API.Storage;
 using MongoDB.Bson.Serialization.Attributes;
@@ -8,10 +9,10 @@ using Newtonsoft.Json;
 
 namespace Mensch.Id.API.Models;
 
-[JsonConverter(typeof(LoginProviderJsonConverter))]
+[JsonConverter(typeof(ValidatedStringValueJsonConverter<LoginProvider>))]
 [BsonSerializer(typeof(LoginProviderBsonSerializer))]
-[TypeConverter(typeof(LoginProviderTypeConverter))]
-public readonly partial struct LoginProvider : IEquatable<LoginProvider>
+[TypeConverter(typeof(ValidatedStringValueTypeConverter<LoginProvider>))]
+public readonly partial struct LoginProvider : IEquatable<LoginProvider>, IValidatedStringValue<LoginProvider>
 {
     public static readonly LoginProvider Local = new("local");
 
@@ -23,6 +24,11 @@ public readonly partial struct LoginProvider : IEquatable<LoginProvider>
     }
 
     public string Value { get; }
+
+    public static LoginProvider Parse(string value)
+    {
+        return new LoginProvider(value);
+    }
 
     public static bool IsValid(string value)
     {

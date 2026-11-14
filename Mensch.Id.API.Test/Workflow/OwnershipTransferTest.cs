@@ -11,7 +11,8 @@ namespace Mensch.Id.API.Test.Workflow;
 
 public class OwnershipTransferTest
 {
-    private const string MenschId = "20000101-ACDEF";
+    private const string TestMenschId = "20000101-ACDEF";
+    private static readonly MenschId TestMenschIdValue = new(TestMenschId);
     private const string AssignerAccountId = "assigner-1";
     private InMemoryAccountStore accountStore;
     private InMemoryStore<Person> personStore;
@@ -27,9 +28,9 @@ public class OwnershipTransferTest
         assignerControlledProfileStore = new InMemoryStore<AssignerControlledProfile>();
         ownershipTransfer = new OwnershipTransfer(accountStore, personStore, assignerControlledProfileStore);
 
-        assignerControlledProfile = AssignerControlledProfileFactory.Create(MenschId, AssignerAccountId);
+        assignerControlledProfile = AssignerControlledProfileFactory.Create(TestMenschId, AssignerAccountId);
         await assignerControlledProfileStore.StoreAsync(assignerControlledProfile);
-        await personStore.StoreAsync(new Person(MenschId, DateTime.UtcNow, AssignerAccountId));
+        await personStore.StoreAsync(new Person(TestMenschId, DateTime.UtcNow, AssignerAccountId));
     }
 
     private async Task<LocalAccount> CreateUserAccount(string personId = null)
@@ -50,63 +51,40 @@ public class OwnershipTransferTest
     {
         var account = await CreateUserAccount();
 
-        var result = await ownershipTransfer.TakeControl(account, MenschId, assignerControlledProfile.OwnershipSecret);
+        var result = await ownershipTransfer.TakeControl(account, TestMenschIdValue, new OwnershipSecret(assignerControlledProfile.OwnershipSecret));
 
         var storedAccount = (LocalAccount)await accountStore.GetByIdAsync(account.Id);
-        var remainingAssignerProfile = await assignerControlledProfileStore.GetByIdAsync(MenschId);
+        var remainingAssignerProfile = await assignerControlledProfileStore.GetByIdAsync(TestMenschId);
         Assert.That(result.Status, Is.EqualTo(OwnershipTransferStatus.Success));
-        Assert.That(result.Profile.Id, Is.EqualTo(MenschId));
-        Assert.That(storedAccount.PersonId, Is.EqualTo(MenschId));
+        Assert.That(result.Profile.Id, Is.EqualTo(TestMenschId));
+        Assert.That(storedAccount.PersonId, Is.EqualTo(TestMenschId));
         Assert.That(remainingAssignerProfile, Is.Null);
     }
 
     [Test]
     public async Task MissingPersonIsCreatedDuringTransfer()
     {
-        await personStore.DeleteAsync(MenschId);
+        await personStore.DeleteAsync(TestMenschId);
         var account = await CreateUserAccount();
 
-        var result = await ownershipTransfer.TakeControl(account, MenschId, assignerControlledProfile.OwnershipSecret);
+        var result = await ownershipTransfer.TakeControl(account, TestMenschIdValue, new OwnershipSecret(assignerControlledProfile.OwnershipSecret));
 
         Assert.That(result.IsSuccess, Is.True);
-        Assert.That(await personStore.ExistsAsync(MenschId), Is.True);
+        Assert.That(await personStore.ExistsAsync(TestMenschId), Is.True);
     }
 
     [Test]
     public async Task WrongSecretIsRejectedAndNothingChanges()
     {
         var account = await CreateUserAccount();
-        var wrongSecret = new string('A', AssignerControlledProfileFactory.OwnershipSecretLength);
+        var wrongSecret = new OwnershipSecret(new string('A', OwnershipSecret.Length));
 
-        var result = await ownershipTransfer.TakeControl(account, MenschId, wrongSecret);
+        var result = await ownershipTransfer.TakeControl(account, TestMenschIdValue, wrongSecret);
 
         var storedAccount = (LocalAccount)await accountStore.GetByIdAsync(account.Id);
         Assert.That(result.Status, Is.EqualTo(OwnershipTransferStatus.InvalidOwnershipSecret));
         Assert.That(storedAccount.PersonId, Is.Null);
-        Assert.That(await assignerControlledProfileStore.ExistsAsync(MenschId), Is.True);
-    }
-
-    [Test]
-    [TestCase(null)]
-    [TestCase("")]
-    public async Task EmptySecretIsRejected(string secret)
-    {
-        var account = await CreateUserAccount();
-
-        var result = await ownershipTransfer.TakeControl(account, MenschId, secret);
-
-        Assert.That(result.Status, Is.EqualTo(OwnershipTransferStatus.InvalidOwnershipSecret));
-    }
-
-    [Test]
-    public async Task SecretIsCaseSensitive()
-    {
-        var account = await CreateUserAccount();
-        var lowerCaseSecret = assignerControlledProfile.OwnershipSecret.ToLowerInvariant();
-
-        var result = await ownershipTransfer.TakeControl(account, MenschId, lowerCaseSecret);
-
-        Assert.That(result.Status, Is.EqualTo(OwnershipTransferStatus.InvalidOwnershipSecret));
+        Assert.That(await assignerControlledProfileStore.ExistsAsync(TestMenschId), Is.True);
     }
 
     [Test]
@@ -114,7 +92,7 @@ public class OwnershipTransferTest
     {
         var account = await CreateUserAccount();
 
-        var result = await ownershipTransfer.TakeControl(account, "20000101-ZZZZZ", assignerControlledProfile.OwnershipSecret);
+        var result = await ownershipTransfer.TakeControl(account, new MenschId("20000101-ZZZZZ"), new OwnershipSecret(assignerControlledProfile.OwnershipSecret));
 
         Assert.That(result.Status, Is.EqualTo(OwnershipTransferStatus.ProfileNotFound));
     }
@@ -124,9 +102,9 @@ public class OwnershipTransferTest
     {
         var firstAccount = await CreateUserAccount();
         var secondAccount = await CreateUserAccount();
-        await ownershipTransfer.TakeControl(firstAccount, MenschId, assignerControlledProfile.OwnershipSecret);
+        await ownershipTransfer.TakeControl(firstAccount, TestMenschIdValue, new OwnershipSecret(assignerControlledProfile.OwnershipSecret));
 
-        var result = await ownershipTransfer.TakeControl(secondAccount, MenschId, assignerControlledProfile.OwnershipSecret);
+        var result = await ownershipTransfer.TakeControl(secondAccount, TestMenschIdValue, new OwnershipSecret(assignerControlledProfile.OwnershipSecret));
 
         var storedSecondAccount = (LocalAccount)await accountStore.GetByIdAsync(secondAccount.Id);
         Assert.That(result.IsSuccess, Is.False);
@@ -136,10 +114,10 @@ public class OwnershipTransferTest
     [Test]
     public async Task IdAlreadyControlledByOtherAccountIsRejected()
     {
-        await CreateUserAccount(MenschId);
+        await CreateUserAccount(TestMenschId);
         var account = await CreateUserAccount();
 
-        var result = await ownershipTransfer.TakeControl(account, MenschId, assignerControlledProfile.OwnershipSecret);
+        var result = await ownershipTransfer.TakeControl(account, TestMenschIdValue, new OwnershipSecret(assignerControlledProfile.OwnershipSecret));
 
         Assert.That(result.Status, Is.EqualTo(OwnershipTransferStatus.ControlledByOtherAccount));
     }
@@ -149,21 +127,21 @@ public class OwnershipTransferTest
     {
         var account = await CreateUserAccount("19990101-ACDEF");
 
-        var result = await ownershipTransfer.TakeControl(account, MenschId, assignerControlledProfile.OwnershipSecret);
+        var result = await ownershipTransfer.TakeControl(account, TestMenschIdValue, new OwnershipSecret(assignerControlledProfile.OwnershipSecret));
 
         Assert.That(result.Status, Is.EqualTo(OwnershipTransferStatus.AccountAlreadyHasProfile));
-        Assert.That(await assignerControlledProfileStore.ExistsAsync(MenschId), Is.True);
+        Assert.That(await assignerControlledProfileStore.ExistsAsync(TestMenschId), Is.True);
     }
 
     [Test]
     public async Task AccountAlreadyControllingIdSucceedsWithoutChanges()
     {
-        var account = await CreateUserAccount(MenschId);
+        var account = await CreateUserAccount(TestMenschId);
 
-        var result = await ownershipTransfer.TakeControl(account, MenschId, "irrelevant");
+        var result = await ownershipTransfer.TakeControl(account, TestMenschIdValue, OwnershipSecret.Generate());
 
         Assert.That(result.IsSuccess, Is.True);
-        Assert.That(result.Profile.Id, Is.EqualTo(MenschId));
+        Assert.That(result.Profile.Id, Is.EqualTo(TestMenschId));
     }
 
     [Test]
@@ -171,7 +149,7 @@ public class OwnershipTransferTest
     {
         var assignerAccount = new AssignerAccount { Id = AssignerAccountId, Username = "assigner" };
 
-        var result = await ownershipTransfer.TakeControl(assignerAccount, MenschId, assignerControlledProfile.OwnershipSecret);
+        var result = await ownershipTransfer.TakeControl(assignerAccount, TestMenschIdValue, new OwnershipSecret(assignerControlledProfile.OwnershipSecret));
 
         Assert.That(result.Status, Is.EqualTo(OwnershipTransferStatus.AccountNotEligible));
     }
@@ -179,7 +157,7 @@ public class OwnershipTransferTest
     [Test]
     public async Task MissingAccountIsNotEligible()
     {
-        var result = await ownershipTransfer.TakeControl(null, MenschId, assignerControlledProfile.OwnershipSecret);
+        var result = await ownershipTransfer.TakeControl(null, TestMenschIdValue, new OwnershipSecret(assignerControlledProfile.OwnershipSecret));
 
         Assert.That(result.Status, Is.EqualTo(OwnershipTransferStatus.AccountNotEligible));
     }
@@ -195,19 +173,19 @@ public class OwnershipTransferTest
         };
         await accountStore.StoreAsync(externalAccount);
 
-        var result = await ownershipTransfer.TakeControl(externalAccount, MenschId, assignerControlledProfile.OwnershipSecret);
+        var result = await ownershipTransfer.TakeControl(externalAccount, TestMenschIdValue, new OwnershipSecret(assignerControlledProfile.OwnershipSecret));
 
         Assert.That(result.IsSuccess, Is.True);
-        Assert.That(externalAccount.PersonId, Is.EqualTo(MenschId));
+        Assert.That(externalAccount.PersonId, Is.EqualTo(TestMenschId));
     }
 
     [Test]
     public void GeneratedOwnershipSecretHasExpectedFormat()
     {
-        var profile = AssignerControlledProfileFactory.Create(MenschId, AssignerAccountId);
-        var otherProfile = AssignerControlledProfileFactory.Create(MenschId, AssignerAccountId);
+        var profile = AssignerControlledProfileFactory.Create(TestMenschId, AssignerAccountId);
+        var otherProfile = AssignerControlledProfileFactory.Create(TestMenschId, AssignerAccountId);
 
-        Assert.That(profile.OwnershipSecret, Has.Length.EqualTo(AssignerControlledProfileFactory.OwnershipSecretLength));
+        Assert.That(profile.OwnershipSecret, Has.Length.EqualTo(OwnershipSecret.Length));
         Assert.That(profile.OwnershipSecret, Does.Match("^[ACDEFGHJKLMNPQRSTUVWXYZ2345679]+$"));
         Assert.That(profile.OwnershipSecret, Is.Not.EqualTo(otherProfile.OwnershipSecret));
         Assert.That(profile.AssignerAccountId, Is.EqualTo(AssignerAccountId));

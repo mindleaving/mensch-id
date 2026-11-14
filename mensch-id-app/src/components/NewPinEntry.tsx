@@ -38,6 +38,7 @@ export const NewPinEntry = (props: NewPinEntryProps) => {
                 errorMessage={errorMessage}
                 submitTitle={t('Pin_Next')}
                 onSubmit={submitFirstPin}
+                showLengthRequirement
                 footer={props.footer}
             />
         );

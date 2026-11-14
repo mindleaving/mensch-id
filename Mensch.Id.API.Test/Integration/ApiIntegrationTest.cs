@@ -269,6 +269,57 @@ public class ApiIntegrationTest
     }
 
     [Test]
+    [TestCase("not-a-mensch-id")]
+    [TestCase("20000101-ACDEB")]
+    [TestCase("x20000101-ACDEF")]
+    public async Task MalformedMenschIdInRouteIsRejected(string menschId)
+    {
+        await CreateAssigner("clinic");
+        using var assignerClient = CreateClient();
+        await Login(assignerClient, "clinic");
+
+        var challengeResponse = await assignerClient.PostAsync($"api/id/{menschId}/challenge", null);
+        var claimResponse = await assignerClient.PostAsync($"api/assigner/claim/{menschId}", null);
+        var profileResponse = await assignerClient.GetAsync($"api/assigner/profiles/{menschId}");
+
+        Assert.That(challengeResponse.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+        Assert.That(claimResponse.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+        Assert.That(profileResponse.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+        Assert.That(factory.PersonStore.Items, Is.Empty);
+    }
+
+    [Test]
+    public async Task LowerCaseMenschIdInRouteIsNormalized()
+    {
+        await CreateAssigner("clinic");
+        using var assignerClient = CreateClient();
+        await Login(assignerClient, "clinic");
+        var menschId = await CreateIdAsAssigner(assignerClient);
+
+        var response = await assignerClient.GetAsync($"api/assigner/profiles/{menschId.ToLowerInvariant()}");
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+    }
+
+    [Test]
+    [TestCase("{\"id\":\"not-a-mensch-id\",\"ownershipSecret\":\"ACDEFGHJKLMNPQRSTUVWXYZ2345679\"}")]
+    [TestCase("{\"id\":\"20000101-ACDEF\",\"ownershipSecret\":\"too-short\"}")]
+    [TestCase("{\"id\":\"20000101-ACDEF\",\"ownershipSecret\":\"acdefghjklmnpqrstuvwxyz2345679\"}")]
+    [TestCase("{\"ownershipSecret\":\"ACDEFGHJKLMNPQRSTUVWXYZ2345679\"}")]
+    [TestCase("{\"id\":\"20000101-ACDEF\"}")]
+    public async Task MalformedTakeControlBodyIsRejected(string json)
+    {
+        await CreateVerifiedUser("joe@example.org");
+        using var client = CreateClient();
+        await Login(client, "joe@example.org");
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+        var response = await client.PostAsync("api/profiles/take-control", content);
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
+    }
+
+    [Test]
     public async Task AnonymousUsersCannotCreateMenschIds()
     {
         using var client = CreateClient();
@@ -287,7 +338,7 @@ public class ApiIntegrationTest
         await Login(assignerClient, "clinic");
         var menschId = await CreateIdAsAssigner(assignerClient);
         var ownershipSecret = factory.AssignerControlledProfileStore.Items.Single().OwnershipSecret;
-        var body = new TakeControlBody { Id = menschId, OwnershipSecret = ownershipSecret };
+        var body = new TakeControlBody { Id = new MenschId(menschId), OwnershipSecret = new OwnershipSecret(ownershipSecret) };
 
         var response = await assignerClient.PostAsync("api/profiles/take-control", ToJsonContent(body));
 
@@ -309,9 +360,9 @@ public class ApiIntegrationTest
         var profileResponse = await assignerClient.GetAsync($"api/assigner/profiles/{menschId}");
         var profileJson = JObject.Parse(await profileResponse.Content.ReadAsStringAsync());
         var ownershipSecret = profileJson["ownershipSecret"]!.Value<string>();
-        var wrongBody = new TakeControlBody { Id = menschId, OwnershipSecret = new string('A', ownershipSecret!.Length) };
+        var wrongBody = new TakeControlBody { Id = new MenschId(menschId), OwnershipSecret = new OwnershipSecret(new string('A', ownershipSecret!.Length)) };
         var wrongSecretResponse = await userClient.PostAsync("api/profiles/take-control", ToJsonContent(wrongBody));
-        var body = new TakeControlBody { Id = menschId, OwnershipSecret = ownershipSecret };
+        var body = new TakeControlBody { Id = new MenschId(menschId), OwnershipSecret = new OwnershipSecret(ownershipSecret) };
         var takeControlResponse = await userClient.PostAsync("api/profiles/take-control", ToJsonContent(body));
         var meResponse = await userClient.GetAsync("api/profiles/me");
 
@@ -340,7 +391,7 @@ public class ApiIntegrationTest
         await Login(secondUserClient, "jane@example.org");
         var menschId = await CreateIdAsAssigner(assignerClient);
         var ownershipSecret = factory.AssignerControlledProfileStore.Items.Single().OwnershipSecret;
-        var body = new TakeControlBody { Id = menschId, OwnershipSecret = ownershipSecret };
+        var body = new TakeControlBody { Id = new MenschId(menschId), OwnershipSecret = new OwnershipSecret(ownershipSecret) };
 
         var firstResponse = await firstUserClient.PostAsync("api/profiles/take-control", ToJsonContent(body));
         var secondResponse = await secondUserClient.PostAsync("api/profiles/take-control", ToJsonContent(body));

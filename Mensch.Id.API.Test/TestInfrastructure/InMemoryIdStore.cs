@@ -7,14 +7,14 @@ using Mensch.Id.API.Storage;
 
 namespace Mensch.Id.API.Test.TestInfrastructure;
 
-public class InMemoryIdStore : InMemoryStore<MenschId>, IIdStore
+public class InMemoryIdStore : InMemoryStore<MenschIdReservation>, IIdStore
 {
     public Task<bool> TryReserveCandidate(
         string idCandidate,
         IdType idType,
         string accountId)
     {
-        var menschId = new MenschId
+        var menschId = new MenschIdReservation
         {
             Id = idCandidate,
             Type = idType,

@@ -56,11 +56,12 @@ namespace Mensch.Id.API.Setups
             services.AddScoped<IFilesStore, FilesStore>();
             services.AddScoped<IIdStore, IdStore>();
             SetupTypeStores<MenschIdChallenge>(services);
-            SetupTypeStores<MenschId>(services);
+            SetupTypeStores<MenschIdReservation>(services);
             SetupTypeStores<Order>(services);
             SetupTypeStores<Person>(services);
             SetupTypeStores<Product>(services);
             SetupTypeStores<Verification>(services);
+            services.AddHostedService<MongoIndexInitializer>();
         }
 
         private static void SetupTypeStores<T>(IServiceCollection services) where T: IId

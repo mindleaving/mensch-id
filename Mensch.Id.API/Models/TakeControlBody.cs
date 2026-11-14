@@ -1,13 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Mensch.Id.API.Models
 {
     public class TakeControlBody
     {
         [Required]
-        public string Id { get; set; }
+        public MenschId? Id { get; set; }
 
         [Required]
-        public string OwnershipSecret { get; set; }
+        public OwnershipSecret? OwnershipSecret { get; set; }
     }
 }

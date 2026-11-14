@@ -1,0 +1,22 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": [
+          "REPLACE_WITH_APPLE_TEAM_ID.id.mensch.app"
+        ],
+        "components": [
+          {
+            "/": "/app/auth/*",
+            "comment": "OpenID Connect redirects of the mensch.ID app"
+          }
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": [
+      "REPLACE_WITH_APPLE_TEAM_ID.id.mensch.app"
+    ]
+  }
+}
