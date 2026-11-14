@@ -3,6 +3,7 @@ import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { BarcodeScanningResult, CameraView, useCameraPermissions } from 'expo-camera';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../auth/AuthContext';
+import { useAppLock } from '../lock/AppLockContext';
 import { ApiError } from '../communication/ApiClient';
 import { AppButton } from '../components/AppButton';
 import { ChallengeSecretView } from '../components/ChallengeSecretView';
@@ -17,6 +18,7 @@ const ScanScreen = () => {
     const { t } = useTranslation();
     const colors = useThemeColors();
     const auth = useAuth();
+    const appLock = useAppLock();
     const [ permission, requestPermission ] = useCameraPermissions();
     const [ isScanning, setIsScanning ] = useState<boolean>(true);
     const [ isLoading, setIsLoading ] = useState<boolean>(false);
@@ -65,7 +67,7 @@ const ScanScreen = () => {
             <StatusScreen
                 message={t('Scan_PermissionRequired')}
                 actionTitle={t('Scan_GrantPermission')}
-                onAction={requestPermission}
+                onAction={() => appLock.runWithoutLock(requestPermission)}
             />
         );
     }

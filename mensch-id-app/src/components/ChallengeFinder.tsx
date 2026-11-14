@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ActivityIndicator, Text, TextInput, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { AppButton } from './AppButton';
+import { ScanButton } from './ScanButton';
 import { ChallengeListItem } from './ChallengeListItem';
 import { CommonStyles, Spacing } from '../styles/Theme';
 import { useThemeColors } from '../hooks/useThemeColors';
@@ -48,12 +48,7 @@ export const ChallengeFinder = (props: ChallengeFinderProps) => {
             </View>
             {!isSearchActive
             ? <View style={{ alignItems: 'center' }}>
-                <AppButton
-                    title={t('ScanQrCode')}
-                    icon="qrcode-scan"
-                    testID="scan-button"
-                    onPress={props.onScanPressed}
-                />
+                <ScanButton testID="scan-button" onPress={props.onScanPressed} />
             </View>
             : <View style={{ gap: Spacing.small }}>
                 {searchState.isSearching && searchState.challenges.length === 0

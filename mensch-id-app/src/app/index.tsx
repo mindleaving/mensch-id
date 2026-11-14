@@ -30,6 +30,7 @@ const HomeScreen = () => {
                     headerRight: () => (
                         <HeaderMenu
                             onCreateChallenge={() => router.push('/create-challenge')}
+                            onOpenSettings={() => router.push('/settings')}
                             onLogout={auth.logout}
                         />
                     )

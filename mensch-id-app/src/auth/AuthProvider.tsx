@@ -67,10 +67,10 @@ export const AuthProvider = (props: PropsWithChildren<AuthProviderProps>) => {
 
     const logout = async () => {
         await authService.endSession();
+        setStatus('loggedOut');
         if(discovery) {
             await endBrowserSession(discovery).catch(() => undefined);
         }
-        setStatus('loggedOut');
     };
 
     const value: AuthContextValue = {
