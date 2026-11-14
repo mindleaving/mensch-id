@@ -35,6 +35,47 @@ export interface ChallengeSearchResult {
     challenges: import('./models').Models.MenschIdChallenge[];
 }
 
+export interface AppLockSettings {
+    pinHash?: string;
+    pinSalt?: string;
+    isBiometricsEnabled: boolean;
+    failedPinAttempts: number;
+    biometricUseCount: number;
+    lastPinEntryTimestamp?: number;
+}
+
+export interface AppLockStorage {
+    load: () => Promise<AppLockSettings>;
+    save: (settings: AppLockSettings) => Promise<void>;
+}
+
+export interface AppLockDependencies {
+    storage: AppLockStorage;
+    hashPin: (pin: string, salt: string) => Promise<string>;
+    createSalt: () => Promise<string>;
+    now: () => number;
+}
+
+export type PinVerificationResult = 'valid' | 'invalid' | 'lockedOut';
+
+export type LockTrigger = 'coldStart' | 'freshLogin';
+
+export type AppLockStatus = 'loading' | 'setupRequired' | 'locked' | 'unlocked';
+
+export interface AppLockContextValue {
+    status: AppLockStatus;
+    isBiometricsAvailable: boolean;
+    isBiometricsEnabled: boolean;
+    remainingPinAttempts: number;
+    setInitialPin: (pin: string) => Promise<void>;
+    unlockWithPin: (pin: string) => Promise<PinVerificationResult>;
+    unlockWithBiometrics: () => Promise<'unlocked' | 'pinRequired' | 'failed'>;
+    changePin: (currentPin: string, newPin: string) => Promise<PinVerificationResult>;
+    setBiometricsEnabled: (isEnabled: boolean) => Promise<boolean>;
+    setPinResetRequested: (isRequested: boolean) => void;
+    runWithoutLock: <T>(action: () => Promise<T>) => Promise<T>;
+}
+
 export interface ProfileState {
     status: 'loading' | 'loaded' | 'noProfile' | 'error';
     menschId?: string;

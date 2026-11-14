@@ -125,7 +125,6 @@ public class AccessControlSetup : ISetup
         IServiceCollection services,
         IConfiguration configuration)
     {
-        const string OidcBasePath = "api/oidc/";
         var settingsSection = configuration.GetSection(OpenIddictSettings.AppSettingsSectionName);
         services.Configure<OpenIddictSettings>(settingsSection);
         var settings = settingsSection.Get<OpenIddictSettings>() ?? new OpenIddictSettings();
@@ -139,13 +138,13 @@ public class AccessControlSetup : ISetup
             .AddServer(
                 options =>
                 {
-                    options
-                        .SetConfigurationEndpointUris(OidcBasePath + ".well-known/openid-configuration")
-                        .SetJsonWebKeySetEndpointUris(OidcBasePath + ".well-known/jwks")
-                    	.SetAuthorizationEndpointUris(OidcBasePath + "authorize")
-                        .SetTokenEndpointUris(OidcBasePath + "token")
-                        .SetEndSessionEndpointUris(OidcBasePath + "endsession")
-                        .SetRevocationEndpointUris(OidcBasePath + "revoke");
+                    options.SetIssuer(BuildIssuer(configuration))
+                        .SetConfigurationEndpointUris("api/oidc/.well-known/openid-configuration")
+                        .SetJsonWebKeySetEndpointUris("api/oidc/.well-known/jwks")
+                        .SetAuthorizationEndpointUris("api/oidc/authorize")
+                        .SetTokenEndpointUris("api/oidc/token")
+                        .SetEndSessionEndpointUris("api/oidc/endsession")
+                        .SetRevocationEndpointUris("api/oidc/revoke");
                     options.AllowAuthorizationCodeFlow()
                         .AllowRefreshTokenFlow()
                         .RequireProofKeyForCodeExchange();
@@ -169,6 +168,14 @@ public class AccessControlSetup : ISetup
                     options.UseAspNetCore();
                 });
         services.AddHostedService<OpenIddictClientSeeder>();
+    }
+
+    private static Uri BuildIssuer(IConfiguration configuration)
+    {
+        var apiBaseUrl = configuration["Authentication:ApiBaseUrl"];
+        if (string.IsNullOrWhiteSpace(apiBaseUrl))
+            throw new SecurityException("No API base URL configured (Authentication:ApiBaseUrl)");
+        return new Uri($"{apiBaseUrl.TrimEnd('/')}/api/oidc/");
     }
 
     private static string ResolveKeyPath(

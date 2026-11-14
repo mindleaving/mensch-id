@@ -197,14 +197,26 @@ public class OidcFlowIntegrationTest
     {
         using var client = CreateClient();
 
-        var response = await client.GetAsync(".well-known/openid-configuration");
+        var response = await client.GetAsync("api/oidc/.well-known/openid-configuration");
 
         var json = JObject.Parse(await response.Content.ReadAsStringAsync());
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-        Assert.That(json["authorization_endpoint"]!.Value<string>(), Does.EndWith("/api/oidc/authorize"));
-        Assert.That(json["token_endpoint"]!.Value<string>(), Does.EndWith("/api/oidc/token"));
-        Assert.That(json["end_session_endpoint"]!.Value<string>(), Does.EndWith("/api/oidc/endsession"));
-        Assert.That(json["revocation_endpoint"]!.Value<string>(), Does.EndWith("/api/oidc/revoke"));
+        Assert.That(json["issuer"]!.Value<string>(), Is.EqualTo($"{MenschIdWebApplicationFactory.ApiBaseUrl}/api/oidc/"));
+        Assert.That(json["jwks_uri"]!.Value<string>(), Is.EqualTo($"{MenschIdWebApplicationFactory.ApiBaseUrl}/api/oidc/.well-known/jwks"));
+        Assert.That(json["authorization_endpoint"]!.Value<string>(), Is.EqualTo($"{MenschIdWebApplicationFactory.ApiBaseUrl}/api/oidc/authorize"));
+        Assert.That(json["token_endpoint"]!.Value<string>(), Is.EqualTo($"{MenschIdWebApplicationFactory.ApiBaseUrl}/api/oidc/token"));
+        Assert.That(json["end_session_endpoint"]!.Value<string>(), Is.EqualTo($"{MenschIdWebApplicationFactory.ApiBaseUrl}/api/oidc/endsession"));
+        Assert.That(json["revocation_endpoint"]!.Value<string>(), Is.EqualTo($"{MenschIdWebApplicationFactory.ApiBaseUrl}/api/oidc/revoke"));
+    }
+
+    [Test]
+    public async Task RootDiscoveryDocumentIsNotServed()
+    {
+        using var client = CreateClient();
+
+        var response = await client.GetAsync(".well-known/openid-configuration");
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
     }
 
     [Test]

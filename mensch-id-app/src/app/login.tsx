@@ -5,6 +5,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../auth/AuthContext';
 import { LoginCancelledError } from '../auth/OidcClient';
 import { AppButton } from '../components/AppButton';
+import { Checkbox } from '../components/Checkbox';
+import { useAppLock } from '../lock/AppLockContext';
 import { getLoginProviderIcon, loadLoginProviders } from '../helpers/LoginProviderHelpers';
 import { CommonStyles, Spacing } from '../styles/Theme';
 import { useThemeColors } from '../hooks/useThemeColors';
@@ -15,6 +17,8 @@ const LoginScreen = () => {
     const { t } = useTranslation();
     const colors = useThemeColors();
     const auth = useAuth();
+    const appLock = useAppLock();
+    const [ isPinResetRequested, setIsPinResetRequested ] = useState<boolean>(false);
     const [ loginProviders, setLoginProviders ] = useState<ViewModels.LoginProviderViewModel[]>([]);
     const [ hasProviderError, setHasProviderError ] = useState<boolean>(false);
     const [ activeLogin, setActiveLogin ] = useState<string>();
@@ -25,6 +29,11 @@ const LoginScreen = () => {
             .then(setLoginProviders)
             .catch(() => setHasProviderError(true));
     }, []);
+
+    const changePinResetRequest = (isRequested: boolean) => {
+        setIsPinResetRequested(isRequested);
+        appLock.setPinResetRequested(isRequested);
+    };
 
     const login = async (loginKey: string, loginProviderId?: string) => {
         setActiveLogin(loginKey);
@@ -71,6 +80,12 @@ const LoginScreen = () => {
                         />
                     ))}
                 </View>
+                <Checkbox
+                    label={t('Login_ResetPin')}
+                    isChecked={isPinResetRequested}
+                    onChange={changePinResetRequest}
+                    testID="reset-pin"
+                />
                 {hasProviderError
                 ? <Text style={[ CommonStyles.instruction, { color: colors.mutedText } ]}>{t('LoginProviders_CouldNotLoad')}</Text>
                 : null}

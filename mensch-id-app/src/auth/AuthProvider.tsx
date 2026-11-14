@@ -5,7 +5,7 @@ import { AuthService } from './AuthService';
 import { secureRefreshTokenStorage } from './SecureRefreshTokenStorage';
 import { endBrowserSession, loginWithBrowser, refreshTokens, revokeRefreshToken } from './OidcClient';
 import { ApiClient } from '../communication/ApiClient';
-import { ApiBaseUrl } from '../helpers/ConfigurationHelpers';
+import { ApiBaseUrl, OidcIssuer } from '../helpers/ConfigurationHelpers';
 import { AuthContextValue, AuthStatus } from '../types/frontendTypes';
 
 interface AuthProviderProps {}
@@ -26,7 +26,7 @@ export const AuthProvider = (props: PropsWithChildren<AuthProviderProps>) => {
         let isCancelled = false;
         const connect = async () => {
             try {
-                const loadedDiscovery = await AuthSession.fetchDiscoveryAsync(ApiBaseUrl + '/api/oidc');
+                const loadedDiscovery = await AuthSession.fetchDiscoveryAsync(OidcIssuer);
                 if(isCancelled) {
                     return;
                 }
@@ -67,10 +67,10 @@ export const AuthProvider = (props: PropsWithChildren<AuthProviderProps>) => {
 
     const logout = async () => {
         await authService.endSession();
+        setStatus('loggedOut');
         if(discovery) {
             await endBrowserSession(discovery).catch(() => undefined);
         }
-        setStatus('loggedOut');
     };
 
     const value: AuthContextValue = {

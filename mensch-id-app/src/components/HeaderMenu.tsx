@@ -8,6 +8,7 @@ import { useThemeColors } from '../hooks/useThemeColors';
 
 interface HeaderMenuProps {
     onCreateChallenge: () => void;
+    onOpenSettings: () => void;
     onLogout: () => void;
 }
 
@@ -65,6 +66,15 @@ export const HeaderMenu = (props: HeaderMenuProps) => {
                         >
                             <MaterialCommunityIcons name="plus-circle-outline" size={22} color={colors.text} />
                             <Text style={{ fontSize: 16, color: colors.text }}>{t('Menu_CreateChallenge')}</Text>
+                        </Pressable>
+                        <Pressable
+                            accessibilityRole="menuitem"
+                            testID="menu-settings"
+                            onPress={() => select(props.onOpenSettings)}
+                            style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.small, padding: Spacing.medium }}
+                        >
+                            <MaterialCommunityIcons name="cog-outline" size={22} color={colors.text} />
+                            <Text style={{ fontSize: 16, color: colors.text }}>{t('Menu_Settings')}</Text>
                         </Pressable>
                         <Pressable
                             accessibilityRole="menuitem"

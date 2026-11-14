@@ -44,6 +44,12 @@ const config: ExpoConfig = {
             }
         ],
         [
+            'expo-local-authentication',
+            {
+                faceIDPermission: 'mensch.ID uses Face ID to unlock the app.'
+            }
+        ],
+        [
             'expo-camera',
             {
                 cameraPermission: 'mensch.ID uses the camera to scan challenge QR codes.',
