@@ -182,32 +182,25 @@ public class ServiceChallengeIntegrationTest
     }
 
     [Test]
-    public async Task UserHubReceivesCreatedChallenge()
+    public async Task PendingChallengesCannotBeListedByUser()
     {
         var service = await CreateActiveService();
-        var sessionCookie = await LoginAndGetSessionCookie("user@example.org", MenschId);
-        var notification = new TaskCompletionSource<JObject>();
-        var connection = new HubConnectionBuilder()
-            .WithUrl(
-                $"{MenschIdWebApplicationFactory.ApiBaseUrl}{UserChallengeHub.Route}",
-                options =>
-                {
-                    options.HttpMessageHandlerFactory = _ => factory.Server.CreateHandler();
-                    options.Transports = HttpTransportType.LongPolling;
-                    options.Headers["Cookie"] = sessionCookie;
-                })
-            .Build();
-        connection.On<object>(UserChallengeHub.ChallengeCreatedMethodName, x => notification.TrySetResult(JObject.Parse(x.ToString()!)));
-        await connection.StartAsync();
+        await CreateChallenge(service, null);
+        var userClient = await CreateLoggedInUserClient("user@example.org", MenschId);
 
-        var challenge = await CreateChallenge(service, null);
+        var response = await userClient.GetAsync("api/service-challenges");
 
-        var completedTask = await Task.WhenAny(notification.Task, Task.Delay(NotificationTimeout));
-        Assert.That(completedTask, Is.SameAs(notification.Task));
-        var createdChallenge = await notification.Task;
-        Assert.That(createdChallenge["id"]!.Value<string>(), Is.EqualTo(challenge.ChallengeId));
-        Assert.That(createdChallenge["serviceDisplayName"]!.Value<string>(), Is.EqualTo(service.Service.DisplayName));
-        await connection.DisposeAsync();
+        Assert.That(response.IsSuccessStatusCode, Is.False);
+    }
+
+    [Test]
+    public async Task UserChallengeHubIsNotAvailable()
+    {
+        var userClient = await CreateLoggedInUserClient("user@example.org", MenschId);
+
+        var response = await userClient.PostAsync("hubs/user-challenges/negotiate?negotiateVersion=1", null);
+
+        Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
     }
 
     [Test]
@@ -377,24 +370,6 @@ public class ServiceChallengeIntegrationTest
         var response = await PostLogin(client, email);
         response.EnsureSuccessStatusCode();
         return client;
-    }
-
-    private async Task<string> LoginAndGetSessionCookie(
-        string email,
-        string personId)
-    {
-        await CreateVerifiedUser(email, personId);
-        var options = new WebApplicationFactoryClientOptions
-        {
-            BaseAddress = new Uri(MenschIdWebApplicationFactory.ApiBaseUrl),
-            HandleCookies = false
-        };
-        var client = factory.CreateClient(options);
-        var response = await PostLogin(client, email);
-        response.EnsureSuccessStatusCode();
-        var setCookieHeaders = response.Headers.GetValues("Set-Cookie");
-        var sessionCookie = setCookieHeaders.First(x => x.StartsWith(MenschIdAuthenticationSchemes.SessionCookieName + "="));
-        return sessionCookie.Split(';')[0];
     }
 
     private async Task CreateVerifiedUser(

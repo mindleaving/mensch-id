@@ -81,7 +81,7 @@ const ServiceChallengeScreen = () => {
                 <Text testID="service-challenge-result" style={[ CommonStyles.title, { color: colors.text } ]}>
                     {t(answer === 'accept' ? 'ServiceChallenge_Accepted' : 'ServiceChallenge_Rejected')}
                 </Text>
-                <AppButton title={t('ServiceChallenge_Done')} onPress={() => router.replace('/')} />
+                <AppButton title={t('ServiceChallenge_Done')} onPress={() => router.canDismiss() ? router.dismissTo('/') : router.replace('/')} />
             </ScrollView>
         );
     }

@@ -76,7 +76,6 @@ namespace Mensch.Id.API
             {
                 endpoints.MapControllers();
                 endpoints.MapHub<ServiceChallengeHub>(ServiceChallengeHub.Route);
-                endpoints.MapHub<UserChallengeHub>(UserChallengeHub.Route);
             });
         }
     }

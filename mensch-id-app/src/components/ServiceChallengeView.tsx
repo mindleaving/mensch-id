@@ -66,6 +66,7 @@ export const ServiceChallengeView = (props: ServiceChallengeViewProps) => {
                 disabled={isExpired || props.isSubmitting}
                 onConfirm={props.onAccept}
             />
+            <View style={{ height: Spacing.large }} />
             <AppButton
                 testID="service-challenge-reject"
                 title={t('ServiceChallenge_Reject')}

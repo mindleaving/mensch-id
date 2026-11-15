@@ -76,8 +76,6 @@ public class ServiceChallengesController : ControllerBase
             body,
             now);
         await challengeStore.StoreAsync(challenge);
-        var viewModel = BuildViewModel(challenge, service);
-        await notifier.NotifyUserAboutNewChallenge(challenge.MenschId, viewModel);
         var response = new ServiceChallengeCreationResponse
         {
             ChallengeId = challenge.Id,
@@ -104,28 +102,6 @@ public class ServiceChallengesController : ControllerBase
         var now = DateTime.UtcNow;
         var result = BuildResult(challenge, now);
         return Ok(result);
-    }
-
-    [Authorize(Policy = RegularUserPolicy.PolicyName)]
-    [HttpGet]
-    public async Task<IActionResult> GetPendingChallenges()
-    {
-        var menschId = await GetMenschIdOfCurrentUser();
-        if (menschId == null)
-            return StatusCode((int)HttpStatusCode.ServiceUnavailable, ProfileIncompleteMessage);
-        var now = DateTime.UtcNow;
-        var challenges = await challengeStore
-            .SearchAsync(
-                x => x.MenschId == menschId && x.State == ServiceChallengeState.Pending && x.ExpiresAt > now,
-                orderBy: x => x.CreatedTimestamp,
-                orderDirection: OrderDirection.Descending)
-            .ToListAsync();
-        var services = await LoadServices(challenges);
-        var viewModels = challenges
-            .Where(x => services.ContainsKey(x.ServiceId))
-            .Select(x => BuildViewModel(x, services[x.ServiceId]))
-            .ToList();
-        return Ok(viewModels);
     }
 
     [Authorize(Policy = RegularUserPolicy.PolicyName)]

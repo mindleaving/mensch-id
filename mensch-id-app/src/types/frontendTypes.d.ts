@@ -82,11 +82,6 @@ export interface AppLockContextValue {
 
 export type ServiceChallengeAnswer = 'accept' | 'reject';
 
-export interface PendingServiceChallengesState {
-    challenges: import('./viewModels').ViewModels.ServiceChallengeViewModel[];
-    hasError: boolean;
-}
-
 export interface ProfileState {
     status: 'loading' | 'loaded' | 'noProfile' | 'error';
     menschId?: string;

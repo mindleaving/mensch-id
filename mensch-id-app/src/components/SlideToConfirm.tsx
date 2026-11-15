@@ -6,7 +6,7 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useThemeColors } from '../hooks/useThemeColors';
 
-const KnobSize = 56;
+const KnobSize = 68;
 const ConfirmThreshold = 0.9;
 
 interface SlideToConfirmProps {

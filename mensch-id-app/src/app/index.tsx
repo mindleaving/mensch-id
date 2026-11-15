@@ -5,9 +5,6 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../auth/AuthContext';
 import { ChallengeFinder } from '../components/ChallengeFinder';
 import { HeaderMenu } from '../components/HeaderMenu';
-import { PendingServiceChallenges } from '../components/PendingServiceChallenges';
-import { buildServiceChallengeRoute } from '../helpers/ServiceChallengeHelpers';
-import { usePendingServiceChallenges } from '../hooks/usePendingServiceChallenges';
 import { useMyProfile } from '../hooks/useMyProfile';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { CommonStyles, Spacing } from '../styles/Theme';
@@ -20,7 +17,6 @@ const HomeScreen = () => {
     const router = useRouter();
     const auth = useAuth();
     const profile = useMyProfile();
-    const pendingServiceChallenges = usePendingServiceChallenges(profile.status === 'loaded');
 
     const searchChallenges = useCallback(async (searchText: string) => {
         const encodedSearchText = encodeURIComponent(searchText);
@@ -56,10 +52,6 @@ const HomeScreen = () => {
                     ? <Text style={[ CommonStyles.instruction, { color: colors.danger } ]}>{t('Profile_CouldNotLoad')}</Text>
                     : null}
                 </View>
-                <PendingServiceChallenges
-                    challenges={pendingServiceChallenges.challenges}
-                    onChallengeSelected={challengeId => router.push(buildServiceChallengeRoute(challengeId))}
-                />
                 <ChallengeFinder
                     searchChallenges={searchChallenges}
                     onScanPressed={() => router.push('/scan')}

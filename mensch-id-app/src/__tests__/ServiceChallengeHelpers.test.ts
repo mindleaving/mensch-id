@@ -1,7 +1,5 @@
 import {
-    addOrReplaceServiceChallenge,
     formatRemainingTime,
-    getActiveServiceChallenges,
     getRemainingSeconds,
     parseServiceChallengeLink,
     parseServiceChallengePath
@@ -49,25 +47,6 @@ describe('ServiceChallengeHelpers', () => {
         expect(formatRemainingTime(65)).toBe('1:05');
     });
 
-    it('adds new challenges first and replaces existing ones', () => {
-        const first = createChallenge('A', '2026-11-14T10:05:00Z');
-        const second = createChallenge('B', '2026-11-14T10:05:00Z');
-        const updatedFirst = { ...first, description: 'Updated' };
-
-        const challenges = addOrReplaceServiceChallenge(addOrReplaceServiceChallenge([], first), second);
-        const updatedChallenges = addOrReplaceServiceChallenge(challenges, updatedFirst);
-
-        expect(challenges.map(x => x.id)).toEqual([ 'B', 'A' ]);
-        expect(updatedChallenges.map(x => x.description)).toEqual([ 'Updated', 'Sign in' ]);
-    });
-
-    it('filters expired challenges', () => {
-        const now = Date.parse('2026-11-14T10:00:00Z');
-        const active = createChallenge('A', '2026-11-14T10:05:00Z');
-        const expired = createChallenge('B', '2026-11-14T09:55:00Z');
-
-        expect(getActiveServiceChallenges([ active, expired ], now)).toEqual([ active ]);
-    });
 });
 
 describe('resolveSystemPath for service challenges', () => {

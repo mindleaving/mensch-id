@@ -1,9 +1,5 @@
-import { ViewModels } from '../types/viewModels';
-
 export const ServiceChallengeLinkPrefix = 'menschid://service-challenge/';
 export const ServiceChallengeRoute = '/service-challenge';
-export const ServiceChallengeHubPath = 'hubs/user-challenges';
-export const ServiceChallengeCreatedMethodName = 'ChallengeCreated';
 
 const ServiceChallengeIdPattern = /^[A-HJ-NP-Z2-9]{52}$/;
 const ServiceChallengePathPattern = /^\/*service-challenge\/([^/?#]+)\/?$/i;
@@ -49,23 +45,4 @@ export const formatRemainingTime = (remainingSeconds: number): string => {
     const minutes = Math.floor(remainingSeconds / 60);
     const seconds = remainingSeconds % 60;
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-};
-
-export const addOrReplaceServiceChallenge = (
-    challenges: ViewModels.ServiceChallengeViewModel[],
-    challenge: ViewModels.ServiceChallengeViewModel
-): ViewModels.ServiceChallengeViewModel[] => {
-    const otherChallenges = challenges.filter(x => x.id !== challenge.id);
-    return [ challenge, ...otherChallenges ];
-};
-
-export const getActiveServiceChallenges = (
-    challenges: ViewModels.ServiceChallengeViewModel[],
-    now: number
-): ViewModels.ServiceChallengeViewModel[] => {
-    return challenges.filter(x => getRemainingSeconds(x.expiresAt, now) > 0);
-};
-
-export const getFirstLine = (text: string): string => {
-    return text.split(/\r?\n/)[0];
 };
