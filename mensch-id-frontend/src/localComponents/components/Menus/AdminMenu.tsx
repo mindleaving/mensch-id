@@ -13,6 +13,7 @@ export const AdminMenu = (props: AdminMenuProps) => {
         <NavDropdown title={resolveText("Menu_Actions")}>
             <NavDropdown.Item onClick={() => navigate("/challenge")}>{resolveText("SendChallenge")}</NavDropdown.Item>
             <NavDropdown.Item onClick={() => navigate("/assigner-account-requests")}>{resolveText("Menu_AssignerAccountRequests")}</NavDropdown.Item>
+            <NavDropdown.Item onClick={() => navigate("/external-services")}>{resolveText("Menu_ExternalServices")}</NavDropdown.Item>
             <NavDropdown.Item onClick={() => navigate("/shop-orders")}>{resolveText("Menu_ShopOrders")}</NavDropdown.Item>
         </NavDropdown>
     </Nav>);

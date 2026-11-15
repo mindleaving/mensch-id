@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
@@ -25,14 +25,30 @@ namespace Mensch.Id.API.Storage
             this.externalLoginObscurer = externalLoginObscurer;
         }
 
+        public static readonly Collation EmailCollation = new("en", strength: CollationStrength.Secondary);
+
         public async Task<LocalAccount> GetLocalByEmailAsync(string email)
         {
             if (email == null) throw new ArgumentNullException(nameof(email));
+            var trimmedEmail = email.Trim();
             var filterBuilder = Builders<Account>.Filter;
             var filter = filterBuilder.And(
                 filterBuilder.Ne("_t", nameof(ExternalAccount)),
-                filterBuilder.Eq(nameof(LocalAccount.Email), email));
-            return await collection.Find(filter).FirstOrDefaultAsync() as LocalAccount;
+                filterBuilder.Eq(nameof(LocalAccount.Email), trimmedEmail));
+            var findOptions = new FindOptions { Collation = EmailCollation };
+            return await collection.Find(filter, findOptions).FirstOrDefaultAsync() as LocalAccount;
+        }
+
+        public async Task<bool> IsProfessionalUsernameInUse(string username)
+        {
+            if (username == null) throw new ArgumentNullException(nameof(username));
+            var trimmedUsername = username.Trim();
+            var filterBuilder = Builders<Account>.Filter;
+            var filter = filterBuilder.And(
+                filterBuilder.In("_t", [nameof(AssignerAccount), nameof(AdminAccount)]),
+                filterBuilder.Eq(nameof(ProfessionalAccount.Username), trimmedUsername));
+            var findOptions = new FindOptions { Collation = EmailCollation };
+            return await collection.Find(filter, findOptions).AnyAsync();
         }
 
         public async Task<List<LocalAnonymousAccount>> GetLocalsByMenschId(
@@ -70,7 +86,7 @@ namespace Mensch.Id.API.Storage
             LoginProvider loginProvider,
             string externalId)
         {
-            var obscuredExternalId = externalLoginObscurer.Obscure(externalId);
+            var obscuredExternalId = externalLoginObscurer.Obscure(loginProvider, externalId);
             return collection.OfType<ExternalAccount>()
                 .Find(x => x.LoginProvider == loginProvider && x.ExternalId == obscuredExternalId)
                 .FirstOrDefaultAsync();
@@ -78,18 +94,16 @@ namespace Mensch.Id.API.Storage
 
         public async Task<Account> GetFromClaimsAsync(List<Claim> claims)
         {
-            var accountIdClaim = claims.Find(x => x.Type == ClaimTypes.NameIdentifier && x.Issuer == JwtSecurityTokenBuilder.Issuer);
-            if (accountIdClaim != null)
-                return await GetByIdAsync(accountIdClaim.Value);
-
-            var loginProvider = ClaimsHelpers.GetLoginProvider(claims);
-            if (loginProvider == LoginProvider.Unknown)
+            var accountId = ClaimsHelpers.GetAccountId(claims);
+            if (accountId != null)
+                return await GetByIdAsync(accountId);
+            var loginProvider = ClaimsHelpers.GetExternalLoginProvider(claims);
+            if (loginProvider == null)
                 return null;
-            if (loginProvider == LoginProvider.LocalJwt)
-                throw new Exception("This should not have happened. If login provider is LocalJwt, the accountIdClaim should exist");
-
-            var externalId = ClaimsHelpers.GetExternalId(claims, loginProvider);
-            return await GetExternalByIdAsync(loginProvider, externalId);
+            var externalId = ClaimsHelpers.GetExternalId(claims, loginProvider.Value);
+            if (externalId == null)
+                return null;
+            return await GetExternalByIdAsync(loginProvider.Value, externalId);
         }
 
         public async Task<List<PersonAccount>> GetAllForMenschIdAsync(
@@ -99,7 +113,16 @@ namespace Mensch.Id.API.Storage
             var localAccounts = await collection.OfType<LocalAccount>().Find(x => x.PersonId == menschId).ToListAsync();
             var localAnonymousAccounts = await collection.OfType<LocalAnonymousAccount>().Find(x => x.PersonId == menschId).ToListAsync();
             var externalAccounts = await collection.OfType<ExternalAccount>().Find(x => x.PersonId == menschId).ToListAsync();
-            return localAccounts.Cast<PersonAccount>().Concat(localAnonymousAccounts).Concat(externalAccounts).ToList();
+            return localAccounts.Cast<PersonAccount>()
+                .Concat(localAnonymousAccounts)
+                .Concat(externalAccounts)
+                .DistinctBy(x => x.Id)
+                .ToList();
+        }
+
+        public Task<List<AssignerAccount>> GetAllAssignersAsync()
+        {
+            return collection.OfType<AssignerAccount>().Find(FilterDefinition<AssignerAccount>.Empty).ToListAsync();
         }
 
         public async Task<ProfessionalAccount> GetProfessionalByUsernameAsync(
@@ -134,7 +157,7 @@ namespace Mensch.Id.API.Storage
                                 x => x.Id == accountId,
                                 updateBuilder.Combine(
                                     updateBuilder.Set(x => x.PasswordHash, passwordHash),
-                                    updateBuilder.Set(x => x.PasswordResetToken, null)
+                                    updateBuilder.Set(x => x.PasswordResetNonce, null)
                                 )
                             );
                     }

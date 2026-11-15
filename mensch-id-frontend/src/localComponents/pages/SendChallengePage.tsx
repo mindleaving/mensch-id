@@ -42,7 +42,7 @@ export const SendChallengePage = (props: SendChallengePageProps) => {
             <p className='lead'>
                 {resolveText("SendChallenge_Text")}
             </p>
-            {!!challengeData
+            {challengeData
             ? <>
                 <ChallengeSenderCard challengeData={challengeData} />
                 <Button onClick={() => setChallengeData(undefined)}>{resolveText("NewChallenge")}</Button>

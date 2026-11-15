@@ -20,7 +20,7 @@ export interface RouteDefinition {
     path: string;
     element: ReactNode;
     usesCustomLayout?: boolean;
-};
+}
 export interface IdAutocompleteProps {
     value?: string | null;
     onChange: (value: string | undefined) => void;

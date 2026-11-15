@@ -21,7 +21,7 @@ export const ShippingMethodShopStep = (props: ShippingMethodShopStepProps) => {
         <h1>{resolveText("Shop")}</h1>
         <h3>{resolveText("Order_ShippingMethod")}</h3>
         {Object.values(ShippingMethod).map(shippingMethod => (
-        <Alert>
+        <Alert key={shippingMethod}>
             <Row>
                 <Col xs="auto">
                     <FormCheck

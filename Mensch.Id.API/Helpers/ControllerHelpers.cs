@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
@@ -27,15 +27,15 @@ namespace Mensch.Id.API.Helpers
         public static AccountType? GetAccountType(
             IHttpContextAccessor httpContextAccessor)
         {
-            var claims = httpContextAccessor.HttpContext?.User.Claims.ToList();
+            var claims = GetClaims(httpContextAccessor);
             return ClaimsHelpers.GetAccountType(claims);
         }
 
         public static string GetAccountId(
             IHttpContextAccessor httpContextAccessor)
         {
-            return httpContextAccessor.HttpContext?.User.Claims
-                .FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
+            var claims = GetClaims(httpContextAccessor);
+            return ClaimsHelpers.GetAccountId(claims);
         }
     }
 }

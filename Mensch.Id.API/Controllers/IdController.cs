@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Models;
@@ -38,17 +38,15 @@ namespace Mensch.Id.API.Controllers
         private const int MaxChallengeLength = 64;
         [HttpPost("{menschId}/challenge")]
         public async Task<IActionResult> CreateChallenge(
-            [FromRoute] string menschId,
+            [FromRoute] MenschId menschId,
             [FromQuery] int challengeLength = 6)
         {
-            if (!ControllerInputSanitizer.ValidateAndSanitzeMenschId(menschId, out menschId))
-                return BadRequest("Invalid mensch.ID");
             if (challengeLength < 1)
                 return BadRequest("Challenge length must be 1 or greater");
             if (challengeLength > MaxChallengeLength)
                 return BadRequest($"Challenge length cannot be greater than {MaxChallengeLength}");
-            var challenge = await challengeCreator.Create(menschId, challengeLength);
-            if (!await personStore.ExistsAsync(menschId))
+            var challenge = await challengeCreator.Create(menschId.Value, challengeLength);
+            if (!await personStore.ExistsAsync(menschId.Value))
                 return Ok(challenge); // Return challenge, even if it isn't stored, to not give away which IDs are in use.
             await challengeStore.StoreAsync(challenge);
             return Ok(challenge);

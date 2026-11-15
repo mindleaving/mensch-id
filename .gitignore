@@ -34,3 +34,5 @@ packages/
 *.zip
 /mensch-id-frontend/public/docs/*
 /mensch-id-frontend/public/font-awesome-4.7.0
+certs/oidc-signing-key.pem
+certs/oidc-encryption-key.pem

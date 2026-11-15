@@ -27,7 +27,7 @@ interface NonExhaustiveTableProps<ItemType> {
     title?: ReactNode;
 }
 
-export const NonExhaustiveTable = <ItemType extends Models.IId>(props: NonExhaustiveTableProps<ItemType>) => {
+export const NonExhaustiveTable = <ItemType extends Models.IId<string>>(props: NonExhaustiveTableProps<ItemType>) => {
 
     const { 
         autoScroll, 

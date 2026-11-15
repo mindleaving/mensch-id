@@ -1,25 +1,9 @@
-﻿using System.Text.RegularExpressions;
-using Mensch.Id.API.Workflow;
+using System.Text.RegularExpressions;
 
 namespace Mensch.Id.API.Helpers
 {
     public static class ControllerInputSanitizer
     {
-        public static bool ValidateAndSanitzeMenschId(
-            string input,
-            out string output)
-        {
-            if (input == null || !MenschIdGenerator.ValidateId(input.ToUpper()))
-            {
-                output = null;
-                return false;
-            }
-
-            output = input.ToUpper();
-            return true;
-        }
-
-
         public static bool ValidateAndSanitizeOptionalId(
             string input,
             out string output)

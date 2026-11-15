@@ -30,21 +30,12 @@ export const TimeFormControl = (props: TimeFormControlProps) => {
         size 
     } = props;
 
-    const [ localValue, setLocalValue ] = useState<string>('');
-
-    useEffect(() => {
-        if(value && /^[0-2]?[0-9]:[0-5][0-9](:[0-5][0-9])?$/.test(value)) {
-            if(!enableSeconds) {
-                const splitted = value.split(':');
-                setLocalValue(`${splitted[0]}:${splitted[1]}`);
-            } else {
-                setLocalValue(value);
-            }
-        } else {
-            setLocalValue('');
-        }
+    const [ localValue, setLocalValue ] = useState<string>(value ?? '');
+    const [ previousValue, setPreviousValue ] = useState<string | undefined>(value);
+    if(value !== previousValue) {
+        setPreviousValue(value);
         setLocalValue(value ?? '');
-    }, [ value, enableSeconds ]);
+    }
 
     const flatpickrOptions = useMemo(() => ({
         noCalendar: true,

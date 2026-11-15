@@ -11,6 +11,7 @@ namespace Mensch.Id.API.Test.Workflow
     public class EmailSenderTest
     {
         [Test]
+        [Explicit("Sends a real email via an external SMTP server")]
         public async Task SendEmailViaExternalServer()
         {
             var settings = new EmailSettings

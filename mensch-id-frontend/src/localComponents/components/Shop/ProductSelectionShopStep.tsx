@@ -32,7 +32,6 @@ export const ProductSelectionShopStep = (props: ProductSelectionShopStepProps) =
     const navigate = useNavigate();
 
     useEffect(() => {
-        setIsLoading(true);
         const loadProducts = buildLoadObjectFunc(
             'api/shop/products', {},
             resolveText("Products_CouldNotLoad"),

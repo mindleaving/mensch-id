@@ -1,4 +1,4 @@
-﻿using Mensch.Id.API.Workflow;
+using Mensch.Id.API.Workflow;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,6 +11,7 @@ namespace Mensch.Id.API.Setups
             IConfiguration configuration)
         {
             services.AddScoped<ChallengeCreator>();
+            services.AddScoped<OwnershipTransfer>();
 
             services.Configure<CertificateSettings>(configuration.GetSection(CertificateSettings.AppSettingsSectionName));
             services.AddScoped<ClaimsSigner>();

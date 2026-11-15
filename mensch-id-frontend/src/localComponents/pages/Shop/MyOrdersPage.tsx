@@ -13,7 +13,6 @@ export const MyOrdersPage = (props: MyOrdersPageProps) => {
     const [ orders, setOrders ] = useState<Models.Shop.Order[]>([]);
 
     useEffect(() => {
-        setIsLoading(true);
         const loadOrders = buildLoadObjectFunc(
             'api/shop/my-orders', { 'orderBy': 'time', orderDirection: OrderDirection.Descending },
             resolveText("Orders_CouldNotLoad"),

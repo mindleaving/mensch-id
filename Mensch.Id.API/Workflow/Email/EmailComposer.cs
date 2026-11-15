@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Web;
 using Mensch.Id.API.Models;
 using Microsoft.Extensions.Options;
@@ -55,6 +55,26 @@ namespace Mensch.Id.API.Workflow.Email
                     .Replace(
                         VerificationEmailContent.VerificationLinkPlaceholder, 
                         $"{baseUrl}/verify-email?accountId={email.AccountId}&token={HttpUtility.UrlEncode(email.VerificationToken)}")
+            };
+            return message;
+        }
+
+        public MimeMessage Compose(
+            ExternalServiceVerificationEmail email)
+        {
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress("mensch.ID", settings.FromAddress));
+            message.To.Add(new MailboxAddress(email.RecipientAddress, email.RecipientAddress));
+            message.Subject = Translate(ExternalServiceVerificationEmailContent.Subject, email.PreferedLanguage);
+            message.Body = new TextPart(TextFormat.Plain)
+            {
+                Text = Translate(ExternalServiceVerificationEmailContent.Message, email.PreferedLanguage)
+                    .Replace(
+                        ExternalServiceVerificationEmailContent.ServiceNamePlaceholder,
+                        email.ServiceName)
+                    .Replace(
+                        ExternalServiceVerificationEmailContent.VerificationLinkPlaceholder,
+                        $"{baseUrl}/verify-service-email?serviceId={email.ServiceId}&token={HttpUtility.UrlEncode(email.VerificationToken)}")
             };
             return message;
         }

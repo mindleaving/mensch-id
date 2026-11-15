@@ -15,7 +15,7 @@ namespace Mensch.Id.API.Workflow
             string email,
             string password,
             Language preferedLanguage = Language.en,
-            string menschId = null);
+            string pendingMenschId = null);
 
         Task<ExternalAccount> CreateExternal(
             LoginProvider loginProvider,

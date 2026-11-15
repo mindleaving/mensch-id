@@ -14,7 +14,7 @@ namespace Mensch.Id.API.Tools
         {
             var settings = new MongoClientSettings
             {
-                Credential = MongoCredential.CreateCredential("admin", "dev", File.ReadAllText("/home/jan/mongodb-dev-credential.txt"))
+                //Credential = MongoCredential.CreateCredential("admin", "dev", File.ReadAllText("/home/jan/mongodb-dev-credential.txt"))
             };
             var mongoClient = new MongoClient(settings);
             ConventionRegistry.Register("EnumStringConvetion", new ConventionPack

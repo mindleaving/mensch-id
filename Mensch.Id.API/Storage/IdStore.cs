@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Mensch.Id.API.Models;
 using MongoDB.Driver;
 
 namespace Mensch.Id.API.Storage
 {
-    public class IdStore : GenericStore<MenschId>, IIdStore
+    public class IdStore : GenericStore<MenschIdReservation>, IIdStore
     {
         public IdStore(
             IMongoDatabase mongoDatabase,
@@ -22,7 +22,7 @@ namespace Mensch.Id.API.Storage
             if (idCandidate == null) throw new ArgumentNullException(nameof(idCandidate));
             if (accountId == null) throw new ArgumentNullException(nameof(accountId));
 
-            var idObject = new MenschId
+            var idObject = new MenschIdReservation
             {
                 Id = idCandidate,
                 Type = idType,
@@ -48,7 +48,7 @@ namespace Mensch.Id.API.Storage
 
             var result = await collection.UpdateOneAsync(
                 x => x.Id == id && x.ReservingAccountId == accountId,
-                Builders<MenschId>.Update.Set(x => x.IsClaimed, true));
+                Builders<MenschIdReservation>.Update.Set(x => x.IsClaimed, true));
             return result.IsAcknowledged && result.MatchedCount == 1;
         }
 
@@ -58,7 +58,7 @@ namespace Mensch.Id.API.Storage
 
             return collection.UpdateOneAsync(
                 x => x.Id == id,
-                Builders<MenschId>.Update.Set(x => x.IsClaimed, false));
+                Builders<MenschIdReservation>.Update.Set(x => x.IsClaimed, false));
         }
 
         public Task ReleaseSpecificReservation(

@@ -1,10 +1,13 @@
 import { RouteDefinition } from "../../sharedCommonComponents/types/frontendTypes"
 import AboutPage from "../pages/AboutPage";
+import AppRedirectPage from "../pages/AppRedirectPage";
 import ContactPage from "../pages/ContactPage";
 import EventsPage from "../pages/EventsPage";
 import PrivacyPage from "../pages/PrivacyPage";
+import RegisterExternalServicePage from "../pages/RegisterExternalServicePage";
 import SendChallengePage from "../pages/SendChallengePage";
 import TermsOfServicePage from "../pages/TermsOfServicePage";
+import VerifyExternalServiceEmailPage from "../pages/VerifyExternalServiceEmailPage";
 
 export const CommonRoutes = () => {
     const routes: RouteDefinition[] = [
@@ -13,7 +16,11 @@ export const CommonRoutes = () => {
         { path: '/terms-of-service', element: <TermsOfServicePage /> },
         { path: '/about', element: <AboutPage /> },
         { path: '/events', element: <EventsPage /> },
-        { path: '/contact', element: <ContactPage /> }
+        { path: '/contact', element: <ContactPage /> },
+        { path: '/verify-service-email', element: <VerifyExternalServiceEmailPage /> },
+        { path: '/register-service', element: <RegisterExternalServicePage /> },
+        { path: '/app/auth/callback', element: <AppRedirectPage /> },
+        { path: '/app/auth/logout', element: <AppRedirectPage /> }
     ];
     return routes
 }

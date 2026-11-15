@@ -2,7 +2,9 @@ export enum AuthenticationErrorType {
     Unknown = "Unknown",
     InvalidUserOrPassword = "InvalidUserOrPassword",
     AuthenticationMethodNotAvailable = "AuthenticationMethodNotAvailable",
-    EmailNotVerified = "EmailNotVerified"
+    EmailNotVerified = "EmailNotVerified",
+    AccountLocked = "AccountLocked",
+    AccountDeactivated = "AccountDeactivated"
 }
 export enum IdType {
     MenschID = "MenschID"
@@ -192,14 +194,6 @@ export enum Language {
     za = "za",
     zu = "zu"
 }
-export enum LoginProvider {
-    Unknown = "Unknown",
-    Google = "Google",
-    Twitter = "Twitter",
-    Facebook = "Facebook",
-    Microsoft = "Microsoft",
-    LocalJwt = "LocalJwt"
-}
 export enum OrderDirection {
     Ascending = "Ascending",
     Descending = "Descending"
@@ -221,12 +215,36 @@ export enum PaymentMethod {
 export enum ShippingMethod {
     Standard = "Standard"
 }
+export enum ExternalServiceStatus {
+    Pending = "Pending",
+    Active = "Active",
+    Deactivated = "Deactivated"
+}
+export enum ServiceChallengeResultStatus {
+    Pending = "Pending",
+    Answered = "Answered",
+    Expired = "Expired"
+}
+export enum ServiceChallengeState {
+    Pending = "Pending",
+    Accepted = "Accepted",
+    Rejected = "Rejected"
+}
 export enum AccountType {
     Local = "Local",
     LocalAnonymous = "LocalAnonymous",
     External = "External",
     Assigner = "Assigner",
+    ExternalService = "ExternalService",
     Admin = "Admin"
+}
+export enum AssignerAccountStatus {
+    Activated = "Activated",
+    Deactivated = "Deactivated"
+}
+export enum SessionType {
+    App = "App",
+    Web = "Web"
 }
 export enum UserType {
     Person = "Person",

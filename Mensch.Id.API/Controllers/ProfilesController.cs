@@ -1,14 +1,17 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Commons.Extensions;
+using Mensch.Id.API.AccessControl;
+using IAuthenticationModule = Mensch.Id.API.AccessControl.IAuthenticationModule;
 using Mensch.Id.API.AccessControl.Policies;
 using Mensch.Id.API.Helpers;
 using Mensch.Id.API.Models;
 using Mensch.Id.API.Models.AccessControl;
 using Mensch.Id.API.Storage;
 using Mensch.Id.API.Workflow;
+using Mensch.Id.API.Workflow.Models;
 using Mensch.Id.API.Workflow.ViewModelBuilders;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -27,45 +30,35 @@ namespace Mensch.Id.API.Controllers
         private readonly IStore<Verification> verificationStore;
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly ProfileViewModelBuilder profileViewModelBuilder;
-        private readonly NewProfileViewModelBuilder newProfileViewModelBuilder;
-        private readonly IIdStore idStore;
-        private readonly IStore<AssignerControlledProfile> assignerControlledProfileStore;
+        private readonly OwnershipTransfer ownershipTransfer;
+        private readonly IAuthenticationModule authenticationModule;
 
         public ProfilesController(
             IAccountStore accountStore,
             IStore<Person> personStore,
             IHttpContextAccessor httpContextAccessor,
-            NewProfileViewModelBuilder newProfileViewModelBuilder,
-            IIdStore idStore,
             ProfileViewModelBuilder profileViewModelBuilder,
             IStore<Verification> verificationStore,
-            IStore<AssignerControlledProfile> assignerControlledProfileStore)
+            OwnershipTransfer ownershipTransfer,
+            IAuthenticationModule authenticationModule)
         {
+            this.authenticationModule = authenticationModule;
             this.accountStore = accountStore;
             this.personStore = personStore;
             this.httpContextAccessor = httpContextAccessor;
-            this.newProfileViewModelBuilder = newProfileViewModelBuilder;
-            this.idStore = idStore;
             this.profileViewModelBuilder = profileViewModelBuilder;
             this.verificationStore = verificationStore;
-            this.assignerControlledProfileStore = assignerControlledProfileStore;
+            this.ownershipTransfer = ownershipTransfer;
         }
 
         [HttpGet("me")]
         public async Task<IActionResult> MyProfile()
         {
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
-            var personId = ClaimsHelpers.GetPersonId(claims);
-            if (personId == null)
-            {
-                var account = await accountStore.GetFromClaimsAsync(claims);
-                if (account is not PersonAccount personAccount)
-                    return NotFound();
-                if (personAccount.PersonId == null)
-                    return NotFound();
-                personId = personAccount.PersonId;
-            }
-            var profileData = await personStore.GetByIdAsync(personId);
+            var account = await accountStore.GetFromClaimsAsync(claims);
+            if (account is not PersonAccount { PersonId: not null } personAccount)
+                return NotFound();
+            var profileData = await personStore.GetByIdAsync(personAccount.PersonId);
             if (profileData == null)
                 return NotFound();
             var vm = await profileViewModelBuilder.Build(profileData);
@@ -73,129 +66,62 @@ namespace Mensch.Id.API.Controllers
         }
 
         
-        [HttpPost("claim/{id}")]
-        public async Task<IActionResult> ClaimId([FromRoute] string id)
-        {
-            if (!ControllerInputSanitizer.ValidateAndSanitzeMenschId(id, out id))
-                return BadRequest("Invalid mensch.ID");
-            var claims = ControllerHelpers.GetClaims(httpContextAccessor);
-            var account = (PersonAccount)await accountStore.GetFromClaimsAsync(claims);
-            if (account.PersonId != null)
-            {
-                if (account.PersonId != id)
-                    return StatusCode((int)HttpStatusCode.Forbidden, "ID in body doesn't match your ID");
-            }
-            else
-            {
-                if (!await idStore.TryClaimId(id, account.Id))
-                    return StatusCode((int)HttpStatusCode.InternalServerError, $"ID '{id}' could not be claimed");
-            }
-
-            if (await personStore.ExistsAsync(id))
-                return Ok();
-
-            var profile = new Person(id, DateTime.UtcNow, account.Id);
-            try
-            {
-                await personStore.StoreAsync(profile);
-                if (account.PersonId == null)
-                {
-                    try
-                    {
-                        account.PersonId = id;
-                        await accountStore.StoreAsync(account);
-                    }
-                    catch
-                    {
-                        await personStore.DeleteAsync(id);
-                        throw;
-                    }
-                }
-            }
-            catch
-            {
-                await idStore.UnclaimId(id);
-                return StatusCode((int)HttpStatusCode.InternalServerError);
-            }
-            await idStore.ReleaseReservations(account.Id);
-            return Ok(profile);
-        }
-
         [HttpPost("take-control")]
         public async Task<IActionResult> TakeControlOfId(
             [FromBody] TakeControlBody body)
         {
-            if (!ControllerInputSanitizer.ValidateAndSanitzeMenschId(body.Id, out var personId))
-                return BadRequest("Invalid mensch.ID");
-            var owningAccounts = await accountStore.GetAllForMenschIdAsync(personId);
-            if (owningAccounts.Any())
-                return StatusCode((int)HttpStatusCode.Forbidden, "ID is controlled by another account already");
-            var assignerControlledProfile = await assignerControlledProfileStore.GetByIdAsync(personId);
-            if (assignerControlledProfile == null)
-                return NotFound();
-            if (body.OwnershipSecret != assignerControlledProfile.OwnershipSecret)
-                return StatusCode((int)HttpStatusCode.Unauthorized, "Invalid ownership secret");
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
             var account = await accountStore.GetFromClaimsAsync(claims);
-            if(account is not PersonAccount personAccount)
-                return StatusCode((int)HttpStatusCode.Unauthorized, "Assigners and admins cannot take permanent control of profiles");
-            if (personAccount.PersonId != null)
+            var result = await ownershipTransfer.TakeControl(
+                account,
+                body.Id!.Value,
+                body.OwnershipSecret!.Value);
+            if (result.IsSuccess)
+                await RefreshSessionClaims(account);
+            return result.Status switch
             {
-                if (personAccount.PersonId == personId)
-                    return Ok();
-                return StatusCode((int)HttpStatusCode.Forbidden, "Your account is already associated with a profile");
-            }
-
-            var profile = await personStore.GetByIdAsync(personId);
-            if (profile == null)
-            {
-                profile = new Person(personId, DateTime.UtcNow, personAccount.Id);
-                await personStore.StoreAsync(profile);
-            }
-            personAccount.PersonId = personId;
-            await accountStore.StoreAsync(personAccount);
-            await assignerControlledProfileStore.DeleteAsync(personId);
-            return Ok(profile);
+                OwnershipTransferStatus.Success => Ok(result.Profile),
+                OwnershipTransferStatus.ProfileNotFound => NotFound(),
+                OwnershipTransferStatus.InvalidOwnershipSecret => StatusCode((int)HttpStatusCode.Unauthorized, "Invalid ownership secret"),
+                OwnershipTransferStatus.ControlledByOtherAccount => StatusCode((int)HttpStatusCode.Forbidden, "ID is controlled by another account already"),
+                OwnershipTransferStatus.AccountNotEligible => StatusCode((int)HttpStatusCode.Forbidden, "Assigners and admins cannot take permanent control of profiles"),
+                OwnershipTransferStatus.AccountAlreadyHasProfile => StatusCode((int)HttpStatusCode.Forbidden, "Your account is already associated with a profile"),
+                _ => throw new ArgumentOutOfRangeException(nameof(result.Status), result.Status, null)
+            };
         }
 
 
-
-        [HttpGet("new")]
-        public async Task<IActionResult> NewProfile([FromQuery] DateOnly birthDate)
+        private async Task RefreshSessionClaims(Account account)
         {
-            if (birthDate == default)
-                return BadRequest("No birthdate specified, but it's required for generating ID candidates");
-            var claims = ControllerHelpers.GetClaims(httpContextAccessor);
-            var account = (PersonAccount)await accountStore.GetFromClaimsAsync(claims);
-            if (account.PersonId != null)
-            {
-                var profileData = await personStore.GetByIdAsync(account.PersonId);
-                if (profileData != null)
-                    return StatusCode((int)HttpStatusCode.Forbidden, "You already have a profile");
-            }
-            var vm = await newProfileViewModelBuilder.BuildForNormalUser(birthDate, account.Id);
-            return Ok(vm);
+            var isSessionAuthenticated = User.Identities.Any(
+                x => x.IsAuthenticated && x.AuthenticationType == MenschIdAuthenticationSchemes.Session);
+            if (!isSessionAuthenticated)
+                return;
+            var authenticationResult = authenticationModule.BuildAuthenticationResult(account);
+            var properties = await RecentAuthentication.GetCurrentSessionProperties(HttpContext);
+            await HttpContext.SignInAsync(
+                MenschIdAuthenticationSchemes.Session,
+                authenticationResult.Principal,
+                properties);
         }
-
 
         [HttpPost("{id}/verify")]
-        public async Task<IActionResult> VerifyPerson([FromRoute] string id)
+        public async Task<IActionResult> VerifyPerson([FromRoute] MenschId id)
         {
-            if (!ControllerInputSanitizer.ValidateAndSanitzeMenschId(id, out id))
-                return BadRequest("Invalid mensch.ID");
-            var targetProfile = await personStore.GetByIdAsync(id);
+            var personId = id.Value;
+            var targetProfile = await personStore.GetByIdAsync(personId);
             if (targetProfile == null)
                 return NotFound();
             var claims = ControllerHelpers.GetClaims(httpContextAccessor);
             var myAccount = await accountStore.GetFromClaimsAsync(claims);
             if (!await CanVerifyOthers(myAccount))
                 return StatusCode((int)HttpStatusCode.Forbidden, "You must have a profile and be verified yourself to verify other profiles");
-            if (myAccount is PersonAccount personAccount && personAccount.PersonId == id)
+            if (myAccount is PersonAccount personAccount && personAccount.PersonId == personId)
                 return StatusCode((int)HttpStatusCode.Forbidden, "You cannot verify yourself :D");
             var verification = new Verification
             {
                 Id = Guid.NewGuid().ToString(),
-                PersonId = id,
+                PersonId = personId,
                 VerifierId = myAccount.Id,
                 Timestamp = DateTime.UtcNow
             };

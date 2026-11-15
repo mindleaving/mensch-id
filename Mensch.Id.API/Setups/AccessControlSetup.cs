@@ -1,148 +1,282 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Security;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Mensch.Id.API.AccessControl;
-using Mensch.Id.API.AccessControl.EventHandlers;
 using Mensch.Id.API.AccessControl.Policies;
+using Mensch.Id.API.Helpers;
+using Mensch.Id.API.Models;
 using Mensch.Id.API.Models.AccessControl;
+using Mensch.Id.API.Storage;
 using Mensch.Id.API.Workflow;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using OpenIddict.Validation.AspNetCore;
+using static OpenIddict.Abstractions.OpenIddictConstants;
 
-namespace Mensch.Id.API.Setups
+namespace Mensch.Id.API.Setups;
+
+public class AccessControlSetup : ISetup
 {
-    public class AccessControlSetup : ISetup
+    public static readonly TimeSpan SessionLifetime = TimeSpan.FromDays(14);
+    public static readonly TimeSpan ExternalLoginLifetime = TimeSpan.FromMinutes(10);
+    public static readonly TimeSpan AccessTokenLifetime = TimeSpan.FromMinutes(15);
+    public static readonly TimeSpan RefreshTokenLifetime = TimeSpan.FromDays(30);
+
+    public void Run(
+        IServiceCollection services,
+        IConfiguration configuration)
     {
-        public void Run(
-            IServiceCollection services,
-            IConfiguration configuration)
-        {
-            SetupExternalLoginObscurer(services, configuration);
+        SetupExternalLoginObscurer(services, configuration);
+        SetupDataProtection(services, configuration);
+        SetupRedirectUrlValidator(services, configuration);
 
-            services.AddSingleton<IClaimBuilder, ClaimBuilder>();
-            var jwtPrivateKey = GetOrGenerateJwtPrivateKey(configuration);
-            services.AddSingleton<ISecurityTokenBuilder>(_ => new JwtSecurityTokenBuilder(jwtPrivateKey));
-            services.AddScoped<IAuthenticationModule, AuthenticationModule>();
-            services.AddScoped<IAccountCreator, AccountCreator>();
-            services.AddSingleton<IPasswordHasher<IAccountWithPassword>, PasswordHasher<IAccountWithPassword>>();
-            services.AddScoped<GoogleAuthenticationEvents>();
-            services.AddScoped<TwitterAuthenticationEvents>();
-            services.AddScoped<FacebookAuthenticationEvents>();
-            services.AddScoped<MicrosoftAuthenticationEvents>();
+        services.AddSingleton<IClaimBuilder, ClaimBuilder>();
+        services.AddScoped<IAuthenticationModule, AuthenticationModule>();
+        services.AddScoped<IAccountCreator, AccountCreator>();
+        services.AddSingleton<IPasswordHasher<IAccountWithPassword>, PasswordHasher<IAccountWithPassword>>();
+        services.AddSingleton<IAccountTokenService, AccountTokenService>();
+        services.AddScoped<OidcAuthenticationEvents>();
+        services.AddScoped<ActiveSessionManager>();
+        services.AddScoped<ISessionRevoker>(provider => provider.GetRequiredService<ActiveSessionManager>());
 
-            services.AddAuthentication(
-                    options =>
-                    {
-                        options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                    })
-                .AddCookie()
-                .AddJwtBearer(
-                    options =>
-                    {
-                        options.TokenValidationParameters = new TokenValidationParameters
-                        {
-                            ValidateIssuer = true,
-                            ValidateAudience = true,
-                            ValidateIssuerSigningKey = true,
-                            IssuerSigningKey = jwtPrivateKey,
-                            ValidAlgorithms = new[] { "HS256" },
-                            ValidTypes = new[] { "JWT" },
-                            ValidAudience = JwtSecurityTokenBuilder.Audience,
-                            ValidIssuer = JwtSecurityTokenBuilder.Issuer
-                        };
-                        // Events can be null
-                        // ReSharper disable once ConstantNullCoalescingCondition
-                        options.Events ??= new();
-                        options.Events.OnMessageReceived = context => {
+        var oidcProviders = configuration.GetSection(OidcProviderSettings.AppSettingsSectionName).Get<List<OidcProviderSettings>>() ?? [];
+        var oidcProviderRegistry = new OidcProviderRegistry(oidcProviders);
+        services.AddSingleton<IOidcProviderRegistry>(oidcProviderRegistry);
 
-                            if (context.Request.Cookies.ContainsKey(JwtSecurityTokenBuilder.AccessTokenCookieName))
-                            {
-                                context.Token = context.Request.Cookies[JwtSecurityTokenBuilder.AccessTokenCookieName];
-                            }
-
-                            return Task.CompletedTask;
-                        };
-                    })
-                .AddGoogle(
-                    options =>
-                    {
-                        options.ClientId = configuration["Authentication:Google:ClientID"];
-                        options.ClientSecret = configuration["Authentication:Google:ClientSecret"];
-                        options.CallbackPath = "/api/accounts/external-login/google";
-                        options.EventsType = typeof(GoogleAuthenticationEvents);
-                    })
-                .AddTwitter(
-                    options =>
-                    {
-                        options.ConsumerKey = configuration["Authentication:Twitter:APIKey"];
-                        options.ConsumerSecret = configuration["Authentication:Twitter:APISecret"];
-                        options.CallbackPath = "/api/accounts/external-login/twitter";
-                        options.EventsType = typeof(TwitterAuthenticationEvents);
-                    })
-                .AddFacebook(
-                    options =>
-                    {
-                        options.AppId = configuration["Authentication:Facebook:AppID"];
-                        options.AppSecret = configuration["Authentication:Facebook:AppSecret"];
-                        options.CallbackPath = "/api/accounts/external-login/facebook";
-                        options.EventsType = typeof(FacebookAuthenticationEvents);
-                    })
-                .AddMicrosoftAccount(
-                    options =>
-                    {
-                        options.ClientId = configuration["Authentication:Microsoft:ClientId"];
-                        options.ClientSecret = configuration["Authentication:Microsoft:ClientSecret"];
-                        options.CallbackPath = "/api/accounts/external-login/microsoft";
-                        options.EventsType = typeof(MicrosoftAuthenticationEvents);
-                    });
-
-            services.AddSingleton<IAuthorizationHandler, AccountTypeRequirementHandler>();
-            services.AddSingleton<IAuthorizationHandler, RegularUserPolicy>();
-            services.AddAuthorization(
+        var authenticationBuilder = services.AddAuthentication(
                 options =>
                 {
-                    options.AddPolicy(AccountTypeRequirement.AssignerPolicyName, policy => policy.AddRequirements(new AccountTypeRequirement(AccountType.Assigner)));
-                    options.AddPolicy(AccountTypeRequirement.AdminPolicyName, policy => policy.AddRequirements(new AccountTypeRequirement(AccountType.Admin)));
-                    options.AddPolicy(RegularUserPolicy.PolicyName, policy => policy.AddRequirements(new RegularUserRequirement()));
+                    options.DefaultScheme = MenschIdAuthenticationSchemes.Default;
+                    options.DefaultChallengeScheme = MenschIdAuthenticationSchemes.Default;
+                })
+            .AddPolicyScheme(
+                MenschIdAuthenticationSchemes.Default,
+                MenschIdAuthenticationSchemes.Default,
+                options => options.ForwardDefaultSelector = SelectScheme)
+            .AddCookie(MenschIdAuthenticationSchemes.Session, ConfigureSessionCookie)
+            .AddCookie(MenschIdAuthenticationSchemes.External, ConfigureExternalCookie);
+        foreach (var oidcProvider in oidcProviders)
+        {
+            AddOpenIdConnectProvider(authenticationBuilder, oidcProvider);
+        }
+
+        SetupOpenIddict(services, configuration);
+
+        services.AddSingleton<IAuthorizationHandler, AccountTypeRequirementHandler>();
+        services.AddSingleton<IAuthorizationHandler, RegularUserPolicy>();
+        services.AddAuthorization(
+            options =>
+            {
+                options.AddPolicy(AccountTypeRequirement.AssignerPolicyName, policy => policy.AddRequirements(new AccountTypeRequirement(AccountType.Assigner)));
+                options.AddPolicy(AccountTypeRequirement.AdminPolicyName, policy => policy.AddRequirements(new AccountTypeRequirement(AccountType.Admin)));
+                options.AddPolicy(
+                    AccountTypeRequirement.ExternalServicePolicyName,
+                    policy => policy.AddRequirements(new AccountTypeRequirement(AccountType.ExternalService)));
+                options.AddPolicy(RegularUserPolicy.PolicyName, policy => policy.AddRequirements(new RegularUserRequirement()));
+            });
+    }
+
+    private static string SelectScheme(HttpContext context)
+    {
+        var authorizationHeader = context.Request.Headers.Authorization.ToString();
+        if (authorizationHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            return OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme;
+        return MenschIdAuthenticationSchemes.Session;
+    }
+
+    private static void ConfigureSessionCookie(CookieAuthenticationOptions options)
+    {
+        options.Cookie.Name = MenschIdAuthenticationSchemes.SessionCookieName;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.ExpireTimeSpan = SessionLifetime;
+        options.SlidingExpiration = true;
+        options.SessionStore = new MongoTicketStore(SessionLifetime);
+        options.Events.OnValidatePrincipal = RejectPrincipalOfDeletedAccount;
+        options.Events.OnRedirectToLogin = context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return Task.CompletedTask;
+        };
+        options.Events.OnRedirectToAccessDenied = context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return Task.CompletedTask;
+        };
+    }
+
+    private static async Task RejectPrincipalOfDeletedAccount(CookieValidatePrincipalContext context)
+    {
+        var accountId = ClaimsHelpers.GetAccountId(context.Principal!.Claims);
+        if (accountId != null)
+        {
+            var accountStore = context.HttpContext.RequestServices.GetRequiredService<IAccountStore>();
+            var account = await accountStore.GetByIdAsync(accountId);
+            if (account != null)
+                return;
+        }
+        context.RejectPrincipal();
+        await context.HttpContext.SignOutAsync(MenschIdAuthenticationSchemes.Session);
+    }
+
+    private static void ConfigureExternalCookie(CookieAuthenticationOptions options)
+    {
+        options.Cookie.Name = MenschIdAuthenticationSchemes.ExternalCookieName;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.ExpireTimeSpan = ExternalLoginLifetime;
+        options.SlidingExpiration = false;
+    }
+
+    private static void SetupOpenIddict(
+        IServiceCollection services,
+        IConfiguration configuration)
+    {
+        var settingsSection = configuration.GetSection(OpenIddictSettings.AppSettingsSectionName);
+        services.Configure<OpenIddictSettings>(settingsSection);
+        var settings = settingsSection.Get<OpenIddictSettings>() ?? new OpenIddictSettings();
+        var contentRoot = configuration[HostDefaults.ContentRootKey] ?? Directory.GetCurrentDirectory();
+        var signingKeyPath = ResolveKeyPath(contentRoot, settings.SigningKeyPath, nameof(settings.SigningKeyPath));
+        var encryptionKeyPath = ResolveKeyPath(contentRoot, settings.EncryptionKeyPath, nameof(settings.EncryptionKeyPath));
+        var isTransportSecurityRequired = configuration.GetValue("OpenIddict:RequireHttps", true);
+
+        services.AddOpenIddict()
+            .AddCore(options => options.UseMongoDb())
+            .AddServer(
+                options =>
+                {
+                    options.SetIssuer(BuildIssuer(configuration))
+                        .SetConfigurationEndpointUris("api/oidc/.well-known/openid-configuration")
+                        .SetJsonWebKeySetEndpointUris("api/oidc/.well-known/jwks")
+                        .SetAuthorizationEndpointUris("api/oidc/authorize")
+                        .SetTokenEndpointUris("api/oidc/token")
+                        .SetEndSessionEndpointUris("api/oidc/endsession")
+                        .SetRevocationEndpointUris("api/oidc/revoke");
+                    options.AllowAuthorizationCodeFlow()
+                        .AllowRefreshTokenFlow()
+                        .AllowClientCredentialsFlow()
+                        .RequireProofKeyForCodeExchange();
+                    options.RegisterScopes(Scopes.OpenId, Scopes.OfflineAccess, OpenIddictClientSeeder.ApiScope);
+                    options.SetAccessTokenLifetime(AccessTokenLifetime)
+                        .SetRefreshTokenLifetime(RefreshTokenLifetime);
+                    options.AddSigningKey(OidcServerKeyLoader.LoadSigningKey(signingKeyPath))
+                        .AddEncryptionKey(OidcServerKeyLoader.LoadEncryptionKey(encryptionKeyPath));
+                    var aspNetCoreBuilder = options.UseAspNetCore()
+                        .EnableAuthorizationEndpointPassthrough()
+                        .EnableTokenEndpointPassthrough()
+                        .EnableEndSessionEndpointPassthrough();
+                    if (!isTransportSecurityRequired)
+                        aspNetCoreBuilder.DisableTransportSecurityRequirement();
+                })
+            .AddValidation(
+                options =>
+                {
+                    options.UseLocalServer();
+                    options.UseAspNetCore();
+                    options.EnableAuthorizationEntryValidation();
+                    options.EnableTokenEntryValidation();
                 });
-        }
+        services.AddHostedService<OpenIddictClientSeeder>();
+    }
 
-        private static void SetupExternalLoginObscurer(
-            IServiceCollection services,
-            IConfiguration configuration)
-        {
-            var obscureSalt = configuration["ExternalLogins:ObscureSalt"];
-            if (string.IsNullOrWhiteSpace(obscureSalt))
-                throw new SecurityException("No salt provided for obscuring external logins");
-            var obscureSecret = configuration["ExternalLogins:SecretPrefix"];
-            if (string.IsNullOrWhiteSpace(obscureSecret))
-                throw new SecurityException("No secret provided for obscuring external logins");
-            services.AddSingleton<IExternalLoginObscurer>(new ExternalLoginObscurer(obscureSalt, obscureSecret));
-        }
+    private static Uri BuildIssuer(IConfiguration configuration)
+    {
+        var apiBaseUrl = configuration["Authentication:ApiBaseUrl"];
+        if (string.IsNullOrWhiteSpace(apiBaseUrl))
+            throw new SecurityException("No API base URL configured (Authentication:ApiBaseUrl)");
+        return new Uri($"{apiBaseUrl.TrimEnd('/')}/api/oidc/");
+    }
 
-        private SymmetricSecurityKey GetOrGenerateJwtPrivateKey(IConfiguration configuration)
-        {
-            SymmetricSecurityKey privateKey;
-            try
+    private static string ResolveKeyPath(
+        string contentRoot,
+        string configuredPath,
+        string settingName)
+    {
+        if (string.IsNullOrWhiteSpace(configuredPath))
+            throw new SecurityException($"No path configured for OpenIddict:{settingName}");
+        return Path.GetFullPath(Path.Combine(contentRoot, configuredPath));
+    }
+
+    private static void AddOpenIdConnectProvider(
+        AuthenticationBuilder authenticationBuilder,
+        OidcProviderSettings provider)
+    {
+        var loginProvider = new LoginProvider(provider.Id);
+        var schemeName = OidcProviderRegistry.GetSchemeName(loginProvider);
+        authenticationBuilder.AddOpenIdConnect(
+            schemeName,
+            provider.DisplayName ?? provider.Id,
+            options =>
             {
-                privateKey = new SymmetricSecurityKey(Convert.FromBase64String(configuration["Authentication:Jwt:PrivateKey"]));
-            }
-            catch (KeyNotFoundException)
-            {
-                var bytes = RandomNumberGenerator.GetBytes(32);
-                privateKey = new SymmetricSecurityKey(bytes);
-                Console.WriteLine($"JWT private key candidate: {Convert.ToBase64String(bytes)}. Store this as environment variable 'Authentication__Jwt__PrivateKey'.");
-            }
+                options.SignInScheme = MenschIdAuthenticationSchemes.External;
+                options.Authority = provider.Authority;
+                options.ClientId = provider.ClientId;
+                options.ClientSecret = provider.ClientSecret;
+                options.ResponseType = OpenIdConnectResponseType.Code;
+                options.UsePkce = true;
+                options.Scope.Clear();
+                options.Scope.Add(OpenIdConnectScope.OpenId);
+                options.MapInboundClaims = false;
+                options.GetClaimsFromUserInfoEndpoint = false;
+                options.SaveTokens = false;
+                options.CallbackPath = $"/api/accounts/external-login/{loginProvider.Value}";
+                options.EventsType = typeof(OidcAuthenticationEvents);
+            });
+    }
 
-            return privateKey;
-        }
+    private static void SetupExternalLoginObscurer(
+        IServiceCollection services,
+        IConfiguration configuration)
+    {
+        var obscureKeyBase64 = configuration["ExternalLogins:ObscureKey"];
+        if (string.IsNullOrWhiteSpace(obscureKeyBase64))
+            throw new SecurityException("No key provided for obscuring external logins (ExternalLogins:ObscureKey)");
+        var obscureKey = Convert.FromBase64String(obscureKeyBase64);
+        services.AddSingleton<IExternalLoginObscurer>(new ExternalLoginObscurer(obscureKey));
+    }
+
+    private static void SetupDataProtection(
+        IServiceCollection services,
+        IConfiguration configuration)
+    {
+        var dataProtectionBuilder = services.AddDataProtection()
+            .SetApplicationName("Mensch.Id.API");
+        var fileStoreDirectory = configuration[$"{FileStoreSettings.AppSettingsSectionName}:Directory"];
+        if (string.IsNullOrWhiteSpace(fileStoreDirectory))
+            return;
+        var keyDirectory = new DirectoryInfo(Path.Combine(fileStoreDirectory, "dataprotection-keys"));
+        dataProtectionBuilder.PersistKeysToFileSystem(keyDirectory);
+    }
+
+    private static void SetupRedirectUrlValidator(
+        IServiceCollection services,
+        IConfiguration configuration)
+    {
+        var allowedOrigins = new List<string>();
+        var corsOrigins = configuration["CORS:Origins"];
+        if (!string.IsNullOrWhiteSpace(corsOrigins))
+            allowedOrigins.AddRange(corsOrigins.Split(','));
+        var websiteBaseUrl = configuration["Email:WebsiteBaseUrl"];
+        if (!string.IsNullOrWhiteSpace(websiteBaseUrl))
+            allowedOrigins.Add(websiteBaseUrl);
+        var apiBaseUrl = configuration["Authentication:ApiBaseUrl"];
+        if (!string.IsNullOrWhiteSpace(apiBaseUrl))
+            allowedOrigins.Add(new Uri(apiBaseUrl).GetLeftPart(UriPartial.Authority));
+        var options = new RedirectUrlValidatorOptions { AllowedOrigins = allowedOrigins.Distinct().ToList() };
+        services.AddSingleton(new RedirectUrlValidator(options));
     }
 }

@@ -4,7 +4,6 @@ import { AsyncButton } from "../../../sharedCommonComponents/components/AsyncBut
 import { showSuccessAlert } from "../../../sharedCommonComponents/helpers/AlertHelpers";
 import { resolveText } from "../../../sharedCommonComponents/helpers/Globalizer";
 import { sendPostRequest } from "../../../sharedCommonComponents/helpers/StoringHelpers";
-import { uuid } from "../../../sharedCommonComponents/helpers/uuid";
 import { Models } from "../../types/models";
 import { TranslatedLinkText } from "../../components/TranslatedLinkText";
 
@@ -25,8 +24,7 @@ export const RequestAssignerAccountPage = (props: RequestAssignerAccountPageProp
         if(!hasAcceptedTermsAndConditions) {
             return;
         }
-        const request: Models.AssignerAccountRequest = {
-            id: uuid(),
+        const request: Omit<Models.AssignerAccountRequest, 'id'> = {
             contactPersonName: name,
             email: email,
             expectedAssignmentsPerYear: expectedAssignmentsPerYear,

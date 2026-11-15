@@ -26,6 +26,20 @@ function App() {
     );
     const [ accountType, setAccountType ] = useState<AccountType>();
 
+    const navigateToAccountHomePage = (accountType: AccountType) => {
+        switch (accountType) {
+            case AccountType.Admin:
+                navigate('/assigner-account-requests');
+                break;
+            case AccountType.Assigner:
+                navigate('/assigner');
+                break;
+            default:
+                navigate('/me');
+                break;
+        }
+    };
+
     useEffect(() => {
         if(!userViewModel) {
             return;
@@ -67,19 +81,6 @@ function App() {
         navigateToAccountHomePage(isLoggedInResponse.accountType!);
     }
 
-    const navigateToAccountHomePage = (accountType: AccountType) => {
-        switch (accountType) {
-            case AccountType.Admin:
-                navigate('/assigner-account-requests');
-                break;
-            case AccountType.Assigner:
-                navigate('/assigner');
-                break;
-            default:
-                navigate('/me');
-                break;
-        }
-    };
 
     const onLogOut = () => {
         setUserViewModel(undefined);

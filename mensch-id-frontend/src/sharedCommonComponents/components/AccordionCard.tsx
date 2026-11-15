@@ -28,14 +28,6 @@ export const AccordionCard = (props: AccordionCardProps) => {
     const [ isCollapsed, setIsCollapsed ] = useState<boolean>(!props.isOpenAtCreate);
 
     useEffect(() => {
-        if(!isCollapsed) {
-            if(!hasBeenMounted) {
-                setHasBeenMounted(true);
-            }
-        }
-    }, [ isCollapsed ]);
-
-    useEffect(() => {
         if(hasBeenMounted) {
             if(props.onMount) {
                 props.onMount();
@@ -93,7 +85,10 @@ export const AccordionCard = (props: AccordionCardProps) => {
             </Accordion.Button>
             <Accordion.Collapse 
                 eventKey={props.eventKey}
-                onEnter={() => setIsCollapsed(false)}
+                onEnter={() => {
+                    setIsCollapsed(false);
+                    setHasBeenMounted(true);
+                }}
                 onExited={() => setIsCollapsed(true)}
             >
                 <Card.Body className={props.bodyClassName ?? 'py-2 px-3'}>

@@ -1,11 +1,11 @@
-import React from 'react';
 import { Row, Col, Button } from 'react-bootstrap';
 import { resolveText } from '../../sharedCommonComponents/helpers/Globalizer';
-import { LoginProvider } from '../types/enums';
+import { getLoginProviderIconClass } from '../helpers/LoginProviderHelpers';
+import { ViewModels } from '../types/viewModels';
 
 interface ExternalLoginsProps {
-    availableExternalProviders: LoginProvider[];
-    onProviderSelected: (loginProvider: LoginProvider) => void;
+    availableExternalProviders: ViewModels.LoginProviderViewModel[];
+    onProviderSelected: (loginProviderId: string) => void;
 }
 
 export const ExternalLogins = (props: ExternalLoginsProps) => {
@@ -13,53 +13,28 @@ export const ExternalLogins = (props: ExternalLoginsProps) => {
     if(props.availableExternalProviders.length === 0) {
         return (<Row>
             <Col>{resolveText("ExternalLogin_NoProviders")}</Col>
-        </Row>)
+        </Row>);
     }
 
     return (
         <Row>
-            {props.availableExternalProviders.includes(LoginProvider.Google)
-            ? <Col xs="auto">
-                <Button
-                    size="lg"
-                    variant="outline-dark"
-                    onClick={() => props.onProviderSelected(LoginProvider.Google)}
-                >
-                    <i className='fa fa-google' />
-                </Button>
-            </Col>: null}
-            {props.availableExternalProviders.includes(LoginProvider.Twitter)
-            ? <Col xs="auto">
-                <Button
-                    size="lg"
-                    variant="outline-dark"
-                    onClick={() => props.onProviderSelected(LoginProvider.Twitter)}
-                >
-                    <i className='fa fa-twitter' />
-                </Button>
-            </Col>: null}
-            {props.availableExternalProviders.includes(LoginProvider.Microsoft)
-            ? <Col xs="auto">
-                <Button
-                    size="lg"
-                    variant="outline-dark"
-                    onClick={() => props.onProviderSelected(LoginProvider.Microsoft)}
-                >
-                    <i className='fa fa-windows' />
-                </Button>
-            </Col>: null}
-            {props.availableExternalProviders.includes(LoginProvider.Facebook)
-            ? <Col xs="auto">
-                <Button
-                    size="lg"
-                    variant="outline-dark"
-                    onClick={() => props.onProviderSelected(LoginProvider.Facebook)}
-                >
-                    <i className='fa fa-facebook' />
-                </Button>
-            </Col>: null}
+            {props.availableExternalProviders.map(loginProvider => {
+                const iconClass = getLoginProviderIconClass(loginProvider.id);
+                return (<Col xs="auto" key={loginProvider.id}>
+                    <Button
+                        size="lg"
+                        variant="outline-dark"
+                        title={loginProvider.displayName}
+                        onClick={() => props.onProviderSelected(loginProvider.id)}
+                    >
+                        {iconClass
+                        ? <i className={iconClass} />
+                        : loginProvider.displayName}
+                    </Button>
+                </Col>);
+            })}
             <Col />
         </Row>
     );
 
-}
+};

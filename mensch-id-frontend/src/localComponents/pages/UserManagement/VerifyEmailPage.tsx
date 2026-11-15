@@ -22,7 +22,6 @@ export const VerifyEmailPage = (props: VerifyEmailPageProps) => {
         if(!accountId || !verificationToken) {
             return;
         }
-        setIsSubmitting(true);
         try {
             await apiClient.instance!.get(`api/accounts/${accountId}/verify-email`, { token: verificationToken });
             setIsVerified(true);
@@ -35,8 +34,11 @@ export const VerifyEmailPage = (props: VerifyEmailPageProps) => {
         }
     }, [ accountId, verificationToken, navigate ]);
 
-    useEffect(() => {  
-        verifyEmail();
+    useEffect(() => {
+        const runInitialVerification = async () => {
+            await verifyEmail();
+        };
+        runInitialVerification();
     }, [ verifyEmail ]);
 
     
@@ -80,7 +82,10 @@ export const VerifyEmailPage = (props: VerifyEmailPageProps) => {
             <Alert variant='danger'>
                 {resolveText("VerifyEmail_CouldNotVerify")}
                 <Button 
-                    onClick={verifyEmail}
+                    onClick={() => {
+                        setIsSubmitting(true);
+                        verifyEmail();
+                    }}
                     className='mx-3'
                 >
                     {resolveText("VerifyEmail_Retry")}

@@ -49,14 +49,13 @@ export const ContactInformationForm = (props: ContactInformationFormProps) => {
         );
     }
 
-    useEffect(() => {
-        setIsStored(false);
-    }, [ contactInformation ]);
-
     return (<Form onSubmit={store}>
         <ContactFormSection
             value={contactInformation}
-            onChange={setContactInformation}
+            onChange={update => {
+                setIsStored(false);
+                setContactInformation(update);
+            }}
         />
         <Center>
             <StoreButton

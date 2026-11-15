@@ -19,10 +19,11 @@ export const MultiStepForm = <T,>(props: MultiStepFormProps<T>) => {
     const { steps, formData, onChange, onSubmit, submitButtonText } = props;
 
     const [ currentStep, setCurrentStep ] = useState<FormStep<T>>(steps[0]);
-
-    useEffect(() => {
+    const [ previousSteps, setPreviousSteps ] = useState<FormStep<T>[]>(steps);
+    if(steps !== previousSteps) {
+        setPreviousSteps(steps);
         setCurrentStep(steps[0]);
-    }, [ steps ]);
+    }
 
     const currentStepIndex = useMemo(() => steps.indexOf(currentStep), [ currentStep, steps ]);
     const previousStep = useMemo(() => currentStepIndex > 0 ? steps[currentStepIndex-1] : undefined, [ currentStep, steps ]);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq.Expressions;
 using System.Net;
@@ -32,9 +32,8 @@ public class AssignerController : ControllerBase
     private readonly NewProfileViewModelBuilder newProfileViewModelBuilder;
     private readonly IHttpContextAccessor httpContextAccessor;
     private readonly IStore<Person> profileStore;
-    private readonly IStore<AssignerControlledProfile> assignerControlledProfileStore;
+    private readonly IAssignerControlledProfileStore assignerControlledProfileStore;
     private readonly SignedProfileBuilder signedProfileBuilder;
-    private readonly IFilterExpressionBuilder<AssignerControlledProfile,AssignedProfilesRequestParameters> filterExpressionBuilder;
     private readonly IFilesStore fileStore;
 
     public AssignerController(
@@ -43,9 +42,8 @@ public class AssignerController : ControllerBase
         IHttpContextAccessor httpContextAccessor,
         IIdStore idStore,
         IStore<Person> profileStore,
-        IStore<AssignerControlledProfile> assignerControlledProfileStore,
+        IAssignerControlledProfileStore assignerControlledProfileStore,
         SignedProfileBuilder signedProfileBuilder,
-        IFilterExpressionBuilder<AssignerControlledProfile,AssignedProfilesRequestParameters> filterExpressionBuilder,
         IFilesStore fileStore)
     {
         this.accountStore = accountStore;
@@ -55,7 +53,6 @@ public class AssignerController : ControllerBase
         this.profileStore = profileStore;
         this.assignerControlledProfileStore = assignerControlledProfileStore;
         this.signedProfileBuilder = signedProfileBuilder;
-        this.filterExpressionBuilder = filterExpressionBuilder;
         this.fileStore = fileStore;
     }
 
@@ -101,8 +98,14 @@ public class AssignerController : ControllerBase
         [FromRoute] string accountId,
         [FromRoute] string logoId)
     {
+        if (!ControllerInputSanitizer.ValidateAndSanitizeMandatoryId(accountId, out accountId))
+            return BadRequest("Invalid account-ID");
         var acount = await accountStore.GetByIdAsync(accountId);
         if (acount is not AssignerAccount assignerAccount)
+            return NotFound();
+        if (assignerAccount.LogoId == null || logoId != assignerAccount.LogoId)
+            return NotFound();
+        if (!IsAllowedLogoContentType(assignerAccount.LogoImageType))
             return NotFound();
         var stream = fileStore.GetById(logoId);
         return File(stream, contentType: assignerAccount.LogoImageType);
@@ -114,7 +117,7 @@ public class AssignerController : ControllerBase
     {
         if (Request.ContentType == null)
             return BadRequest("No content type specified");
-        if (!Regex.IsMatch(Request.ContentType, "^image/(png|gif|jpeg|svg\\+xml)$"))
+        if (!IsAllowedLogoContentType(Request.ContentType))
             return BadRequest("Unsupported image file type");
         var accountId = ControllerHelpers.GetAccountId(httpContextAccessor);
         var acount = await accountStore.GetByIdAsync(accountId);
@@ -165,23 +168,26 @@ public class AssignerController : ControllerBase
 
     [HttpPost("reject/{idCandidate}")]
     public async Task<IActionResult> RejectIdCandidate(
-        [FromRoute] string idCandidate)
+        [FromRoute] MenschId idCandidate)
     {
         var accountId = ControllerHelpers.GetAccountId(httpContextAccessor);
-        await idStore.ReleaseSpecificReservation(accountId, idCandidate);
+        await idStore.ReleaseSpecificReservation(accountId, idCandidate.Value);
         return Ok();
     }
 
     [HttpPost("claim/{idCandidate}")]
     public async Task<IActionResult> CreateNew(
-        [FromRoute] string idCandidate)
+        [FromRoute] MenschId idCandidate)
     {
+        var menschId = idCandidate.Value;
         var accountId = ControllerHelpers.GetAccountId(httpContextAccessor);
-        if (!await idStore.TryClaimId(idCandidate, accountId))
-            return StatusCode((int)HttpStatusCode.InternalServerError, $"Could not claim ID '{idCandidate}'. Did you reserve it first?");
+        if (await profileStore.ExistsAsync(menschId))
+            return Conflict($"ID '{menschId}' has already been assigned");
+        if (!await idStore.TryClaimId(menschId, accountId))
+            return StatusCode((int)HttpStatusCode.InternalServerError, $"Could not claim ID '{menschId}'. Did you reserve it first?");
         var assignerControlledProfile = AssignerControlledProfileFactory.Create(idCandidate, accountId);
         await assignerControlledProfileStore.StoreAsync(assignerControlledProfile);
-        var person = new Person(idCandidate, DateTime.UtcNow, accountId);
+        var person = new Person(menschId, DateTime.UtcNow, accountId);
         await profileStore.StoreAsync(person);
         return Ok(person);
     }
@@ -192,44 +198,28 @@ public class AssignerController : ControllerBase
         [FromQuery] AssignedProfilesRequestParameters queryParameters)
     {
         var accountId = ControllerHelpers.GetAccountId(httpContextAccessor);
-        var filterExpressions = filterExpressionBuilder.Build(queryParameters);
-        filterExpressions.Add(x => x.AssignerAccountId == accountId);
-        var combinedFilter = SearchExpressionBuilder.And(filterExpressions.ToArray());
-        var orderByExpression = BuildOrderByExpression(queryParameters.OrderBy);
-        var items = assignerControlledProfileStore.SearchAsync(
-            combinedFilter,
-            queryParameters.Count,
-            queryParameters.Skip,
-            orderByExpression,
-            queryParameters.OrderDirection);
+        var items = assignerControlledProfileStore.SearchAssignedProfiles(accountId, queryParameters);
         return Ok(items);
-    }
-
-    private Expression<Func<AssignerControlledProfile, object>> BuildOrderByExpression(
-        string orderBy)
-    {
-        return orderBy?.ToLower() switch
-        {
-            "time" => x => x.CreationDate,
-            "id" => x => x.Id,
-            _ => x => x.CreationDate
-        };
     }
 
     [HttpGet("profiles/{personId}")]
     public async Task<IActionResult> GetAssignerControlledProfile(
-        [FromRoute] string personId,
+        [FromRoute] MenschId personId,
         [FromQuery] bool signed = false)
     {
-        if (!ControllerInputSanitizer.ValidateAndSanitzeMenschId(personId, out personId))
-            return BadRequest("Invalid person-ID");
+        var accountId = ControllerHelpers.GetAccountId(httpContextAccessor);
         var profile = await assignerControlledProfileStore.GetByIdAsync(personId);
-        if (profile == null)
+        if (profile == null || profile.AssignerAccountId != accountId)
             return NotFound();
         if(!signed)
             return Ok(profile);
         var signedProfile = signedProfileBuilder.Build(profile);
         return Ok(signedProfile);
+    }
+
+    private static bool IsAllowedLogoContentType(string contentType)
+    {
+        return contentType != null && Regex.IsMatch(contentType, "^image/(png|gif|jpeg)$");
     }
 
 }

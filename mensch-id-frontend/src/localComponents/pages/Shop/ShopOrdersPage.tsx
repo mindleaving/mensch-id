@@ -26,7 +26,6 @@ export const ShopOrdersPage = (props: ShopOrdersPageProps) => {
     const [ selectedOrder, setSelectedOrder ] = useState<Models.Shop.Order>();
 
     useEffect(() => {
-        setIsLoading(true);
         const queryParams: QueryParameters = [
             { key: 'orderBy', value: 'time' },
             { key: 'orderDirection', value: OrderDirection.Ascending }
@@ -131,7 +130,10 @@ export const ShopOrdersPage = (props: ShopOrdersPageProps) => {
             <FormCheck
                 label={resolveText("Orders_ShowOnlyOpen")}
                 checked={onlyOpenOrders}
-                onChange={e => setOnlyOpenOrders(e.target.checked)}
+                onChange={e => {
+                    setIsLoading(true);
+                    setOnlyOpenOrders(e.target.checked);
+                }}
             />
         </FormGroup>
         <Table>

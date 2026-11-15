@@ -1,4 +1,4 @@
-﻿using Mensch.Id.API.Models;
+using Mensch.Id.API.Models;
 using Mensch.Id.API.Models.RequestParameters;
 using Mensch.Id.API.Models.Shop;
 using Mensch.Id.API.Workflow.FilterExpressionBuilders;
@@ -13,7 +13,6 @@ namespace Mensch.Id.API.Setups
             IServiceCollection services,
             IConfiguration configuration)
         {
-            services.AddScoped<IFilterExpressionBuilder<AssignerControlledProfile,AssignedProfilesRequestParameters>, AssignedProfileFillterExpressionBuilder>();
             services.AddScoped<IFilterExpressionBuilder<Order,OrderRequestParameters>, OrderFilterExpressionBuilder>();
             services.AddScoped<IFilterExpressionBuilder<Product,ProductRequestParameters>, ProductFilterExpressionBuilder>();
         }

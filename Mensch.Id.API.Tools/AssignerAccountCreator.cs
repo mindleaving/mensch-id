@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Security.Cryptography;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Commons.IO;
@@ -24,8 +25,7 @@ namespace Mensch.Id.API.Tools
             const Language PreferedLanguage = Language.en;
             // ### END INPUT ####
 
-            var passwordGenerator = new TemporaryPasswordGenerator { AllowedCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" };
-            var password = passwordGenerator.Generate();
+            var password = RandomNumberGenerator.GetString("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 16);
             Console.WriteLine($"Password: {password}");
 
             var accountCollection = GetCollection<Account>();

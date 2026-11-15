@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
@@ -6,113 +6,80 @@ using Mensch.Id.API.AccessControl;
 using Mensch.Id.API.Models;
 using Mensch.Id.API.Models.AccessControl;
 
-namespace Mensch.Id.API.Helpers
+namespace Mensch.Id.API.Helpers;
+
+public static class ClaimsHelpers
 {
-    public static class ClaimsHelpers
+    private const string ExternalIssuerPrefix = "oidc:";
+
+    public static string GetExternalIssuer(LoginProvider loginProvider)
     {
-        public static string GetPersonId(List<Claim> claims)
-        {
-            var jwtClaims = claims.Where(x => x.Issuer == JwtSecurityTokenBuilder.Issuer).ToList();
-            return jwtClaims.FirstOrDefault(x => x.Type == MenschIdClaimTypes.PersonIdClaimName)?.Value;
-        }
+        return ExternalIssuerPrefix + loginProvider.Value;
+    }
 
-        public static IEnumerable<LoginProvider> GetLoginProviders(List<Claim> claims)
-        {
-            var hasLocalClaims = claims.Any(x => x.Issuer == JwtSecurityTokenBuilder.Issuer);
-            if(hasLocalClaims)
-                yield return LoginProvider.LocalJwt;
-            var externalClaims = claims.Where(x => x.Issuer != JwtSecurityTokenBuilder.Issuer);
-            var issuers = externalClaims.Select(x => x.Issuer).Distinct();
-            foreach (var issuer in issuers)
-            {
-                yield return issuer switch
-                {
-                    "Facebook" => LoginProvider.Facebook,
-                    "Google" => LoginProvider.Google,
-                    "Microsoft" => LoginProvider.Microsoft,
-                    "Twitter" => LoginProvider.Twitter,
-                    _ => throw new Exception($"Unknown claim issuer '{issuer}'")
-                };
-            }
-        }
+    public static List<Claim> BuildExternalClaims(
+        LoginProvider loginProvider,
+        string externalId)
+    {
+        var issuer = GetExternalIssuer(loginProvider);
+        return
+        [
+            new Claim(MenschIdClaimTypes.Subject, externalId, ClaimValueTypes.String, issuer),
+            new Claim(MenschIdClaimTypes.LoginProvider, loginProvider.Value, ClaimValueTypes.String, issuer)
+        ];
+    }
 
-        public static LoginProvider GetLoginProvider(List<Claim> claims)
-        {
-            if(!claims.Any())
-                throw new Exception("No claims made");
-            var loginProviders = GetLoginProviders(claims).ToList();
-            var hasExternalLoginProviders = loginProviders.Any(x => x != LoginProvider.LocalJwt);
-            if (hasExternalLoginProviders)
-                return loginProviders.Single(x => x != LoginProvider.LocalJwt);
-            return LoginProvider.LocalJwt;
-        }
+    public static bool IsMenschIdAccountPrincipal(IEnumerable<Claim> claims)
+    {
+        return claims.Any(x => x.Type == MenschIdClaimTypes.AccountTypeClaimName);
+    }
 
-        public static string GetExternalId(List<Claim> claims)
-        {
-            var loginProvider = GetLoginProvider(claims);
-            return GetExternalId(claims, loginProvider);
-        }
+    public static string GetAccountId(IEnumerable<Claim> claims)
+    {
+        var claimList = claims.ToList();
+        if (!IsMenschIdAccountPrincipal(claimList))
+            return null;
+        return claimList.FirstOrDefault(x => x.Type == MenschIdClaimTypes.Subject)?.Value
+               ?? claimList.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
+    }
 
-        public static string GetExternalId(
-            IEnumerable<Claim> claims,
-            LoginProvider loginProvider)
-        {
-            var loginProviderClaims = claims.Where(x => x.Issuer == GetIssuer(loginProvider)).ToList();
-            switch (loginProvider)
-            {
-                case LoginProvider.Unknown:
-                    throw new Exception($"Invalid login provider '{loginProvider}'");
-                case LoginProvider.Google:
-                case LoginProvider.LocalJwt:
-                case LoginProvider.Twitter:
-                case LoginProvider.Microsoft:
-                case LoginProvider.Facebook:
-                    return loginProviderClaims.Single(x => x.Type == ClaimTypes.NameIdentifier).Value;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(loginProvider), loginProvider, null);
-            }
-        }
+    public static string GetPersonId(IEnumerable<Claim> claims)
+    {
+        return claims.FirstOrDefault(x => x.Type == MenschIdClaimTypes.PersonIdClaimName)?.Value;
+    }
 
-        public static AccountType? GetAccountType(
-            List<Claim> claims)
-        {
-            var loginProvider = GetLoginProvider(claims);
-            switch (loginProvider)
-            {
-                case LoginProvider.Unknown:
-                    throw new Exception($"Invalid login provider '{loginProvider}'");
-                case LoginProvider.Google:
-                case LoginProvider.Twitter:
-                case LoginProvider.Facebook:
-                case LoginProvider.Microsoft:
-                    return AccountType.External;
-                case LoginProvider.LocalJwt:
-                    {
-                        var accountTypeString = claims.Single(x => x.Type == MenschIdClaimTypes.AccountTypeClaimName).Value;
-                        return Enum.Parse<AccountType>(accountTypeString);
-                    }
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(loginProvider), loginProvider, null);
-            }
-        }
+    public static Guid? GetServiceId(IEnumerable<Claim> claims)
+    {
+        var serviceIdString = claims.FirstOrDefault(x => x.Type == MenschIdClaimTypes.ServiceId)?.Value;
+        if (!Guid.TryParse(serviceIdString, out var serviceId))
+            return null;
+        return serviceId;
+    }
 
-        private static string GetIssuer(LoginProvider loginProvider)
-        {
-            switch (loginProvider)
-            {
-                case LoginProvider.Google:
-                    return "Google";
-                case LoginProvider.Twitter:
-                    return "Twitter";
-                case LoginProvider.Facebook:
-                    return "Facebook";
-                case LoginProvider.Microsoft:
-                    return "Microsoft";
-                case LoginProvider.LocalJwt:
-                    return JwtSecurityTokenBuilder.Issuer;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(loginProvider), loginProvider, null);
-            }
-        }
+    public static AccountType? GetAccountType(IEnumerable<Claim> claims)
+    {
+        var accountTypeString = claims.FirstOrDefault(x => x.Type == MenschIdClaimTypes.AccountTypeClaimName)?.Value;
+        if (accountTypeString == null)
+            return null;
+        return Enum.Parse<AccountType>(accountTypeString);
+    }
+
+    public static LoginProvider? GetExternalLoginProvider(IEnumerable<Claim> externalClaims)
+    {
+        var loginProviderClaim = externalClaims.FirstOrDefault(
+            x => x.Type == MenschIdClaimTypes.LoginProvider && x.Issuer == ExternalIssuerPrefix + x.Value);
+        if (loginProviderClaim == null || !LoginProvider.IsValid(loginProviderClaim.Value))
+            return null;
+        return new LoginProvider(loginProviderClaim.Value);
+    }
+
+    public static string GetExternalId(
+        IEnumerable<Claim> externalClaims,
+        LoginProvider loginProvider)
+    {
+        var issuer = GetExternalIssuer(loginProvider);
+        return externalClaims
+            .FirstOrDefault(x => x.Issuer == issuer && x.Type == MenschIdClaimTypes.Subject)
+            ?.Value;
     }
 }

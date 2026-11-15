@@ -21,7 +21,7 @@ const availableLanguages = [ Language.de, Language.en ];
 export const PrintCertificatePage = (props: PrintCertificatePageProps) => {
 
     const { personId } = useParams();
-    const [ isLoading, setIsLoading ] = useState<boolean>(false);
+    const [ isLoading, setIsLoading ] = useState<boolean>(personId !== undefined);
     const [ assignerControlledProfile, setAssignerControlledProfile ] = useState<ViewModels.SignedAssignerControlledProfile>();
     const assignerProfile = useContext(UserContext)! as ViewModels.AssignerAccountViewModel;
     const contactInformation = useMemo(() => assignerProfile.contactInformation, [ assignerProfile ]);
@@ -36,7 +36,6 @@ export const PrintCertificatePage = (props: PrintCertificatePageProps) => {
         if(!personId) {
             return;
         }
-        setIsLoading(true);
         const loadProfile = buildLoadObjectFunc(
             `api/assigner/profiles/${personId}`, { signed: 'true' },
             resolveText("AssignerControlledProfile_CouldNotLoad"),

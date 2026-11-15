@@ -28,12 +28,21 @@ export const PagedTable = (props: PropsWithChildren<PagedTableProps>) => {
     const onPageChanged = props.onPageChanged;
     const orderBy = props.orderBy;
     const orderDirection = props.orderDirection;
-    useEffect(() => {
+    const [ previousOnPageChanged, setPreviousOnPageChanged ] = useState(() => onPageChanged);
+    const [ previousOrderBy, setPreviousOrderBy ] = useState(orderBy);
+    const [ previousOrderDirection, setPreviousOrderDirection ] = useState(orderDirection);
+    if(onPageChanged !== previousOnPageChanged) {
+        setPreviousOnPageChanged(() => onPageChanged);
         setPageIndex(0);
-    }, [ onPageChanged, entriesPerPage ]);
+        setIsLoading(true);
+    }
+    if(orderBy !== previousOrderBy || orderDirection !== previousOrderDirection) {
+        setPreviousOrderBy(orderBy);
+        setPreviousOrderDirection(orderDirection);
+        setIsLoading(true);
+    }
     useEffect(() => {
         const loadItems = async () => {
-            setIsLoading(true);
             try {
                 await onPageChanged(pageIndex, entriesPerPage, orderBy, orderDirection);
             } finally {
@@ -45,14 +54,21 @@ export const PagedTable = (props: PropsWithChildren<PagedTableProps>) => {
 
     const gotoPreviousPage = () => {
         if(pageIndex === 0) return;
+        setIsLoading(true);
         setPageIndex(pageIndex-1);
     }
     const gotoNextPage = () => {
+        setIsLoading(true);
         setPageIndex(pageIndex+1);
+    }
+    const gotoFirstPage = () => {
+        if(pageIndex === 0) return;
+        setIsLoading(true);
+        setPageIndex(0);
     }
 
     const navigationButtons = (<>
-        <Button className="m-1" onClick={() => setPageIndex(0)} disabled={pageIndex === 0}><i className="fa fa-step-backward" /></Button>
+        <Button className="m-1" onClick={gotoFirstPage} disabled={pageIndex === 0}><i className="fa fa-step-backward" /></Button>
         <Button className="m-1" onClick={gotoPreviousPage} disabled={pageIndex === 0}>{resolveText('Previous')}</Button>
         <Button className="m-1" onClick={gotoNextPage}>{resolveText('Next')}</Button>
     </>);
@@ -66,7 +82,11 @@ export const PagedTable = (props: PropsWithChildren<PagedTableProps>) => {
             <Col xs="auto">
                 <FormSelect
                     value={entriesPerPage}
-                    onChange={(e:any) => setEntriesPerPage(e.target.value)}
+                    onChange={(e:any) => {
+                        setIsLoading(true);
+                        setPageIndex(0);
+                        setEntriesPerPage(e.target.value);
+                    }}
                 >
                     <option value="5">5</option>
                     <option value="10">10</option>
